@@ -56,6 +56,7 @@
             color: #333;
             font-weight: 500;
             transition: color 0.3s ease;
+            cursor: pointer;
         }
 
         .nav-links a:hover, .nav-links a.active {
@@ -137,12 +138,21 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
+        .leaderboard-item.current-user {
+            background: linear-gradient(145deg, #e3f2fd, #ffffff);
+            border-left: 4px solid #667eea;
+        }
+
         .rank {
             font-weight: bold;
             font-size: 1.2rem;
             color: #667eea;
             min-width: 40px;
         }
+
+        .rank.gold { color: #FFD700; }
+        .rank.silver { color: #C0C0C0; }
+        .rank.bronze { color: #CD7F32; }
 
         .player-info {
             flex-grow: 1;
@@ -186,6 +196,22 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
         }
 
+        .scenario-deadline {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .scenario-deadline.urgent {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
         .choice-options {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -213,6 +239,13 @@
             color: white;
         }
 
+        .choice-option.submitted {
+            border-color: #28a745;
+            background: linear-gradient(145deg, #28a745, #20c997);
+            color: white;
+            cursor: not-allowed;
+        }
+
         .choice-title {
             font-weight: bold;
             margin-bottom: 0.5rem;
@@ -224,15 +257,30 @@
             margin-bottom: 0.5rem;
         }
 
+        .choice-option.selected .choice-cost,
+        .choice-option.submitted .choice-cost {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
         .choice-potential {
             color: #28a745;
             font-weight: bold;
             margin-bottom: 0.5rem;
         }
 
+        .choice-option.selected .choice-potential,
+        .choice-option.submitted .choice-potential {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
         .choice-odds {
             color: #666;
             font-size: 0.9rem;
+        }
+
+        .choice-option.selected .choice-odds,
+        .choice-option.submitted .choice-odds {
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .btn {
@@ -247,7 +295,7 @@
             font-weight: 500;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -255,34 +303,82 @@
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
-        .accounting-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-
-        .account-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .account-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem;
-            background: linear-gradient(145deg, #f9f9f9, #ffffff);
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+        .btn-success {
+            background: linear-gradient(145deg, #28a745, #20c997);
         }
 
         .hidden {
             display: none;
+        }
+
+        .countdown {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .countdown.urgent {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .dice-roll {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .dice {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: roll 2s ease-in-out infinite;
+        }
+
+        @keyframes roll {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+        }
+
+        .results {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .notification {
+            background: #cce7ff;
+            border: 1px solid #99d6ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -303,22 +399,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        .roll-animation {
-            animation: roll 2s ease-in-out;
-        }
-
-        @keyframes roll {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(90deg); }
-            50% { transform: rotate(180deg); }
-            75% { transform: rotate(270deg); }
-        }
-
-        .dice {
-            font-size: 3rem;
-            display: inline-block;
-        }
     </style>
 </head>
 <body>
@@ -327,10 +407,9 @@
             <nav class="nav">
                 <div class="logo">🏆 Tripletex Business School</div>
                 <div class="nav-links">
-                    <a href="#" class="nav-link active" data-section="dashboard">Dashboard</a>
-                    <a href="#" class="nav-link" data-section="scenario">Scenario</a>
-                    <a href="#" class="nav-link" data-section="accounting">Regnskap</a>
-                    <a href="#" class="nav-link" data-section="reports">Rapporter</a>
+                    <a class="nav-link active" data-section="dashboard">Dashboard</a>
+                    <a class="nav-link" data-section="scenario">Scenario</a>
+                    <a class="nav-link" data-section="help">Hjelp</a>
                 </div>
             </nav>
         </div>
@@ -342,7 +421,9 @@
             <section id="dashboard" class="section">
                 <div class="dashboard">
                     <h1>Velkommen til Business School! 🚀</h1>
-                    <p>Uke 1 av 12 - Foundation Phase</p>
+                    <p><strong>Uke <span id="current-week">1</span> av 12</strong> - <span id="current-phase">Foundation Phase</span></p>
+                    
+                    <div id="notifications" class="notifications"></div>
                     
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -350,53 +431,24 @@
                             <div class="stat-label">Business Value (NOK)</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" id="rank">3</div>
+                            <div class="stat-value" id="rank">-</div>
                             <div class="stat-label">Din Rangering</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" id="revenue">45,000</div>
-                            <div class="stat-label">Månedsomsetning</div>
+                            <div class="stat-value" id="scenario-status">Venter</div>
+                            <div class="stat-label">Scenario Status</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" id="growth">15%</div>
-                            <div class="stat-label">Vekst denne måneden</div>
+                            <div class="stat-value" id="tripletex-status">Setup</div>
+                            <div class="stat-label">Tripletex Status</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="leaderboard">
+                <div class="leaderboard" id="leaderboard-container">
                     <h2>🏆 Leaderboard</h2>
-                    <div class="leaderboard-item">
-                        <span class="rank">1</span>
-                        <div class="player-info">
-                            <div class="player-name">Anna Nordström</div>
-                            <div class="player-company">EcoTech Solutions AS</div>
-                        </div>
-                        <span class="business-value">545,000 NOK</span>
-                    </div>
-                    <div class="leaderboard-item">
-                        <span class="rank">2</span>
-                        <div class="player-info">
-                            <div class="player-name">Marcus Berg</div>
-                            <div class="player-company">Digital Innovation AS</div>
-                        </div>
-                        <span class="business-value">520,000 NOK</span>
-                    </div>
-                    <div class="leaderboard-item" style="background: linear-gradient(145deg, #e3f2fd, #ffffff);">
-                        <span class="rank">3</span>
-                        <div class="player-info">
-                            <div class="player-name">Du</div>
-                            <div class="player-company">Smart Logistics AS</div>
-                        </div>
-                        <span class="business-value">500,000 NOK</span>
-                    </div>
-                    <div class="leaderboard-item">
-                        <span class="rank">4</span>
-                        <div class="player-info">
-                            <div class="player-name">Lisa Hansen</div>
-                            <div class="player-company">CreativeHub AS</div>
-                        </div>
-                        <span class="business-value">485,000 NOK</span>
+                    <div id="leaderboard-content">
+                        <p>Leaderboard lastes...</p>
                     </div>
                 </div>
             </section>
@@ -404,111 +456,66 @@
             <!-- Scenario Section -->
             <section id="scenario" class="section hidden">
                 <div class="scenario-section">
-                    <h2>📈 Måned 1: Kapasitetsutfordring</h2>
-                    <div class="scenario-card">
-                        <h3>Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger som begrenser fremtidig vekst</h3>
-                        <p><strong>Deadline for valg:</strong> Onsdag 14. august</p>
-                        <p><strong>Terningkast:</strong> Fredag 16. august kl 14:00</p>
-                        
-                        <div class="choice-options">
-                            <div class="choice-option" data-choice="A">
-                                <div class="choice-title">A) Stort kontor + full bemanning</div>
-                                <div class="choice-cost">Kostnad: +80% husleie + 60k/mnd lønn</div>
-                                <div class="choice-potential">Potensial: Maks vekst 30% → 50%</div>
-                                <div class="choice-odds">Odds: 60% suksess / 25% delvis / 15% fiasko</div>
-                            </div>
-                            <div class="choice-option" data-choice="B">
-                                <div class="choice-title">B) Medium kontor</div>
-                                <div class="choice-cost">Kostnad: +40% husleie</div>
-                                <div class="choice-potential">Potensial: Maks vekst 30% → 40%</div>
-                                <div class="choice-odds">Odds: 80% suksess / 20% ingen effekt</div>
-                            </div>
-                            <div class="choice-option" data-choice="C">
-                                <div class="choice-title">C) Automatiseringsløsning</div>
-                                <div class="choice-cost">Kostnad: 200k engangs + 20k/mnd avskrivning</div>
-                                <div class="choice-potential">Potensial: -20% lønnskostnad</div>
-                                <div class="choice-odds">Odds: 75% suksess / 25% tekniske problemer</div>
-                            </div>
-                            <div class="choice-option" data-choice="D">
-                                <div class="choice-title">D) Outsourcing-strategi</div>
-                                <div class="choice-cost">Kostnad: +15k/mnd konsulenthonorar</div>
-                                <div class="choice-potential">Potensial: Maks vekst 30% → 35%</div>
-                                <div class="choice-odds">Odds: 95% suksess / 5% leverandørproblemer</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top: 2rem; text-align: center;">
-                            <button class="btn" id="submit-choice" disabled>Bekreft valg</button>
-                            <div id="dice-roll" class="hidden" style="margin-top: 1rem;">
-                                <div class="dice" id="dice">🎲</div>
-                                <p id="roll-result"></p>
-                            </div>
+                    <div id="scenario-content">
+                        <div class="scenario-card">
+                            <h2>Ingen aktivt scenario</h2>
+                            <p>Neste scenario kommer snart! Hold deg oppdatert på Dashboard.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Accounting Section -->
-            <section id="accounting" class="section hidden">
-                <div class="accounting-section">
-                    <h2>📊 Regnskapsføring</h2>
-                    <p>Her kan du registrere transaksjoner basert på scenario-utfall</p>
+            <!-- Help Section -->
+            <section id="help" class="section hidden">
+                <div class="dashboard">
+                    <h2>🎮 Hvordan spille</h2>
                     
-                    <div class="account-grid">
-                        <div class="account-item">
-                            <span>1920 - Bank</span>
-                            <span>500,000 NOK</span>
-                        </div>
-                        <div class="account-item">
-                            <span>1500 - Kundefordringer</span>
-                            <span>45,000 NOK</span>
-                        </div>
-                        <div class="account-item">
-                            <span>3000 - Salgsinntekt</span>
-                            <span>45,000 NOK</span>
-                        </div>
-                        <div class="account-item">
-                            <span>6300 - Leie lokale</span>
-                            <span>-12,000 NOK</span>
-                        </div>
-                    </div>
+                    <h3>📋 Regler</h3>
+                    <p><strong>Mål:</strong> Få høyest Business Value etter 12 uker</p>
+                    <p><strong>Start:</strong> 500,000 NOK på bankkonto</p>
+                    <p><strong>Strategi:</strong> Velg smarte risiko/reward scenarioer</p>
                     
-                    <div style="margin-top: 2rem;">
-                        <button class="btn">Ny transaksjon</button>
-                        <button class="btn">Import scenario-effekt</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Reports Section -->
-            <section id="reports" class="section hidden">
-                <div class="accounting-section">
-                    <h2>📈 Rapporter</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">45,000</div>
-                            <div class="stat-label">Omsetning denne måneden</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">32,000</div>
-                            <div class="stat-label">Netto resultat</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">545,000</div>
-                            <div class="stat-label">Total eiendeler</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">0</div>
-                            <div class="stat-label">Regnskapsstraffer</div>
-                        </div>
-                    </div>
+                    <h3>🎲 Scenarioer</h3>
+                    <p>Hver måned får du et scenario med 3-4 valg. Høyere risiko = høyere potensial!</p>
+                    <p>Terningkast avgjør utfall basert på odds.</p>
+                    
+                    <h3>⚠️ Straffer</h3>
+                    <p>Feil i Tripletex gir automatiske kostnader:</p>
+                    <ul style="margin: 1rem 0; padding-left: 2rem;">
+                        <li>Feil åpningsbalanse: -50,000 NOK</li>
+                        <li>Feil MVA-oppsett: -25,000 NOK/dag</li>
+                        <li>Manglende første salg: -10,000 NOK/dag</li>
+                        <li>Feil kontokoder: -5,000 NOK per feil</li>
+                    </ul>
+                    
+                    <h3>🏆 Vinnere</h3>
+                    <p>Høyest Business Value etter 12 uker vinner!</p>
+                    <p>Det teller både scenario-gevinster og regnskaps-nøyaktighet.</p>
+                    
+                    <h3>📞 Support</h3>
+                    <p>Trenger du hjelp? Kontakt admin eller spør i Slack!</p>
                 </div>
             </section>
         </div>
     </main>
 
     <script>
-        // Navigation
+        // Game state - will be updated from admin panel
+        let gameState = {
+            currentUser: 'Deg', // Will be set per user
+            players: [
+                { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
+                { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
+                { name: 'Deg', company: 'Ditt Selskap AS', businessValue: 500000, rank: 3 },
+                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 485000, rank: 4 }
+            ],
+            currentScenario: null,
+            userChoice: null,
+            scenarioResults: null,
+            notifications: []
+        };
+
+        // Navigation functionality
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -528,117 +535,274 @@
             });
         });
 
-        // Scenario choice selection
-        document.querySelectorAll('.choice-option').forEach(option => {
-            option.addEventListener('click', () => {
-                // Remove selected class from all options
-                document.querySelectorAll('.choice-option').forEach(o => o.classList.remove('selected'));
-                // Add selected class to clicked option
-                option.classList.add('selected');
-                // Enable submit button
-                document.getElementById('submit-choice').disabled = false;
-            });
-        });
+        // Update functions that will be called from admin panel
+        function updateLeaderboard(players) {
+            gameState.players = players;
+            renderLeaderboard();
+            updateUserStats();
+        }
 
-        // Submit choice and simulate dice roll
-        document.getElementById('submit-choice').addEventListener('click', () => {
-            const selectedChoice = document.querySelector('.choice-option.selected');
+        function updateScenario(scenario) {
+            gameState.currentScenario = scenario;
+            renderScenario();
+        }
+
+        function updateScenarioResults(results) {
+            gameState.scenarioResults = results;
+            renderScenarioResults();
+        }
+
+        function addNotification(message, type = 'info') {
+            gameState.notifications.unshift({
+                message,
+                type,
+                timestamp: new Date(),
+                id: Date.now()
+            });
+            renderNotifications();
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                gameState.notifications = gameState.notifications.filter(n => n.id !== gameState.notifications[0].id);
+                renderNotifications();
+            }, 10000);
+        }
+
+        // Render functions
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-content');
+            
+            if (!gameState.players || gameState.players.length === 0) {
+                container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
+                return;
+            }
+
+            let html = '';
+            gameState.players.forEach((player, index) => {
+                const isCurrentUser = player.name === gameState.currentUser || player.name === 'Deg';
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                
+                html += `
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                        <span class="rank ${rankClass}">${player.rank}</span>
+                        <div class="player-info">
+                            <div class="player-name">${player.name}${isCurrentUser ? ' (Deg)' : ''}</div>
+                            <div class="player-company">${player.company}</div>
+                        </div>
+                        <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderScenario() {
+            const container = document.getElementById('scenario-content');
+            
+            if (!gameState.currentScenario) {
+                container.innerHTML = `
+                    <div class="scenario-card">
+                        <h2>Ingen aktivt scenario</h2>
+                        <p>Neste scenario kommer snart! Hold deg oppdatert på Dashboard.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const scenario = gameState.currentScenario;
+            const deadline = scenario.deadline ? new Date(scenario.deadline) : null;
+            const now = new Date();
+            const timeLeft = deadline ? deadline - now : 0;
+            const isExpired = timeLeft <= 0;
+            
+            let deadlineHtml = '';
+            if (deadline && !isExpired) {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                
+                const urgentClass = timeLeft < 24 * 60 * 60 * 1000 ? 'urgent' : '';
+                deadlineHtml = `
+                    <div class="scenario-deadline ${urgentClass}">
+                        ⏰ Deadline: ${days}d ${hours}t ${minutes}m igjen
+                    </div>
+                `;
+            } else if (deadline && isExpired) {
+                deadlineHtml = `
+                    <div class="scenario-deadline urgent">
+                        ⏰ Deadline passert - venter på resultater
+                    </div>
+                `;
+            }
+
+            let choicesHtml = '';
+            if (scenario.choices && !isExpired) {
+                choicesHtml = '<div class="choice-options">';
+                Object.entries(scenario.choices).forEach(([key, choice]) => {
+                    const isSelected = gameState.userChoice === key;
+                    const isSubmitted = gameState.userChoice !== null;
+                    const choiceClass = isSubmitted ? 'submitted' : isSelected ? 'selected' : '';
+                    
+                    choicesHtml += `
+                        <div class="choice-option ${choiceClass}" data-choice="${key}" ${isSubmitted ? '' : 'onclick="selectChoice(\'' + key + '\')"'}>
+                            <div class="choice-title">${key}) ${choice.title}</div>
+                            <div class="choice-cost">💰 ${choice.cost}</div>
+                            <div class="choice-potential">🎯 ${choice.potential}</div>
+                            <div class="choice-odds">🎲 ${choice.odds}</div>
+                        </div>
+                    `;
+                });
+                choicesHtml += '</div>';
+                
+                if (gameState.userChoice) {
+                    choicesHtml += `
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <p><strong>✅ Ditt valg: ${gameState.userChoice}</strong></p>
+                            <p>Venter på terningkast...</p>
+                        </div>
+                    `;
+                } else {
+                    choicesHtml += `
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <button class="btn" id="submit-choice" disabled onclick="submitChoice()">Velg et alternativ</button>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = `
+                <div class="scenario-card">
+                    <h2>${scenario.title}</h2>
+                    <p>${scenario.description}</p>
+                    ${deadlineHtml}
+                    ${choicesHtml}
+                </div>
+            `;
+        }
+
+        function renderScenarioResults() {
+            if (!gameState.scenarioResults) return;
+            
+            const container = document.getElementById('scenario-content');
+            const currentContent = container.innerHTML;
+            
+            const resultsHtml = `
+                <div class="results">
+                    <h3>🎊 Scenario Resultater!</h3>
+                    <div id="dice-animation" class="dice-roll">
+                        <div class="dice">🎲</div>
+                        <p id="dice-result">Terning: ${gameState.scenarioResults.diceRoll}</p>
+                        <p><strong>${gameState.scenarioResults.outcome}</strong></p>
+                        <p>Business Value endring: ${gameState.scenarioResults.valueChange > 0 ? '+' : ''}${gameState.scenarioResults.valueChange.toLocaleString()} NOK</p>
+                    </div>
+                    <p><em>💼 Implementer effektene i ditt Tripletex-regnskap!</em></p>
+                </div>
+            `;
+            
+            container.innerHTML = currentContent + resultsHtml;
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notifications');
+            
+            if (gameState.notifications.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            gameState.notifications.slice(0, 3).forEach(notification => {
+                html += `
+                    <div class="notification">
+                        📢 ${notification.message}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateUserStats() {
+            const currentUser = gameState.players.find(p => p.name === gameState.currentUser || p.name === 'Deg');
+            
+            if (currentUser) {
+                document.getElementById('business-value').textContent = currentUser.businessValue.toLocaleString();
+                document.getElementById('rank').textContent = `#${currentUser.rank}`;
+            }
+            
+            // Update scenario status
+            const scenarioStatus = document.getElementById('scenario-status');
+            if (gameState.currentScenario && gameState.userChoice) {
+                scenarioStatus.textContent = '✅ Valgt';
+            } else if (gameState.currentScenario) {
+                scenarioStatus.textContent = '⏳ Venter';
+            } else {
+                scenarioStatus.textContent = 'Ingen aktive';
+            }
+        }
+
+        // Interaction functions
+        let selectedChoice = null;
+
+        function selectChoice(choice) {
+            if (gameState.userChoice !== null) return; // Already submitted
+            
+            // Remove selection from all options
+            document.querySelectorAll('.choice-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selection to clicked option
+            document.querySelector(`[data-choice="${choice}"]`).classList.add('selected');
+            selectedChoice = choice;
+            
+            // Enable submit button
+            document.getElementById('submit-choice').disabled = false;
+        }
+
+        function submitChoice() {
             if (!selectedChoice) return;
             
-            const choice = selectedChoice.getAttribute('data-choice');
+            gameState.userChoice = selectedChoice;
+            addNotification(`Valg "${selectedChoice}" sendt inn! Venter på terningkast.`, 'success');
+            renderScenario();
+            updateUserStats();
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderLeaderboard();
+            renderScenario();
+            updateUserStats();
             
-            // Disable further changes
-            document.querySelectorAll('.choice-option').forEach(o => {
-                o.style.pointerEvents = 'none';
-                o.style.opacity = '0.7';
-            });
-            
-            document.getElementById('submit-choice').disabled = true;
-            document.getElementById('submit-choice').textContent = 'Valg sendt!';
-            
-            // Show dice roll section
-            document.getElementById('dice-roll').classList.remove('hidden');
-            
-            // Simulate dice roll after 1 second
-            setTimeout(() => {
-                rollDice(choice);
-            }, 1000);
+            // Sample notification
+            addNotification('Velkommen til Tripletex Business School! 🎉');
         });
 
-        function rollDice(choice) {
-            const dice = document.getElementById('dice');
-            const result = document.getElementById('roll-result');
-            
-            // Animate dice
-            dice.classList.add('roll-animation');
-            
-            // Simulate different outcomes based on choice
-            const outcomes = {
-                'A': {
-                    1: 'Fiasko! Bare kostnadene, ingen gevinst.',
-                    2: 'Fiasko! Bare kostnadene, ingen gevinst.', 
-                    3: 'Delvis suksess! 40% maks vekst.',
-                    4: 'Full suksess! 50% maks vekst.',
-                    5: 'Full suksess! 50% maks vekst.',
-                    6: 'Full suksess! 50% maks vekst.'
-                },
-                'B': {
-                    1: 'Ingen veksteffekt, bare høyere husleie.',
-                    2: 'Suksess! 40% maks vekst.',
-                    3: 'Suksess! 40% maks vekst.',
-                    4: 'Suksess! 40% maks vekst.',
-                    5: 'Suksess! 40% maks vekst.',
-                    6: 'Suksess! 40% maks vekst.'
-                },
-                'C': {
-                    1: 'Tekniske problemer! Bare kostnadene.',
-                    2: 'Tekniske problemer! Bare kostnadene.',
-                    3: 'Suksess! -20% lønnskostnad.',
-                    4: 'Suksess! -20% lønnskostnad.',
-                    5: 'Suksess! -20% lønnskostnad.',
-                    6: 'Suksess! -20% lønnskostnad.'
-                },
-                'D': {
-                    1: 'Leverandørproblemer! Kostnad uten gevinst.',
-                    2: 'Suksess! 35% maks vekst.',
-                    3: 'Suksess! 35% maks vekst.',
-                    4: 'Suksess! 35% maks vekst.',
-                    5: 'Suksess! 35% maks vekst.',
-                    6: 'Suksess! 35% maks vekst.'
-                }
-            };
-            
-            setTimeout(() => {
-                const roll = Math.floor(Math.random() * 6) + 1;
-                dice.textContent = `⚄`; // Show a dice face
-                dice.classList.remove('roll-animation');
-                
-                result.innerHTML = `
-                    <strong>Terning: ${roll}</strong><br>
-                    ${outcomes[choice][roll]}<br>
-                    <em>Implementer effektene i regnskapssystemet!</em>
-                `;
-                
-                // Update business value based on outcome
-                updateBusinessValue(choice, roll);
-            }, 2000);
-        }
-
-        function updateBusinessValue(choice, roll) {
-            // Simplified business value update logic
-            const currentValue = parseInt(document.getElementById('business-value').textContent.replace(',', ''));
-            let newValue = currentValue;
-            
-            // This would be more complex in a real implementation
-            if (choice === 'A' && roll >= 4) {
-                newValue += 25000; // Successful high-risk choice
-            } else if (choice === 'B' && roll >= 2) {
-                newValue += 15000; // Successful medium-risk choice
+        // Functions that admin panel can call to update this platform
+        // These will be called by copying JavaScript from admin panel
+        window.updateGameData = function(newData) {
+            if (newData.players) {
+                updateLeaderboard(newData.players);
             }
-            // etc...
-            
-            document.getElementById('business-value').textContent = newValue.toLocaleString();
-        }
+            if (newData.scenario) {
+                updateScenario(newData.scenario);
+            }
+            if (newData.results) {
+                updateScenarioResults(newData.results);
+            }
+            if (newData.notification) {
+                addNotification(newData.notification.message, newData.notification.type);
+            }
+        };
+
+        // Auto-refresh every 30 seconds to check for updates
+        setInterval(() => {
+            // In a real implementation, this would call an API
+            // For now, updates come from admin panel JavaScript injection
+            console.log('Checking for updates...');
+        }, 30000);
     </script>
 </body>
 </html>
