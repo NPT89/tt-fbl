@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Tripletex Business School</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            margin-bottom: 1.5rem;
+            color: #667eea;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            width: auto;
+            margin: 0.25rem;
+        }
+
+        .current-data {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+
+        .player-row input {
+            width: 120px;
+            margin: 0 0.5rem;
+            padding: 0.25rem;
+        }
+
+        .export-area {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            min-height: 200px;
+            overflow-y: auto;
+        }
+
+        .scenario-choice {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .choice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .choice-title {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Admin Panel - Tripletex Business School</h1>
+            <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
+            <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
+            <button class="tab" onclick="showTab('penalties')">Straffer</button>
+            <button class="tab" onclick="showTab('export')">Eksporter Data</button>
+        </div>
+
+        <!-- Leaderboard Tab -->
+        <div id="leaderboard" class="tab-content active">
+            <div class="panel-grid">
+                <div class="panel">
+                    <h2>📊 Oppdater Leaderboard</h2>
+                    
+                    <div class="current-data">
+                        <strong>Nåværende rangering:</strong>
+                        <div id="current-leaderboard"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Legg til ny spiller:</label>
+                        <input type="text" id="new-player-name" placeholder="Navn">
+                        <input type="text" id="new-player-company" placeholder="Selskap">
+                        <input type="number" id="new-player-value" placeholder="500000" value="500000">
+                        <button class="btn btn-small" onclick="addPlayer()">Legg til</button>
+                    </div>
+                    
+                    <div id="player-list"></div>
+                    
+                    <button class="btn" onclick="updateLeaderboard()">Oppdater Leaderboard</button>
+                </div>
+
+                <div class="panel">
+                    <h2>⚡ Hurtig Business Value Endring</h2>
+                    
+                    <div class="form-group">
+                        <label>Velg spiller:</label>
+                        <select id="quick-player-select">
+                            <option value="">Velg spiller...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Endring i Business Value:</label>
+                        <input type="number" id="quick-value-change" placeholder="+25000 eller -15000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Grunn (valgfri):</label>
+                        <input type="text" id="quick-change-reason" placeholder="Scenario A suksess">
+                    </div>
+                    
+                    <button class="btn" onclick="applyQuickChange()">Utfør Endring</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenarios Tab -->
+        <div id="scenarios" class="tab-content">
+            <div class="panel-grid">
+                <div class="panel">
+                    <h2>🎲 Aktivt Scenario</h2>
+                    
+                    <div class="form-group">
+                        <label>Scenariotittel:</label>
+                        <input type="text" id="scenario-title" placeholder="Måned 1: Kapasitetsutfordring">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Beskrivelse:</label>
+                        <textarea id="scenario-description" rows="3" placeholder="Din bedrift vokser raskt, men..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Deadline:</label>
+                        <input type="datetime-local" id="scenario-deadline">
+                    </div>
+                    
+                    <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+                </div>
+
+                <div class="panel">
+                    <h2>📝 Scenario Valg</h2>
+                    <div id="scenario-choices">
+                        <div class="scenario-choice">
+                            <div class="choice-header">
+                                <span class="choice-title">A) Stort kontor + full bemanning</span>
+                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                            </div>
+                            <input type="text" placeholder="Kostnad: +80% husleie + 60k/mnd lønn" style="margin-bottom: 0.5rem;">
+                            <input type="text" placeholder="Potensial: Maks vekst 30% → 50%">
+                        </div>
+                    </div>
+                    <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🎯 Scenario Resultater</h2>
+                
+                <div class="form-group">
+                    <label>Kast terning for alle:</label>
+                    <button class="btn" onclick="rollDiceForAll()">🎲 Kast Terning</button>
+                </div>
+                
+                <div id="dice-results"></div>
+                
+                <div class="form-group">
+                    <label>Eller sett resultater manuelt:</label>
+                    <div id="manual-results"></div>
+                </div>
+                
+                <button class="btn" onclick="applyScenarioResults()">Bruk Resultater</button>
+            </div>
+        </div>
+
+        <!-- Penalties Tab -->
+        <div id="penalties" class="tab-content">
+            <div class="panel-grid">
+                <div class="panel">
+                    <h2>⚠️ Legg til Straff</h2>
+                    
+                    <div class="form-group">
+                        <label>Spiller:</label>
+                        <select id="penalty-player">
+                            <option value="">Velg spiller...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Type straff:</label>
+                        <select id="penalty-type">
+                            <option value="">Velg type...</option>
+                            <option value="setup">Setup-feil (-50,000 NOK)</option>
+                            <option value="mva">MVA-feil (-25,000 NOK/dag)</option>
+                            <option value="sale">Manglende salg (-10,000 NOK/dag)</option>
+                            <option value="account">Feil kontokode (-5,000 NOK)</option>
+                            <option value="custom">Egendefinert</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Beløp (hvis egendefinert):</label>
+                        <input type="number" id="penalty-amount" placeholder="-15000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Kommentar:</label>
+                        <input type="text" id="penalty-comment" placeholder="Årsak til straff">
+                    </div>
+                    
+                    <button class="btn" onclick="addPenalty()">Legg til Straff</button>
+                </div>
+
+                <div class="panel">
+                    <h2>📋 Aktive Straffer</h2>
+                    <div id="active-penalties"></div>
+                    <button class="btn" onclick="refreshPenalties()">Oppdater Liste</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Tab -->
+        <div id="export" class="tab-content">
+            <div class="panel">
+                <h2>📤 Eksporter Data til HTML Platform</h2>
+                <p>Kopier og lim inn denne koden i den eksisterende HTML-plattformen:</p>
+                
+                <div class="form-group">
+                    <label>JavaScript for leaderboard:</label>
+                    <div class="export-area" id="export-leaderboard-js"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>JavaScript for scenario:</label>
+                    <div class="export-area" id="export-scenario-js"></div>
+                </div>
+                
+                <button class="btn" onclick="generateExportCode()">Generer Kode</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data - starts with sample data
+        let gameData = {
+            players: [
+                { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
+                { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
+                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 485000, rank: 3 }
+            ],
+            currentScenario: {
+                title: 'Måned 1: Kapasitetsutfordring',
+                description: 'Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger...',
+                deadline: '2025-08-16T14:00',
+                choices: {
+                    'A': 'Stort kontor + full bemanning',
+                    'B': 'Medium kontor', 
+                    'C': 'Automatiseringsløsning',
+                    'D': 'Outsourcing-strategi'
+                }
+            },
+            penalties: []
+        };
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Refresh data for the tab
+            if (tabName === 'leaderboard') {
+                refreshLeaderboard();
+            } else if (tabName === 'penalties') {
+                refreshPenalties();
+            }
+        }
+
+        // Leaderboard functions
+        function refreshLeaderboard() {
+            // Sort players by business value
+            gameData.players.sort((a, b) => b.businessValue - a.businessValue);
+            
+            // Update ranks
+            gameData.players.forEach((player, index) => {
+                player.rank = index + 1;
+            });
+            
+            // Update current leaderboard display
+            const currentDiv = document.getElementById('current-leaderboard');
+            currentDiv.innerHTML = gameData.players.map(player => 
+                `${player.rank}. ${player.name} - ${player.businessValue.toLocaleString()} NOK`
+            ).join('<br>');
+            
+            // Update player list for editing
+            const playerListDiv = document.getElementById('player-list');
+            playerListDiv.innerHTML = gameData.players.map((player, index) => `
+                <div class="player-row">
+                    <span>${player.rank}. ${player.name}</span>
+                    <div>
+                        <input type="number" value="${player.businessValue}" 
+                               onchange="updatePlayerValue(${index}, this.value)">
+                        <button class="btn btn-small" onclick="removePlayer(${index})">Fjern</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update dropdowns
+            updatePlayerDropdowns();
+        }
+
+        function updatePlayerDropdowns() {
+            const dropdowns = ['quick-player-select', 'penalty-player'];
+            dropdowns.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                dropdown.innerHTML = '<option value="">Velg spiller...</option>' +
+                    gameData.players.map((player, index) => 
+                        `<option value="${index}">${player.name}</option>`
+                    ).join('');
+            });
+        }
+
+        function addPlayer() {
+            const name = document.getElementById('new-player-name').value;
+            const company = document.getElementById('new-player-company').value;
+            const value = parseInt(document.getElementById('new-player-value').value);
+            
+            if (name && company && value) {
+                gameData.players.push({
+                    name,
+                    company,
+                    businessValue: value,
+                    rank: gameData.players.length + 1
+                });
+                
+                // Clear inputs
+                document.getElementById('new-player-name').value = '';
+                document.getElementById('new-player-company').value = '';
+                document.getElementById('new-player-value').value = '500000';
+                
+                refreshLeaderboard();
+                alert(`${name} lagt til!`);
+            } else {
+                alert('Fyll inn alle felt');
+            }
+        }
+
+        function removePlayer(index) {
+            if (confirm(`Sikker på at du vil fjerne ${gameData.players[index].name}?`)) {
+                gameData.players.splice(index, 1);
+                refreshLeaderboard();
+            }
+        }
+
+        function updatePlayerValue(index, newValue) {
+            gameData.players[index].businessValue = parseInt(newValue);
+            refreshLeaderboard();
+        }
+
+        function applyQuickChange() {
+            const playerIndex = document.getElementById('quick-player-select').value;
+            const change = parseInt(document.getElementById('quick-value-change').value);
+            const reason = document.getElementById('quick-change-reason').value;
+            
+            if (playerIndex !== '' && change) {
+                gameData.players[playerIndex].businessValue += change;
+                
+                // Clear inputs
+                document.getElementById('quick-player-select').value = '';
+                document.getElementById('quick-value-change').value = '';
+                document.getElementById('quick-change-reason').value = '';
+                
+                refreshLeaderboard();
+                alert(`Endring på ${change.toLocaleString()} NOK utført for ${gameData.players[playerIndex].name}`);
+            } else {
+                alert('Velg spiller og angi endring');
+            }
+        }
+
+        function updateLeaderboard() {
+            alert('Leaderboard oppdatert! Kopier JavaScript-koden fra "Eksporter Data" fanen.');
+        }
+
+        // Scenario functions  
+        function updateScenario() {
+            gameData.currentScenario.title = document.getElementById('scenario-title').value;
+            gameData.currentScenario.description = document.getElementById('scenario-description').value;
+            gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
+            
+            alert('Scenario oppdatert!');
+        }
+
+        function addChoice() {
+            const choicesDiv = document.getElementById('scenario-choices');
+            const choiceCount = choicesDiv.children.length;
+            const choiceLetter = String.fromCharCode(65 + choiceCount); // A, B, C, D...
+            
+            const choiceDiv = document.createElement('div');
+            choiceDiv.className = 'scenario-choice';
+            choiceDiv.innerHTML = `
+                <div class="choice-header">
+                    <span class="choice-title">${choiceLetter}) Nytt valg</span>
+                    <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                </div>
+                <input type="text" placeholder="Kostnad: " style="margin-bottom: 0.5rem;">
+                <input type="text" placeholder="Potensial: ">
+            `;
+            choicesDiv.appendChild(choiceDiv);
+        }
+
+        function removeChoice(button) {
+            button.closest('.scenario-choice').remove();
+        }
+
+        function rollDiceForAll() {
+            const resultsDiv = document.getElementById('dice-results');
+            let results = '<h3>🎲 Terningkast Resultater:</h3>';
+            
+            gameData.players.forEach(player => {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                results += `<p><strong>${player.name}:</strong> Terning ${roll}</p>`;
+            });
+            
+            resultsDiv.innerHTML = results;
+        }
+
+        function applyScenarioResults() {
+            alert('Scenario resultater anvendt! Husk å oppdatere business values manuelt.');
+        }
+
+        // Penalty functions
+        function addPenalty() {
+            const playerIndex = document.getElementById('penalty-player').value;
+            const penaltyType = document.getElementById('penalty-type').value;
+            const customAmount = document.getElementById('penalty-amount').value;
+            const comment = document.getElementById('penalty-comment').value;
+            
+            if (playerIndex !== '' && penaltyType) {
+                let amount = 0;
+                let description = '';
+                
+                switch(penaltyType) {
+                    case 'setup':
+                        amount = -50000;
+                        description = 'Setup-feil';
+                        break;
+                    case 'mva':
+                        amount = -25000;
+                        description = 'MVA-feil';
+                        break;
+                    case 'sale':
+                        amount = -10000;
+                        description = 'Manglende salg';
+                        break;
+                    case 'account':
+                        amount = -5000;
+                        description = 'Feil kontokode';
+                        break;
+                    case 'custom':
+                        amount = parseInt(customAmount);
+                        description = 'Egendefinert straff';
+                        break;
+                }
+                
+                const penalty = {
+                    player: gameData.players[playerIndex].name,
+                    type: description,
+                    amount: amount,
+                    comment: comment,
+                    date: new Date().toLocaleDateString()
+                };
+                
+                gameData.penalties.push(penalty);
+                
+                // Apply penalty to business value
+                gameData.players[playerIndex].businessValue += amount;
+                
+                // Clear form
+                document.getElementById('penalty-player').value = '';
+                document.getElementById('penalty-type').value = '';
+                document.getElementById('penalty-amount').value = '';
+                document.getElementById('penalty-comment').value = '';
+                
+                refreshLeaderboard();
+                refreshPenalties();
+                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}`);
+            } else {
+                alert('Velg spiller og type straff');
+            }
+        }
+
+        function refreshPenalties() {
+            const penaltiesDiv = document.getElementById('active-penalties');
+            if (gameData.penalties.length === 0) {
+                penaltiesDiv.innerHTML = '<p>Ingen aktive straffer</p>';
+            } else {
+                penaltiesDiv.innerHTML = gameData.penalties.map((penalty, index) => `
+                    <div class="player-row">
+                        <div>
+                            <strong>${penalty.player}</strong><br>
+                            ${penalty.type}: ${penalty.amount.toLocaleString()} NOK<br>
+                            <small>${penalty.comment} (${penalty.date})</small>
+                        </div>
+                        <button class="btn btn-small" onclick="removePenalty(${index})">Fjern</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function removePenalty(index) {
+            const penalty = gameData.penalties[index];
+            if (confirm(`Fjern straff for ${penalty.player}?`)) {
+                // Remove penalty from business value (add it back)
+                const playerIndex = gameData.players.findIndex(p => p.name === penalty.player);
+                if (playerIndex !== -1) {
+                    gameData.players[playerIndex].businessValue -= penalty.amount; // subtract negative = add
+                }
+                
+                gameData.penalties.splice(index, 1);
+                refreshLeaderboard();
+                refreshPenalties();
+            }
+        }
+
+        // Export functions
+        function generateExportCode() {
+            // Generate leaderboard update code
+            const leaderboardCode = `
+// Oppdater leaderboard data
+const leaderboardData = ${JSON.stringify(gameData.players, null, 2)};
+
+// Update leaderboard in the main platform
+function updateMainLeaderboard() {
+    const leaderboardContainer = document.querySelector('.leaderboard');
+    if (!leaderboardContainer) return;
+    
+    let html = '<h2>🏆 Leaderboard</h2>';
+    
+    leaderboardData.forEach((player, index) => {
+        const isCurrentUser = index === 2; // Adjust based on current user
+        const highlightClass = isCurrentUser ? ' style="background: linear-gradient(145deg, #e3f2fd, #ffffff);"' : '';
+        
+        html += \`
+            <div class="leaderboard-item"\${highlightClass}>
+                <span class="rank">\${player.rank}</span>
+                <div class="player-info">
+                    <div class="player-name">\${player.name}</div>
+                    <div class="player-company">\${player.company}</div>
+                </div>
+                <span class="business-value">\${player.businessValue.toLocaleString()} NOK</span>
+            </div>
+        \`;
+    });
+    
+    leaderboardContainer.innerHTML = html;
+}
+
+// Update individual stats
+document.getElementById('business-value').textContent = leaderboardData[2].businessValue.toLocaleString();
+document.getElementById('rank').textContent = leaderboardData[2].rank;
+
+// Call the function to update
+updateMainLeaderboard();`;
+
+            document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
+
+            // Generate scenario code
+            const scenarioCode = `
+// Oppdater scenario data
+const scenarioData = ${JSON.stringify(gameData.currentScenario, null, 2)};
+
+// Update scenario in main platform
+function updateMainScenario() {
+    const scenarioTitle = document.querySelector('.scenario-card h3');
+    const scenarioDesc = document.querySelector('.scenario-card p');
+    
+    if (scenarioTitle) scenarioTitle.textContent = scenarioData.title;
+    if (scenarioDesc) scenarioDesc.textContent = scenarioData.description;
+    
+    // Update deadline if exists
+    const deadline = new Date(scenarioData.deadline);
+    const deadlineElements = document.querySelectorAll('[data-deadline]');
+    deadlineElements.forEach(el => {
+        el.textContent = deadline.toLocaleDateString('no-NO') + ' ' + deadline.toLocaleTimeString('no-NO', {hour: '2-digit', minute: '2-digit'});
+    });
+}
+
+updateMainScenario();`;
+
+            document.getElementById('export-scenario-js').textContent = scenarioCode;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshLeaderboard();
+            
+            // Set current date/time for scenario deadline
+            const now = new Date();
+            now.setDate(now.getDate() + 2); // 2 days from now
+            document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
+            
+            // Fill scenario with default data
+            document.getElementById('scenario-title').value = gameData.currentScenario.title;
+            document.getElementById('scenario-description').value = gameData.currentScenario.description;
+        });
+    </script>
+</body>
+</html>
