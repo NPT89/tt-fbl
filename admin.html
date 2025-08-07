@@ -227,6 +227,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
             <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
+            <button class="tab" onclick="showTab('choices')">Se Valg</button>
             <button class="tab" onclick="showTab('penalties')">Straffer</button>
             <button class="tab" onclick="showTab('export')">Eksporter Data</button>
         </div>
@@ -343,6 +344,43 @@
                 </div>
                 
                 <button class="btn" onclick="applyScenarioResults()">Bruk Resultater</button>
+            </div>
+        </div>
+
+        <!-- Choices View Tab -->
+        <div id="choices" class="tab-content">
+            <div class="panel">
+                <h2>👁️ Spillervalg Oversikt</h2>
+                
+                <div class="form-group">
+                    <label>Google Apps Script URL for å hente valg:</label>
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+                    <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
+                </div>
+                
+                <div id="choices-loading" style="display: none; text-align: center; padding: 2rem;">
+                    <div>⏳ Henter valg fra Google Sheets...</div>
+                </div>
+                
+                <div id="choices-error" style="display: none; background: #f8d7da; border: 1px solid #dc3545; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <strong>❌ Feil ved henting av valg:</strong>
+                    <div id="error-message"></div>
+                </div>
+                
+                <div id="choices-summary" style="display: none; background: #d4edda; border: 1px solid #28a745; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <div id="summary-stats"></div>
+                </div>
+                
+                <div id="choices-content">
+                    <p style="text-align: center; color: #666; font-style: italic;">Klikk "Hent Valg" for å se spillernes valg</p>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <h3>🎯 Quick Actions</h3>
+                    <button class="btn btn-small" onclick="exportChoicesToCSV()" id="export-csv-btn" disabled>💾 Eksporter til CSV</button>
+                    <button class="btn btn-small" onclick="clearOldChoices()" id="clear-choices-btn" disabled>🧹 Fjern Gamle Valg</button>
+                    <button class="btn btn-small" onclick="refreshChoices()" id="refresh-btn" disabled>🔄 Oppdater</button>
+                </div>
             </div>
         </div>
 
@@ -501,6 +539,12 @@
                 refreshPenalties();
             } else if (tabName === 'scenarios') {
                 previewChoices(); // Auto-update preview when switching to scenarios
+            } else if (tabName === 'choices') {
+                // Auto-load choices if URL is set
+                const urlInput = document.getElementById('sheets-url-input');
+                if (urlInput.value && !urlInput.value.includes('YOUR_SCRIPT_ID')) {
+                    fetchPlayerChoices();
+                }
             }
         }
 
@@ -1055,6 +1099,229 @@ console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
             
             console.log('Generated export code with Google Sheets integration');
             alert('Kode generert med Google Sheets integration! \\n\\nHusk å følge instruksjonene for å sette opp Google Apps Script først.');
+        }
+
+        // NEW: Player Choices Management
+        let currentChoicesData = [];
+
+        function fetchPlayerChoices() {
+            const urlInput = document.getElementById('sheets-url-input');
+            const sheetsUrl = urlInput.value.trim();
+            
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                alert('Legg inn din Google Apps Script URL først!');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('choices-loading').style.display = 'block';
+            document.getElementById('choices-error').style.display = 'none';
+            document.getElementById('choices-summary').style.display = 'none';
+            document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #666;">Laster...</p>';
+            
+            // Fetch choices using JSONP
+            fetchChoicesFromSheets(sheetsUrl)
+                .then(data => {
+                    document.getElementById('choices-loading').style.display = 'none';
+                    currentChoicesData = data;
+                    displayChoicesData(data);
+                    enableActionButtons();
+                })
+                .catch(error => {
+                    document.getElementById('choices-loading').style.display = 'none';
+                    showChoicesError(error.message);
+                });
+        }
+
+        function fetchChoicesFromSheets(url) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'choicesCallback_' + Date.now();
+                const script = document.createElement('script');
+                
+                window[callbackName] = function(response) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    
+                    if (response && response.status === 'success') {
+                        resolve(response.data || []);
+                    } else {
+                        reject(new Error(response ? response.message : 'Unknown error'));
+                    }
+                };
+                
+                script.onerror = function() {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('Failed to fetch choices from Google Sheets'));
+                };
+                
+                script.src = url + '?callback=' + callbackName;
+                document.head.appendChild(script);
+                
+                setTimeout(() => {
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }
+                }, 10000);
+            });
+        }
+
+        function displayChoicesData(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('choices-content').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+                        <h3>📭 Ingen valg funnet</h3>
+                        <p>Enten har ingen valgt ennå, eller Google Sheets er tomt.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show summary
+            showChoicesSummary(data);
+            
+            // Group by scenario
+            const groupedByScenario = {};
+            data.forEach(choice => {
+                const scenario = choice['Scenario Title'] || 'Ukjent Scenario';
+                if (!groupedByScenario[scenario]) {
+                    groupedByScenario[scenario] = [];
+                }
+                groupedByScenario[scenario].push(choice);
+            });
+            
+            let html = '';
+            Object.entries(groupedByScenario).forEach(([scenario, choices]) => {
+                html += `
+                    <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <h3 style="color: #667eea; margin-bottom: 1rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
+                            🎲 ${scenario}
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                `;
+                
+                choices.forEach(choice => {
+                    const timestamp = new Date(choice['Timestamp']).toLocaleDateString('no-NO') + ' ' + 
+                                    new Date(choice['Timestamp']).toLocaleTimeString('no-NO', {hour: '2-digit', minute: '2-digit'});
+                    
+                    html += `
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; border-left: 4px solid #667eea;">
+                            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
+                                <strong style="color: #667eea; font-size: 1.1rem;">${choice['Player Name']}</strong>
+                                <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
+                                    ${choice['Choice Letter']}
+                                </span>
+                            </div>
+                            <div style="color: #333; margin-bottom: 0.5rem;">${choice['Choice Title']}</div>
+                            <div style="color: #666; font-size: 0.85rem;">⏰ ${timestamp}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('choices-content').innerHTML = html;
+        }
+
+        function showChoicesSummary(data) {
+            const totalChoices = data.length;
+            const uniquePlayers = new Set(data.map(choice => choice['Player Name'])).size;
+            const scenarios = new Set(data.map(choice => choice['Scenario Title'])).size;
+            
+            // Count choices by letter
+            const choiceCounts = {};
+            data.forEach(choice => {
+                const letter = choice['Choice Letter'];
+                choiceCounts[letter] = (choiceCounts[letter] || 0) + 1;
+            });
+            
+            const choiceBreakdown = Object.entries(choiceCounts)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([letter, count]) => `${letter}: ${count}`)
+                .join(' | ');
+            
+            document.getElementById('summary-stats').innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div><strong>📊 Totalt valg:</strong> ${totalChoices}</div>
+                    <div><strong>👥 Unike spillere:</strong> ${uniquePlayers}</div>
+                    <div><strong>🎯 Scenarioer:</strong> ${scenarios}</div>
+                </div>
+                <div><strong>📈 Valg fordeling:</strong> ${choiceBreakdown}</div>
+            `;
+            document.getElementById('choices-summary').style.display = 'block';
+        }
+
+        function showChoicesError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('choices-error').style.display = 'block';
+            document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #dc3545;">Kunne ikke hente valg</p>';
+        }
+
+        function enableActionButtons() {
+            document.getElementById('export-csv-btn').disabled = false;
+            document.getElementById('clear-choices-btn').disabled = false;
+            document.getElementById('refresh-btn').disabled = false;
+        }
+
+        function refreshChoices() {
+            fetchPlayerChoices();
+        }
+
+        function exportChoicesToCSV() {
+            if (currentChoicesData.length === 0) {
+                alert('Ingen data å eksportere');
+                return;
+            }
+            
+            // Create CSV content
+            const headers = ['Timestamp', 'Player Name', 'Choice Letter', 'Choice Title', 'Scenario Title', 'Session/Week'];
+            let csvContent = headers.join(',') + '\\n';
+            
+            currentChoicesData.forEach(choice => {
+                const row = [
+                    choice['Timestamp'],
+                    '"' + choice['Player Name'] + '"',
+                    choice['Choice Letter'],
+                    '"' + choice['Choice Title'] + '"',
+                    '"' + (choice['Scenario Title'] || 'N/A') + '"',
+                    choice['Session/Week'] || 'N/A'
+                ];
+                csvContent += row.join(',') + '\\n';
+            });
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tripletex_choices_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('CSV eksportert! 📁');
+        }
+
+        function clearOldChoices() {
+            const confirmed = confirm('Er du sikker på at du vil fjerne alle gamle valg fra visningen?\\n\\nDette påvirker IKKE Google Sheets, bare denne visningen.');
+            
+            if (confirmed) {
+                currentChoicesData = [];
+                document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Visning tømt. Klikk "Hent Valg" for å laste på nytt.</p>';
+                document.getElementById('choices-summary').style.display = 'none';
+                
+                // Disable action buttons
+                document.getElementById('export-csv-btn').disabled = true;
+                document.getElementById('clear-choices-btn').disabled = true;
+                document.getElementById('refresh-btn').disabled = true;
+            }
         }
 
         // Initialize on load
