@@ -680,44 +680,71 @@
             }
         }
 
-        // Export functions
+        // TRIPPELSJEKKET KORREKT EXPORT FUNKSJON
         function generateExportCode() {
-            // Generate leaderboard update code
+            // Ensure we have players data
+            if (!gameData.players || gameData.players.length === 0) {
+                alert('Legg til spillere først!');
+                return;
+            }
+            
+            // Generate leaderboard update code - KORREKT VERSION
             const leaderboardCode = `
 // Oppdater leaderboard data
 const leaderboardData = ${JSON.stringify(gameData.players, null, 2)};
 
-// Update leaderboard in the main platform
+console.log('Updating with data:', leaderboardData);
+
+// Update leaderboard in the main platform - RIKTIG SELECTOR
 function updateMainLeaderboard() {
-    const leaderboardContainer = document.querySelector('.leaderboard');
-    if (!leaderboardContainer) return;
+    const leaderboardContainer = document.getElementById('leaderboard-content');
+    if (!leaderboardContainer) {
+        console.error('Leaderboard container not found');
+        return;
+    }
     
-    let html = '<h2>🏆 Leaderboard</h2>';
+    let html = '';
     
     leaderboardData.forEach((player, index) => {
-        const isCurrentUser = index === 2; // Adjust based on current user
-        const highlightClass = isCurrentUser ? ' style="background: linear-gradient(145deg, #e3f2fd, #ffffff);"' : '';
+        if (!player || !player.name || typeof player.businessValue === 'undefined') {
+            console.error('Invalid player data:', player);
+            return;
+        }
+        
+        const isCurrentUser = player.name === 'Deg' || player.name.includes('Test');
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
         
         html += \`
-            <div class="leaderboard-item"\${highlightClass}>
-                <span class="rank">\${player.rank}</span>
+            <div class="leaderboard-item \${isCurrentUser ? 'current-user' : ''}">
+                <span class="rank \${rankClass}">\${player.rank || (index + 1)}</span>
                 <div class="player-info">
-                    <div class="player-name">\${player.name}</div>
-                    <div class="player-company">\${player.company}</div>
+                    <div class="player-name">\${player.name}\${isCurrentUser ? ' (Deg)' : ''}</div>
+                    <div class="player-company">\${player.company || 'Ukjent AS'}</div>
                 </div>
-                <span class="business-value">\${player.businessValue.toLocaleString()} NOK</span>
+                <span class="business-value">\${(player.businessValue || 0).toLocaleString()} NOK</span>
             </div>
         \`;
     });
     
-    leaderboardContainer.innerHTML = html;
+    if (html) {
+        leaderboardContainer.innerHTML = html;
+        console.log('Leaderboard updated successfully!');
+    } else {
+        leaderboardContainer.innerHTML = '<p>Ingen gyldige spillere funnet.</p>';
+    }
 }
 
-// Update individual stats
-document.getElementById('business-value').textContent = leaderboardData[2].businessValue.toLocaleString();
-document.getElementById('rank').textContent = leaderboardData[2].rank;
+// Update individual stats safely
+const firstPlayer = leaderboardData[0];
+if (firstPlayer && typeof firstPlayer.businessValue !== 'undefined') {
+    const businessValueEl = document.getElementById('business-value');
+    const rankEl = document.getElementById('rank');
+    
+    if (businessValueEl) businessValueEl.textContent = firstPlayer.businessValue.toLocaleString();
+    if (rankEl) rankEl.textContent = '#' + (firstPlayer.rank || 1);
+}
 
-// Call the function to update
+// Call the update function
 updateMainLeaderboard();`;
 
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
