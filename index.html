@@ -712,22 +712,28 @@
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-app').classList.add('hidden');
             
-            // Setup event listeners for login screen
-            setupLoginListeners();
+            // Fix: Ensure DOM elements exist before binding events
+            setTimeout(() => {
+                const userSelect = document.getElementById('user-select');
+                const loginBtn = document.getElementById('login-btn');
+                
+                if (userSelect && loginBtn) {
+                    // Remove any existing event listeners
+                    userSelect.removeEventListener('change', handleUserSelect);
+                    
+                    // Add fresh event listener
+                    userSelect.addEventListener('change', handleUserSelect);
+                    
+                    // Enable login button if user is already selected
+                    loginBtn.disabled = !userSelect.value;
+                }
+            }, 100);
         }
 
-        function setupLoginListeners() {
-            // Enable login button when user is selected
-            const userSelect = document.getElementById('user-select');
+        function handleUserSelect(event) {
             const loginBtn = document.getElementById('login-btn');
-            
-            if (userSelect && loginBtn) {
-                userSelect.addEventListener('change', function() {
-                    loginBtn.disabled = !this.value;
-                });
-                
-                // Also check initial state
-                loginBtn.disabled = !userSelect.value;
+            if (loginBtn) {
+                loginBtn.disabled = !event.target.value;
             }
         }
 
@@ -756,6 +762,12 @@
                 return;
             }
             
+            // Ensure user exists in available users
+            if (!gameState.availableUsers.includes(selectedUser)) {
+                alert('Ugyldig bruker valgt!');
+                return;
+            }
+            
             gameState.currentUser = selectedUser;
             
             // Save to localStorage if remember me is checked
@@ -764,6 +776,7 @@
                 localStorage.setItem('businessSchoolRemember', 'true');
             }
             
+            console.log('Login successful for:', selectedUser);
             showMainApp();
         }
 
