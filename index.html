@@ -289,10 +289,120 @@
             font-weight: bold;
         }
 
-        .scenario-deadline.urgent {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+        .scenario-choices {
+            margin: 1.5rem 0;
+        }
+
+        .choice-display {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(145deg, #f9f9f9, #ffffff);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .choice-letter {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #667eea;
+            min-width: 30px;
+        }
+
+        .choice-content {
+            flex-grow: 1;
+        }
+
+        .choice-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .choice-cost {
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .choice-potential {
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .choice-odds {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .scenario-note {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .scenario-note p {
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-note p:last-child {
+            margin-bottom: 0;
+        }
+
+        .scenario-results {
+            margin-top: 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .result-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .result-player {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #667eea;
+        }
+
+        .result-choice, .result-dice, .result-outcome {
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .result-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .result-value.positive {
+            color: #28a745;
+        }
+
+        .result-value.negative {
+            color: #dc3545;
         }
 
         .btn {
@@ -696,7 +806,122 @@
                 return;
             }
 
-            // Scenario rendering code here (same as before)
+            const scenario = gameState.currentScenario;
+            const deadline = scenario.deadline ? new Date(scenario.deadline) : null;
+            const now = new Date();
+            const timeLeft = deadline ? deadline - now : 0;
+            const isExpired = timeLeft <= 0;
+            
+            let deadlineHtml = '';
+            if (deadline && !isExpired) {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                
+                const urgentClass = timeLeft < 24 * 60 * 60 * 1000 ? 'urgent' : '';
+                deadlineHtml = `
+                    <div class="scenario-deadline ${urgentClass}">
+                        ⏰ Deadline: ${days}d ${hours}t ${minutes}m igjen
+                    </div>
+                `;
+            } else if (deadline && isExpired) {
+                deadlineHtml = `
+                    <div class="scenario-deadline urgent">
+                        ⏰ Deadline passert - venter på resultater
+                    </div>
+                `;
+            }
+
+            // Build choices HTML if available
+            let choicesHtml = '';
+            if (scenario.choices && Object.keys(scenario.choices).length > 0) {
+                choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
+                
+                Object.entries(scenario.choices).forEach(([key, choice]) => {
+                    // Handle both string choices and object choices
+                    if (typeof choice === 'string') {
+                        choicesHtml += `
+                            <div class="choice-display">
+                                <div class="choice-letter">${key})</div>
+                                <div class="choice-content">
+                                    <div class="choice-title">${choice}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        choicesHtml += `
+                            <div class="choice-display">
+                                <div class="choice-letter">${key})</div>
+                                <div class="choice-content">
+                                    <div class="choice-title">${choice.title || choice}</div>
+                                    ${choice.cost ? `<div class="choice-cost">💰 ${choice.cost}</div>` : ''}
+                                    ${choice.potential ? `<div class="choice-potential">🎯 ${choice.potential}</div>` : ''}
+                                    ${choice.odds ? `<div class="choice-odds">🎲 ${choice.odds}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                choicesHtml += '</div>';
+                
+                if (!isExpired) {
+                    choicesHtml += `
+                        <div class="scenario-note">
+                            <p><strong>📝 Hvordan delta:</strong></p>
+                            <p>Diskuter ditt valg med admin, eller vent på instruksjoner for hvordan du sender inn ditt valg.</p>
+                        </div>
+                    `;
+                } else {
+                    choicesHtml += `
+                        <div class="scenario-note">
+                            <p><strong>⏰ Valg-periode avsluttet</strong></p>
+                            <p>Venter på terningkast og resultater...</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Build results HTML if available
+            let resultsHtml = '';
+            if (scenario.results && Object.keys(scenario.results).length > 0) {
+                resultsHtml = `
+                    <div class="scenario-results">
+                        <h3>🎊 Scenario Resultater!</h3>
+                        <div class="results-grid">
+                `;
+                
+                Object.entries(scenario.results).forEach(([playerName, result]) => {
+                    resultsHtml += `
+                        <div class="result-item">
+                            <div class="result-player">${playerName}</div>
+                            <div class="result-choice">Valg: ${result.choice}</div>
+                            <div class="result-dice">🎲 Terning: ${result.roll}</div>
+                            <div class="result-outcome">${result.outcome}</div>
+                            <div class="result-value ${result.valueChange >= 0 ? 'positive' : 'negative'}">
+                                ${result.valueChange >= 0 ? '+' : ''}${result.valueChange.toLocaleString()} NOK
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsHtml += `
+                        </div>
+                        <div class="scenario-note">
+                            <p><strong>💼 Neste steg:</strong> Implementer effektene i ditt Tripletex-regnskap!</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="scenario-card">
+                    <h2>${scenario.title}</h2>
+                    <p>${scenario.description}</p>
+                    ${deadlineHtml}
+                    ${choicesHtml}
+                    ${resultsHtml}
+                </div>
+            `;
         }
 
         function updateStats() {
@@ -709,6 +934,25 @@
                 
                 const avgValue = gameState.players.reduce((sum, p) => sum + p.businessValue, 0) / gameState.players.length;
                 document.getElementById('avg-value').textContent = avgValue.toLocaleString();
+            }
+
+            // Update scenario status
+            const scenarioStatusEl = document.getElementById('scenario-status');
+            if (gameState.currentScenario) {
+                const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
+                const now = new Date();
+                
+                if (gameState.currentScenario.results) {
+                    scenarioStatusEl.textContent = 'Resultater klar';
+                } else if (deadline && deadline < now) {
+                    scenarioStatusEl.textContent = 'Venter terning';
+                } else if (deadline) {
+                    scenarioStatusEl.textContent = 'Aktiv';
+                } else {
+                    scenarioStatusEl.textContent = 'Planlagt';
+                }
+            } else {
+                scenarioStatusEl.textContent = 'Ingen aktive';
             }
         }
 
@@ -767,11 +1011,22 @@
             }
         };
 
+        // Auto-refresh countdown timer every minute
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (gameState.currentScenario && gameState.currentScenario.deadline) {
+                    renderScenario(); // Updates countdown
+                    updateStats(); // Updates scenario status
+                }
+            }, 60000); // Every 60 seconds
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             renderLeaderboard();
             renderScenario();
             updateStats();
+            startAutoRefresh(); // Start countdown timer
             
             // Welcome notification
             addNotification('Velkommen til Tripletex Business School! Klikk på spillere for å se detaljer. 🎉');
