@@ -387,12 +387,13 @@
     </div>
 
     <script>
-        // Game data - starts with sample data
+        // Game data - starts with sample data - MULTI-USER ENHANCED
         let gameData = {
             players: [
                 { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
                 { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
-                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 485000, rank: 3 }
+                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 500000, rank: 3 },
+                { name: 'Test Bruker', company: 'Test Selskap AS', businessValue: 485000, rank: 4 }
             ],
             currentScenario: {
                 title: 'Måned 1: Kapasitetsutfordring',
@@ -405,7 +406,47 @@
                     'D': 'Outsourcing-strategi'
                 }
             },
-            penalties: []
+            penalties: [],
+            // BREAKDOWN DATA FOR ALL USERS
+            playerBreakdowns: {
+                'Anna Nordström': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 },
+                        { week: 2, scenario: 'Markedsføring', choice: 'B', outcome: 'Moderat', value: 10000 }
+                    ],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Marcus Berg': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'B', outcome: 'Suksess', value: 20000 }
+                    ],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Lisa Hansen': {
+                    startCapital: 500000,
+                    scenarioGains: [],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Test Bruker': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 },
+                        { week: 2, scenario: 'Markedsføring', choice: 'C', outcome: 'Moderat', value: 15000 }
+                    ],
+                    penalties: [
+                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' },
+                        { type: 'Setup-feil', value: -50000, date: '2025-08-05', status: 'løst', reason: 'Feil åpningsbalanse' }
+                    ],
+                    bonuses: [
+                        { type: 'Cleanup bonus', value: 15000, date: '2025-08-12', reason: 'Rettet alle setup-feil raskt' }
+                    ]
+                }
+            }
         };
 
         // Tab functionality
@@ -620,8 +661,9 @@
                         break;
                 }
                 
+                const player = gameData.players[playerIndex];
                 const penalty = {
-                    player: gameData.players[playerIndex].name,
+                    player: player.name,
                     type: description,
                     amount: amount,
                     comment: comment,
@@ -631,7 +673,25 @@
                 gameData.penalties.push(penalty);
                 
                 // Apply penalty to business value
-                gameData.players[playerIndex].businessValue += amount;
+                player.businessValue += amount;
+                
+                // IMPORTANT: Add to player's breakdown data
+                if (!gameData.playerBreakdowns[player.name]) {
+                    gameData.playerBreakdowns[player.name] = {
+                        startCapital: 500000,
+                        scenarioGains: [],
+                        penalties: [],
+                        bonuses: []
+                    };
+                }
+                
+                gameData.playerBreakdowns[player.name].penalties.push({
+                    type: description,
+                    value: amount,
+                    date: new Date().toLocaleDateString(),
+                    status: 'aktiv',
+                    reason: comment || 'Ingen kommentar'
+                });
                 
                 // Clear form
                 document.getElementById('penalty-player').value = '';
@@ -641,7 +701,7 @@
                 
                 refreshLeaderboard();
                 refreshPenalties();
-                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}`);
+                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}.\n\nHusk å eksportere og oppdatere hovedsiden!`);
             } else {
                 alert('Velg spiller og type straff');
             }
