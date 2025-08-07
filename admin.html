@@ -11,30 +11,6 @@
             box-sizing: border-box;
         }
 
-        // URL Storage functions
-        function saveUrl() {
-            const urlInput = document.getElementById('sheets-url-input');
-            const url = urlInput.value.trim();
-            
-            if (!url || url.includes('YOUR_SCRIPT_ID')) {
-                alert('Legg inn en gyldig Google Apps Script URL først!');
-                return;
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('tripletex_sheets_url', url);
-            alert('✅ URL lagret! Den vil nå være der neste gang du åpner admin-panelet.');
-        }
-
-        function loadSavedUrl() {
-            const savedUrl = localStorage.getItem('tripletex_sheets_url');
-            if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
-                document.getElementById('sheets-url-input').value = savedUrl;
-                return true;
-            }
-            return false;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -170,38 +146,6 @@
             overflow-y: auto;
         }
 
-        .scenario-choice {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .choice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .choice-title-input {
-            flex-grow: 1;
-            font-weight: bold;
-            color: #667eea;
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-            margin-right: 1rem;
-        }
-
-        .choice-title-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-
         .tabs {
             display: flex;
             margin-bottom: 1rem;
@@ -232,12 +176,12 @@
             display: block;
         }
 
-        .choice-preview {
-            background: #e3f2fd;
-            border: 1px solid #bbdefb;
+        .dice-result {
+            background: white;
             border-radius: 8px;
             padding: 1rem;
-            margin-top: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid #667eea;
         }
     </style>
 </head>
@@ -252,6 +196,7 @@
             <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
             <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
             <button class="tab" onclick="showTab('choices')">Se Valg</button>
+            <button class="tab" onclick="showTab('dice')">Terningkast</button>
             <button class="tab" onclick="showTab('penalties')">Straffer</button>
             <button class="tab" onclick="showTab('export')">Eksporter Data</button>
         </div>
@@ -332,71 +277,42 @@
                 <div class="panel">
                     <h2>📝 Scenario Valg</h2>
                     <div id="scenario-choices">
-                        <div class="scenario-choice" data-choice="A">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="A) Stort kontor + full bemanning" placeholder="A) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: +80% husleie + 60k/mnd lønn" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Maks vekst 30% → 50%">
-                            <input type="text" class="choice-odds" placeholder="Odds: 60% suksess / 25% delvis / 15% fiasko">
+                        <div class="form-group">
+                            <label>A) Valg:</label>
+                            <input type="text" id="choice-a-title" placeholder="Stort kontor + full bemanning">
+                            <input type="text" id="choice-a-cost" placeholder="Kostnad: +80% husleie + 60k/mnd lønn" style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-a-potential" placeholder="Potensial: Maks vekst 30% → 50%" style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-a-odds" placeholder="Odds: 60% suksess / 25% delvis / 15% fiasko" style="margin-top: 0.5rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>B) Valg:</label>
+                            <input type="text" id="choice-b-title" placeholder="Medium kontor">
+                            <input type="text" id="choice-b-cost" placeholder="Kostnad: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-b-potential" placeholder="Potensial: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-b-odds" placeholder="Odds: " style="margin-top: 0.5rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>C) Valg:</label>
+                            <input type="text" id="choice-c-title" placeholder="Automatiseringsløsning">
+                            <input type="text" id="choice-c-cost" placeholder="Kostnad: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-c-potential" placeholder="Potensial: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-c-odds" placeholder="Odds: " style="margin-top: 0.5rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>D) Valg:</label>
+                            <input type="text" id="choice-d-title" placeholder="Outsourcing-strategi">
+                            <input type="text" id="choice-d-cost" placeholder="Kostnad: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-d-potential" placeholder="Potensial: " style="margin-top: 0.5rem;">
+                            <input type="text" id="choice-d-odds" placeholder="Odds: " style="margin-top: 0.5rem;">
                         </div>
                     </div>
-                    <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
-                    
-                    <div class="choice-preview">
-                        <h3>📋 Forhåndsvisning av valg:</h3>
-                        <div id="choices-preview"></div>
-                        <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
-                    </div>
-                </div>
-            </div>
 
-            <div class="panel">
-                <h2>🎯 Scenario Resultater</h2>
-                
-                <div class="form-group">
-                    <label>Steg 1: Hent spillervalg først</label>
-                    <button class="btn" onclick="loadChoicesForDice()">📥 Last inn valg for terningkast</button>
-                </div>
-                
-                <div id="loaded-choices" style="display: none; background: #e3f2fd; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-                    <h4>📋 Valg klare for terningkast:</h4>
-                    <div id="choices-for-dice"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Steg 2: Definer odds for hvert valg</label>
-                    <div id="odds-configuration" style="display: none;">
-                        <div style="background: #fff3cd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                            <strong>📊 Odds system:</strong><br>
-                            • 1-2: Fiasko (-50% til -100% av potensial)<br>
-                            • 3-4: Moderat suksess (25% til 75% av potensial)<br>
-                            • 5-6: Full suksess (100%+ av potensial)
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <h3>📋 Forhåndsvisning:</h3>
+                        <div id="choices-preview" style="background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                            <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
+                            <div id="preview-content"></div>
                         </div>
-                        <div id="odds-inputs"></div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Steg 3: Kast terning for alle</label>
-                    <button class="btn" id="roll-dice-btn" onclick="rollDiceForAllPlayers()" disabled>🎲 Kast Terning for Alle</button>
-                </div>
-                
-                <div id="dice-results-detailed" style="display: none; background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin: 1rem 0;">
-                    <h3>🎊 Terningkast Resultater</h3>
-                    <div id="results-grid"></div>
-                    <div style="margin-top: 1rem;">
-                        <button class="btn" onclick="applyResultsToLeaderboard()">✅ Bruk Resultater i Leaderboard</button>
-                        <button class="btn btn-small" onclick="exportResults()">📄 Eksporter Resultater</button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Eller sett resultater manuelt:</label>
-                    <div id="manual-results-section" style="display: none;">
-                        <div id="manual-results-inputs"></div>
-                        <button class="btn btn-small" onclick="applyManualResults()">✅ Bruk Manuelle Resultater</button>
                     </div>
                 </div>
             </div>
@@ -410,32 +326,31 @@
                 <div class="form-group">
                     <label>Google Apps Script URL for å hente valg:</label>
                     <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
-                    <button class="btn btn-small" onclick="saveUrl()" style="margin-top: 0.5rem;">💾 Lagre URL</button>
+                    <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
-                </div>
-                
-                <div id="choices-loading" style="display: none; text-align: center; padding: 2rem;">
-                    <div>⏳ Henter valg fra Google Sheets...</div>
-                </div>
-                
-                <div id="choices-error" style="display: none; background: #f8d7da; border: 1px solid #dc3545; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-                    <strong>❌ Feil ved henting av valg:</strong>
-                    <div id="error-message"></div>
-                </div>
-                
-                <div id="choices-summary" style="display: none; background: #d4edda; border: 1px solid #28a745; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-                    <div id="summary-stats"></div>
                 </div>
                 
                 <div id="choices-content">
                     <p style="text-align: center; color: #666; font-style: italic;">Klikk "Hent Valg" for å se spillernes valg</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Simple Dice Tab -->
+        <div id="dice" class="tab-content">
+            <div class="panel">
+                <h2>🎲 Enkelt Terningkast</h2>
                 
-                <div style="margin-top: 2rem;">
-                    <h3>🎯 Quick Actions</h3>
-                    <button class="btn btn-small" onclick="exportChoicesToCSV()" id="export-csv-btn" disabled>💾 Eksporter til CSV</button>
-                    <button class="btn btn-small" onclick="clearOldChoices()" id="clear-choices-btn" disabled>🧹 Fjern Gamle Valg</button>
-                    <button class="btn btn-small" onclick="refreshChoices()" id="refresh-btn" disabled>🔄 Oppdater</button>
+                <div class="form-group">
+                    <label>Kast terning for alle spillere:</label>
+                    <button class="btn" onclick="rollDiceSimple()">🎲 Kast Terning</button>
+                </div>
+                
+                <div id="dice-results"></div>
+                
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label>Eller sett resultater manuelt:</label>
+                    <div id="manual-results"></div>
                 </div>
             </div>
         </div>
@@ -508,7 +423,7 @@
     </div>
 
     <script>
-        // Game data - starts with sample data - MULTI-USER ENHANCED
+        // Game data
         let gameData = {
             players: [
                 { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
@@ -528,13 +443,11 @@
                 }
             },
             penalties: [],
-            // BREAKDOWN DATA FOR ALL USERS
             playerBreakdowns: {
                 'Anna Nordström': {
                     startCapital: 500000,
                     scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 },
-                        { week: 2, scenario: 'Markedsføring', choice: 'B', outcome: 'Moderat', value: 10000 }
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 }
                     ],
                     penalties: [],
                     bonuses: []
@@ -556,108 +469,62 @@
                 'Test Bruker': {
                     startCapital: 500000,
                     scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 },
-                        { week: 2, scenario: 'Markedsføring', choice: 'C', outcome: 'Moderat', value: 15000 }
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 }
                     ],
                     penalties: [
-                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' },
-                        { type: 'Setup-feil', value: -50000, date: '2025-08-05', status: 'løst', reason: 'Feil åpningsbalanse' }
+                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' }
                     ],
-                    bonuses: [
-                        { type: 'Cleanup bonus', value: 15000, date: '2025-08-12', reason: 'Rettet alle setup-feil raskt' }
-                    ]
+                    bonuses: []
                 }
             }
-        }
-
-        // URL Storage functions
-        function saveUrl() {
-            const urlInput = document.getElementById('sheets-url-input');
-            const url = urlInput.value.trim();
-            
-            if (!url || url.includes('YOUR_SCRIPT_ID')) {
-                alert('Legg inn en gyldig Google Apps Script URL først!');
-                return;
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('tripletex_sheets_url', url);
-            alert('✅ URL lagret! Den vil nå være der neste gang du åpner admin-panelet.');
-        }
-
-        function loadSavedUrl() {
-            const savedUrl = localStorage.getItem('tripletex_sheets_url');
-            if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
-                document.getElementById('sheets-url-input').value = savedUrl;
-                return true;
-            }
-            return false;
         };
 
         // Tab functionality
         function showTab(tabName) {
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
             
-            // Remove active class from all tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Show selected tab content
             document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked tab
             event.target.classList.add('active');
             
-            // Refresh data for the tab
             if (tabName === 'leaderboard') {
                 refreshLeaderboard();
             } else if (tabName === 'penalties') {
                 refreshPenalties();
-            } else if (tabName === 'scenarios') {
-                previewChoices(); // Auto-update preview when switching to scenarios
-            } else if (tabName === 'choices') {
-                // Auto-load choices if URL is set
-                const urlInput = document.getElementById('sheets-url-input');
-                if (urlInput.value && !urlInput.value.includes('YOUR_SCRIPT_ID')) {
-                    fetchPlayerChoices();
-                }
             }
         }
 
         // Leaderboard functions
         function refreshLeaderboard() {
-            // Sort players by business value
             gameData.players.sort((a, b) => b.businessValue - a.businessValue);
             
-            // Update ranks
             gameData.players.forEach((player, index) => {
                 player.rank = index + 1;
             });
             
-            // Update current leaderboard display
             const currentDiv = document.getElementById('current-leaderboard');
             currentDiv.innerHTML = gameData.players.map(player => 
-                `${player.rank}. ${player.name} - ${player.businessValue.toLocaleString()} NOK`
+                player.rank + '. ' + player.name + ' - ' + player.businessValue.toLocaleString() + ' NOK'
             ).join('<br>');
             
-            // Update player list for editing
             const playerListDiv = document.getElementById('player-list');
-            playerListDiv.innerHTML = gameData.players.map((player, index) => `
-                <div class="player-row">
-                    <span>${player.rank}. ${player.name}</span>
-                    <div>
-                        <input type="number" value="${player.businessValue}" 
-                               onchange="updatePlayerValue(${index}, this.value)">
-                        <button class="btn btn-small" onclick="removePlayer(${index})">Fjern</button>
-                    </div>
-                </div>
-            `).join('');
+            let playerHtml = '';
+            gameData.players.forEach((player, index) => {
+                playerHtml += '<div class="player-row">';
+                playerHtml += '<span>' + player.rank + '. ' + player.name + '</span>';
+                playerHtml += '<div>';
+                playerHtml += '<input type="number" value="' + player.businessValue + '" onchange="updatePlayerValue(' + index + ', this.value)">';
+                playerHtml += '<button class="btn btn-small" onclick="removePlayer(' + index + ')">Fjern</button>';
+                playerHtml += '</div>';
+                playerHtml += '</div>';
+            });
+            playerListDiv.innerHTML = playerHtml;
             
-            // Update dropdowns
             updatePlayerDropdowns();
         }
 
@@ -665,10 +532,11 @@
             const dropdowns = ['quick-player-select', 'penalty-player'];
             dropdowns.forEach(dropdownId => {
                 const dropdown = document.getElementById(dropdownId);
-                dropdown.innerHTML = '<option value="">Velg spiller...</option>' +
-                    gameData.players.map((player, index) => 
-                        `<option value="${index}">${player.name}</option>`
-                    ).join('');
+                let options = '<option value="">Velg spiller...</option>';
+                gameData.players.forEach((player, index) => {
+                    options += '<option value="' + index + '">' + player.name + '</option>';
+                });
+                dropdown.innerHTML = options;
             });
         }
 
@@ -679,26 +547,25 @@
             
             if (name && company && value) {
                 gameData.players.push({
-                    name,
-                    company,
+                    name: name,
+                    company: company,
                     businessValue: value,
                     rank: gameData.players.length + 1
                 });
                 
-                // Clear inputs
                 document.getElementById('new-player-name').value = '';
                 document.getElementById('new-player-company').value = '';
                 document.getElementById('new-player-value').value = '500000';
                 
                 refreshLeaderboard();
-                alert(`${name} lagt til!`);
+                alert(name + ' lagt til!');
             } else {
                 alert('Fyll inn alle felt');
             }
         }
 
         function removePlayer(index) {
-            if (confirm(`Sikker på at du vil fjerne ${gameData.players[index].name}?`)) {
+            if (confirm('Sikker på at du vil fjerne ' + gameData.players[index].name + '?')) {
                 gameData.players.splice(index, 1);
                 refreshLeaderboard();
             }
@@ -717,13 +584,12 @@
             if (playerIndex !== '' && change) {
                 gameData.players[playerIndex].businessValue += change;
                 
-                // Clear inputs
                 document.getElementById('quick-player-select').value = '';
                 document.getElementById('quick-value-change').value = '';
                 document.getElementById('quick-change-reason').value = '';
                 
                 refreshLeaderboard();
-                alert(`Endring på ${change.toLocaleString()} NOK utført for ${gameData.players[playerIndex].name}`);
+                alert('Endring på ' + change.toLocaleString() + ' NOK utført for ' + gameData.players[playerIndex].name);
             } else {
                 alert('Velg spiller og angi endring');
             }
@@ -733,405 +599,99 @@
             alert('Leaderboard oppdatert! Kopier JavaScript-koden fra "Eksporter Data" fanen.');
         }
 
-        // FIXED Scenario functions
+        // Scenario functions
         function updateScenario() {
             gameData.currentScenario.title = document.getElementById('scenario-title').value;
             gameData.currentScenario.description = document.getElementById('scenario-description').value;
             gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
             
-            // Collect choices from the form
-            collectChoicesData();
+            // Update choices
+            gameData.currentScenario.choices = {
+                'A': document.getElementById('choice-a-title').value,
+                'B': document.getElementById('choice-b-title').value,
+                'C': document.getElementById('choice-c-title').value,
+                'D': document.getElementById('choice-d-title').value
+            };
             
             alert('Scenario oppdatert!');
         }
 
-        function collectChoicesData() {
-            const choiceElements = document.querySelectorAll('.scenario-choice');
-            const choices = {};
+        // Simple dice rolling
+        function rollDiceSimple() {
+            let results = '<h3>🎲 Terningkast Resultater:</h3>';
             
-            choiceElements.forEach(choiceEl => {
-                const titleInput = choiceEl.querySelector('.choice-title-input');
-                const costInput = choiceEl.querySelector('.choice-cost');
-                const potentialInput = choiceEl.querySelector('.choice-potential');
-                const oddsInput = choiceEl.querySelector('.choice-odds');
-                
-                if (titleInput && titleInput.value.trim()) {
-                    // Extract letter from title (A), B), C), etc.)
-                    const titleValue = titleInput.value.trim();
-                    const letterMatch = titleValue.match(/^([A-Z])\)/);
-                    const letter = letterMatch ? letterMatch[1] : 'A';
-                    const title = titleValue.replace(/^[A-Z]\)\s*/, ''); // Remove "A) " part
-                    
-                    choices[letter] = {
-                        title: title,
-                        cost: costInput ? costInput.value.trim() : '',
-                        potential: potentialInput ? potentialInput.value.trim() : '',
-                        odds: oddsInput ? oddsInput.value.trim() : ''
-                    };
-                }
-            });
-            
-            gameData.currentScenario.choices = choices;
-            console.log('Collected choices:', choices);
-        }
-
-        function addChoice() {
-            const choicesDiv = document.getElementById('scenario-choices');
-            const choiceCount = choicesDiv.children.length;
-            const choiceLetter = String.fromCharCode(65 + choiceCount); // A, B, C, D...
-            
-            const choiceDiv = document.createElement('div');
-            choiceDiv.className = 'scenario-choice';
-            choiceDiv.setAttribute('data-choice', choiceLetter);
-            choiceDiv.innerHTML = `
-                <div class="choice-header">
-                    <input type="text" class="choice-title-input" value="${choiceLetter}) Nytt valg" placeholder="${choiceLetter}) Valg tittel" oninput="previewChoices()">
-                    <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                </div>
-                <input type="text" class="choice-cost" placeholder="Kostnad: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                <input type="text" class="choice-potential" placeholder="Potensial: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                <input type="text" class="choice-odds" placeholder="Odds: " oninput="previewChoices()">
-            `;
-            choicesDiv.appendChild(choiceDiv);
-            
-            // Auto-update preview
-            setTimeout(previewChoices, 100);
-        }
-
-        function removeChoice(button) {
-            button.closest('.scenario-choice').remove();
-            previewChoices();
-        }
-
-        // NEW: Preview choices function
-        function previewChoices() {
-            collectChoicesData(); // Update gameData with current form values
-            
-            const previewDiv = document.getElementById('choices-preview');
-            const choices = gameData.currentScenario.choices;
-            
-            if (!choices || Object.keys(choices).length === 0) {
-                previewDiv.innerHTML = '<p>Ingen valg lagt til ennå</p>';
-                return;
-            }
-            
-            let html = '';
-            Object.entries(choices).forEach(([key, choice]) => {
-                html += `
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: white;">
-                        <div style="font-weight: bold; color: #667eea; margin-bottom: 0.5rem;">${key}) ${choice.title}</div>
-                        ${choice.cost ? `<div style="color: #dc3545; font-size: 0.9rem;">💰 ${choice.cost}</div>` : ''}
-                        ${choice.potential ? `<div style="color: #28a745; font-size: 0.9rem;">🎯 ${choice.potential}</div>` : ''}
-                        ${choice.odds ? `<div style="color: #666; font-size: 0.9rem;">🎲 ${choice.odds}</div>` : ''}
-                    </div>
-                `;
-            });
-            
-            previewDiv.innerHTML = html;
-        }
-
-        // Advanced Dice Rolling System
-        let choicesForDice = [];
-        let diceResults = [];
-
-        function loadChoicesForDice() {
-            // First check if we have a saved URL
-            const urlInput = document.getElementById('sheets-url-input');
-            let sheetsUrl = urlInput.value.trim();
-            
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                // Try to load from localStorage
-                sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-                if (sheetsUrl) {
-                    urlInput.value = sheetsUrl;
-                }
-            }
-            
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                alert('Sett Google Apps Script URL først i "Se Valg" tab!');
-                return;
-            }
-            
-            // Fetch choices
-            fetchChoicesFromSheets(sheetsUrl)
-                .then(data => {
-                    if (data.length === 0) {
-                        alert('Ingen valg funnet. Spillere må velge alternativer først!');
-                        return;
-                    }
-                    
-                    choicesForDice = data;
-                    displayChoicesForDice(data);
-                    setupOddsConfiguration(data);
-                    document.getElementById('loaded-choices').style.display = 'block';
-                    document.getElementById('odds-configuration').style.display = 'block';
-                    document.getElementById('roll-dice-btn').disabled = false;
-                    
-                    alert(\`✅ Lastet \${data.length} valg for terningkast!\`);
-                })
-                .catch(error => {
-                    alert('Feil ved lasting av valg: ' + error.message);
-                });
-        }
-
-        function displayChoicesForDice(data) {
-            let html = '';
-            const groupedByPlayer = {};
-            
-            data.forEach(choice => {
-                const player = choice['Player Name'];
-                if (!groupedByPlayer[player]) {
-                    groupedByPlayer[player] = [];
-                }
-                groupedByPlayer[player].push(choice);
-            });
-            
-            Object.entries(groupedByPlayer).forEach(([player, choices]) => {
-                const latestChoice = choices[choices.length - 1]; // Take latest choice if multiple
-                html += \`
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; margin: 0.25rem 0; background: white; border-radius: 6px; border-left: 4px solid #667eea;">
-                        <span><strong>\${player}</strong></span>
-                        <span>Valg \${latestChoice['Choice Letter']}: \${latestChoice['Choice Title']}</span>
-                        <span style="font-size: 0.8rem; color: #666;">🎲 Klar</span>
-                    </div>
-                \`;
-            });
-            
-            document.getElementById('choices-for-dice').innerHTML = html;
-        }
-
-        function setupOddsConfiguration(data) {
-            const uniqueChoices = {};
-            data.forEach(choice => {
-                const letter = choice['Choice Letter'];
-                const title = choice['Choice Title'];
-                if (!uniqueChoices[letter]) {
-                    uniqueChoices[letter] = title;
-                }
-            });
-            
-            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
-            
-            Object.entries(uniqueChoices).forEach(([letter, title]) => {
-                html += \`
-                    <div style="background: white; border-radius: 8px; padding: 1rem; border-left: 4px solid #667eea;">
-                        <h4 style="color: #667eea; margin-bottom: 0.5rem;">Valg \${letter}: \${title}</h4>
-                        <div style="margin-bottom: 0.5rem;">
-                            <label style="font-size: 0.9rem;">Base verdi (NOK):</label>
-                            <input type="number" id="base-value-\${letter}" placeholder="25000" value="25000" style="width: 100%; padding: 0.25rem;">
-                        </div>
-                        <div style="margin-bottom: 0.5rem;">
-                            <label style="font-size: 0.9rem;">Risiko nivå:</label>
-                            <select id="risk-level-\${letter}" style="width: 100%; padding: 0.25rem;">
-                                <option value="low">Lav risiko (kun positive utfall)</option>
-                                <option value="medium" selected>Medium risiko (balansert)</option>
-                                <option value="high">Høy risiko (store tap mulig)</option>
-                            </select>
-                        </div>
-                    </div>
-                \`;
-            });
-            
-            html += '</div>';
-            document.getElementById('odds-inputs').innerHTML = html;
-        }
-
-        function rollDiceForAllPlayers() {
-            if (choicesForDice.length === 0) {
-                alert('Last inn valg først!');
-                return;
-            }
-            
-            // Group choices by player (take latest choice)
-            const playerChoices = {};
-            choicesForDice.forEach(choice => {
-                const player = choice['Player Name'];
-                playerChoices[player] = choice; // This will keep the latest choice
-            });
-            
-            diceResults = [];
-            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
-            
-            Object.entries(playerChoices).forEach(([player, choice]) => {
+            gameData.players.forEach(player => {
                 const roll = Math.floor(Math.random() * 6) + 1;
-                const letter = choice['Choice Letter'];
-                const baseValue = parseInt(document.getElementById(\`base-value-\${letter}\`)?.value) || 25000;
-                const riskLevel = document.getElementById(\`risk-level-\${letter}\`)?.value || 'medium';
-                
-                // Calculate result based on dice roll and risk level
-                const result = calculateResult(roll, baseValue, riskLevel);
-                
-                diceResults.push({
-                    player: player,
-                    choice: letter,
-                    choiceTitle: choice['Choice Title'],
-                    roll: roll,
-                    baseValue: baseValue,
-                    finalValue: result.value,
-                    outcome: result.outcome,
-                    riskLevel: riskLevel
-                });
-                
-                const rollEmoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
-                const valueClass = result.value >= 0 ? 'positive' : 'negative';
-                
-                html += \`
-                    <div style="background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid \${result.value >= 0 ? '#28a745' : '#dc3545'};">
-                        <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem; color: #667eea;">\${player}</div>
-                        <div style="margin-bottom: 0.25rem;">Valg: \${letter}) \${choice['Choice Title']}</div>
-                        <div style="margin-bottom: 0.25rem; font-size: 1.2rem;">🎲 Terning: \${roll} \${rollEmoji}</div>
-                        <div style="margin-bottom: 0.25rem; font-size: 0.9rem; color: #666;">\${result.outcome}</div>
-                        <div style="font-weight: bold; font-size: 1.1rem; margin-top: 0.5rem; color: \${result.value >= 0 ? '#28a745' : '#dc3545'};">
-                            \${result.value >= 0 ? '+' : ''}\${result.value.toLocaleString()} NOK
-                        </div>
-                    </div>
-                \`;
+                const emoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
+                results += '<div class="dice-result">';
+                results += '<strong>' + player.name + ':</strong> Terning ' + roll + ' ' + emoji;
+                results += '</div>';
             });
             
-            html += '</div>';
-            document.getElementById('results-grid').innerHTML = html;
-            document.getElementById('dice-results-detailed').style.display = 'block';
-            
-            console.log('Dice results:', diceResults);
+            document.getElementById('dice-results').innerHTML = results;
         }
 
-        function calculateResult(roll, baseValue, riskLevel) {
-            let multiplier;
-            let outcome;
+        // Player choices management
+        function saveUrl() {
+            const urlInput = document.getElementById('sheets-url-input');
+            const url = urlInput.value.trim();
             
-            // Determine outcome based on dice roll
-            if (roll <= 2) {
-                // Fiasko
-                outcome = 'Fiasko! 💥';
-                switch(riskLevel) {
-                    case 'low':
-                        multiplier = 0; // No loss for low risk
-                        break;
-                    case 'medium':
-                        multiplier = -0.5; // 50% loss
-                        break;
-                    case 'high':
-                        multiplier = -1.0; // 100% loss
-                        break;
-                }
-            } else if (roll <= 4) {
-                // Moderat suksess
-                outcome = 'Moderat suksess 😐';
-                switch(riskLevel) {
-                    case 'low':
-                        multiplier = 0.5; // 50% gain
-                        break;
-                    case 'medium':
-                        multiplier = 0.5; // 50% gain
-                        break;
-                    case 'high':
-                        multiplier = 0.75; // 75% gain
-                        break;
-                }
-            } else {
-                // Full suksess
-                outcome = 'Full suksess! 🎉';
-                switch(riskLevel) {
-                    case 'low':
-                        multiplier = 1.0; // 100% gain
-                        break;
-                    case 'medium':
-                        multiplier = 1.2; // 120% gain
-                        break;
-                    case 'high':
-                        multiplier = 1.5; // 150% gain
-                        break;
-                }
+            if (!url || url.includes('YOUR_SCRIPT_ID')) {
+                alert('Legg inn en gyldig Google Apps Script URL først!');
+                return;
             }
             
-            const finalValue = Math.round(baseValue * multiplier);
+            localStorage.setItem('tripletex_sheets_url', url);
+            alert('✅ URL lagret!');
+        }
+
+        function fetchPlayerChoices() {
+            const urlInput = document.getElementById('sheets-url-input');
+            const sheetsUrl = urlInput.value.trim();
             
-            return {
-                value: finalValue,
-                outcome: outcome,
-                multiplier: multiplier
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                alert('Legg inn din Google Apps Script URL først!');
+                return;
+            }
+            
+            document.getElementById('choices-content').innerHTML = '<p>⏳ Henter valg...</p>';
+            
+            // Simple JSONP fetch
+            const callbackName = 'choicesCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success' && response.data) {
+                    displayChoices(response.data);
+                } else {
+                    document.getElementById('choices-content').innerHTML = '<p>❌ Ingen valg funnet eller feil ved henting</p>';
+                }
             };
+            
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=get';
+            document.head.appendChild(script);
         }
 
-        function applyResultsToLeaderboard() {
-            if (diceResults.length === 0) {
-                alert('Kast terning først!');
+        function displayChoices(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('choices-content').innerHTML = '<p>📭 Ingen valg funnet</p>';
                 return;
             }
             
-            // Apply results to game data
-            diceResults.forEach(result => {
-                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
-                if (playerIndex !== -1) {
-                    gameData.players[playerIndex].businessValue += result.finalValue;
-                    
-                    // Add to breakdown data
-                    if (!gameData.playerBreakdowns[result.player]) {
-                        gameData.playerBreakdowns[result.player] = {
-                            startCapital: 500000,
-                            scenarioGains: [],
-                            penalties: [],
-                            bonuses: []
-                        };
-                    }
-                    
-                    gameData.playerBreakdowns[result.player].scenarioGains.push({
-                        week: 'Current',
-                        scenario: gameData.currentScenario.title,
-                        choice: result.choice,
-                        outcome: result.outcome,
-                        value: result.finalValue
-                    });
-                }
+            let html = '<h3>📊 Spillervalg (' + data.length + ' totalt)</h3>';
+            
+            data.forEach(choice => {
+                html += '<div class="dice-result">';
+                html += '<strong>' + choice['Player Name'] + '</strong> - ';
+                html += 'Valg ' + choice['Choice Letter'] + ': ' + choice['Choice Title'];
+                html += '<br><small>⏰ ' + new Date(choice['Timestamp']).toLocaleString('no-NO') + '</small>';
+                html += '</div>';
             });
             
-            refreshLeaderboard();
-            alert(\`✅ Resultater anvendt! \${diceResults.length} spillere oppdatert.\`);
-            
-            // Store results in current scenario
-            gameData.currentScenario.results = {};
-            diceResults.forEach(result => {
-                gameData.currentScenario.results[result.player] = {
-                    choice: result.choice,
-                    roll: result.roll,
-                    outcome: result.outcome,
-                    valueChange: result.finalValue
-                };
-            });
-        }
-
-        function exportResults() {
-            if (diceResults.length === 0) {
-                alert('Ingen resultater å eksportere!');
-                return;
-            }
-            
-            let csvContent = 'Player,Choice,Choice Title,Dice Roll,Base Value,Final Value,Outcome,Risk Level\\n';
-            
-            diceResults.forEach(result => {
-                csvContent += [
-                    \`"\${result.player}"\`,
-                    result.choice,
-                    \`"\${result.choiceTitle}"\`,
-                    result.roll,
-                    result.baseValue,
-                    result.finalValue,
-                    \`"\${result.outcome}"\`,
-                    result.riskLevel
-                ].join(',') + '\\n';
-            });
-            
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'scenario_results_' + new Date().toISOString().split('T')[0] + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            alert('Resultater eksportert som CSV! 📁');
+            document.getElementById('choices-content').innerHTML = html;
         }
 
         // Penalty functions
@@ -1169,559 +729,60 @@
                 }
                 
                 const player = gameData.players[playerIndex];
-                const penalty = {
-                    player: player.name,
-                    type: description,
-                    amount: amount,
-                    comment: comment,
-                    date: new Date().toLocaleDateString()
-                };
+                gameData.players[playerIndex].businessValue += amount;
                 
-                gameData.penalties.push(penalty);
-                
-                // Apply penalty to business value
-                player.businessValue += amount;
-                
-                // IMPORTANT: Add to player's breakdown data
-                if (!gameData.playerBreakdowns[player.name]) {
-                    gameData.playerBreakdowns[player.name] = {
-                        startCapital: 500000,
-                        scenarioGains: [],
-                        penalties: [],
-                        bonuses: []
-                    };
-                }
-                
-                gameData.playerBreakdowns[player.name].penalties.push({
-                    type: description,
-                    value: amount,
-                    date: new Date().toLocaleDateString(),
-                    status: 'aktiv',
-                    reason: comment || 'Ingen kommentar'
-                });
-                
-                // Clear form
                 document.getElementById('penalty-player').value = '';
                 document.getElementById('penalty-type').value = '';
                 document.getElementById('penalty-amount').value = '';
                 document.getElementById('penalty-comment').value = '';
                 
                 refreshLeaderboard();
-                refreshPenalties();
-                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}.\n\nHusk å eksportere og oppdatere hovedsiden!`);
+                alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + player.name);
             } else {
                 alert('Velg spiller og type straff');
             }
         }
 
         function refreshPenalties() {
-            const penaltiesDiv = document.getElementById('active-penalties');
-            if (gameData.penalties.length === 0) {
-                penaltiesDiv.innerHTML = '<p>Ingen aktive straffer</p>';
-            } else {
-                penaltiesDiv.innerHTML = gameData.penalties.map((penalty, index) => `
-                    <div class="player-row">
-                        <div>
-                            <strong>${penalty.player}</strong><br>
-                            ${penalty.type}: ${penalty.amount.toLocaleString()} NOK<br>
-                            <small>${penalty.comment} (${penalty.date})</small>
-                        </div>
-                        <button class="btn btn-small" onclick="removePenalty(${index})">Fjern</button>
-                    </div>
-                `).join('');
-            }
+            // Simple penalty display
+            document.getElementById('active-penalties').innerHTML = '<p>Straffer vises etter at de er lagt til spillere</p>';
         }
 
-        function removePenalty(index) {
-            const penalty = gameData.penalties[index];
-            if (confirm(`Fjern straff for ${penalty.player}?`)) {
-                // Remove penalty from business value (add it back)
-                const playerIndex = gameData.players.findIndex(p => p.name === penalty.player);
-                if (playerIndex !== -1) {
-                    gameData.players[playerIndex].businessValue -= penalty.amount; // subtract negative = add
-                }
-                
-                gameData.penalties.splice(index, 1);
-                refreshLeaderboard();
-                refreshPenalties();
-            }
-        }
-
-        // FIXED EXPORT FUNCTION with Google Sheets Integration
+        // Export function
         function generateExportCode() {
-            // Ensure we have players data
             if (!gameData.players || gameData.players.length === 0) {
                 alert('Legg til spillere først!');
                 return;
             }
             
-            // IMPORTANT: Set your Google Apps Script URL here!
-            const GOOGLE_SHEETS_URL = prompt(
-                'Lim inn din Google Apps Script Web App URL:\n\n' +
-                '(Følg instruksjonen i "Eksporter Data" fanen for å få denne)',
-                'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'
-            );
-            
-            if (!GOOGLE_SHEETS_URL || GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
-                alert('Du må sette opp Google Apps Script URL først!');
-                return;
-            }
-            
-            // Collect current choices from the form before generating export
-            collectChoicesData();
-            
-            // Generate leaderboard update code
-            const leaderboardCode = `
-// Oppdater leaderboard data
-window.updateGameData({
-    players: ${JSON.stringify(gameData.players, null, 2)},
-    playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)}
-});
+            const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
-console.log('Leaderboard updated successfully!');`;
-
-            // Generate scenario code with Google Sheets Integration (CORS-fixed)
-            const scenarioCode = `
-// Oppdater scenario data med Google Sheets integration (CORS-fixed)
-const GOOGLE_SHEETS_URL = '${GOOGLE_SHEETS_URL}';
-
-const scenarioData = {
-    title: "${gameData.currentScenario.title}",
-    description: "${gameData.currentScenario.description}",
-    deadline: "${gameData.currentScenario.deadline}",
-    choices: ${JSON.stringify(gameData.currentScenario.choices, null, 2)}
-};
-
-// Function to send choice to Google Sheets using JSONP (bypasses CORS)
-function sendChoiceToSheets(choiceData) {
-    return new Promise((resolve, reject) => {
-        // Create a unique callback name
-        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        
-        // Create the script element
-        const script = document.createElement('script');
-        
-        // Set up the callback function
-        window[callbackName] = function(response) {
-            // Clean up
-            document.head.removeChild(script);
-            delete window[callbackName];
-            
-            if (response && response.status === 'success') {
-                resolve(true);
-            } else {
-                reject(new Error(response ? response.message : 'Unknown error'));
-            }
-        };
-        
-        // Handle script load error
-        script.onerror = function() {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error('Failed to load script'));
-        };
-        
-        // Encode the data for URL
-        const params = new URLSearchParams({
-            callback: callbackName,
-            player: choiceData.player,
-            choice: choiceData.choice,
-            choiceTitle: choiceData.choiceTitle,
-            scenarioTitle: choiceData.scenarioTitle,
-            week: choiceData.week,
-            timestamp: choiceData.timestamp
-        });
-        
-        // Set the script source
-        script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
-        
-        // Add script to head to trigger the request
-        document.head.appendChild(script);
-        
-        // Set a timeout in case the request hangs
-        setTimeout(() => {
-            if (document.head.contains(script)) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('Request timeout'));
-            }
-        }, 10000); // 10 second timeout
-    });
-}
-
-// Update scenario with clickable choices
-window.updateGameData({
-    scenario: scenarioData
-});
-
-// Make choices clickable and integrate with Google Sheets
-setTimeout(() => {
-    const choiceElements = document.querySelectorAll('.choice-display');
-    choiceElements.forEach((choiceEl, index) => {
-        const choiceLetter = choiceEl.querySelector('.choice-letter').textContent.replace(')', '');
-        
-        // Add click handler
-        choiceEl.style.cursor = 'pointer';
-        choiceEl.style.transition = 'all 0.3s ease';
-        
-        choiceEl.addEventListener('mouseenter', () => {
-            choiceEl.style.transform = 'translateX(5px)';
-            choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
-        });
-        
-        choiceEl.addEventListener('mouseleave', () => {
-            choiceEl.style.transform = 'translateX(0)';
-            choiceEl.style.boxShadow = 'none';
-        });
-        
-        choiceEl.addEventListener('click', async () => {
-            const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
-            if (playerName && playerName.trim()) {
-                const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
-                const confirmed = confirm(\`\${playerName}, bekrefter du valg \${choiceLetter}: \${choiceTitle}?\`);
-                
-                if (confirmed) {
-                    // Show loading state
-                    const originalBg = choiceEl.style.backgroundColor;
-                    choiceEl.style.backgroundColor = '#fff3cd';
-                    choiceEl.style.borderColor = '#ffc107';
-                    
-                    // Add loading text
-                    const loadingEl = document.createElement('div');
-                    loadingEl.innerHTML = '⏳ Sender valg...';
-                    loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
-                    choiceEl.appendChild(loadingEl);
-                    
-                    // Prepare choice data
-                    const choiceData = {
-                        player: playerName.trim(),
-                        choice: choiceLetter,
-                        choiceTitle: choiceTitle,
-                        scenarioTitle: scenarioData.title,
-                        week: 'Current',
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    try {
-                        // Send to Google Sheets using JSONP
-                        await sendChoiceToSheets(choiceData);
-                        
-                        // Remove loading element
-                        choiceEl.removeChild(loadingEl);
-                        
-                        // Success feedback
-                        choiceEl.style.backgroundColor = '#d4edda';
-                        choiceEl.style.borderColor = '#28a745';
-                        
-                        alert(\`✅ Valg registrert: \${choiceLetter}) \${choiceTitle}\\n\\nDitt valg er sendt til admin og lagret i systemet!\`);
-                        
-                        // Add success indicator
-                        const successEl = document.createElement('div');
-                        successEl.innerHTML = '✅ Valg registrert!';
-                        successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
-                        choiceEl.appendChild(successEl);
-                        
-                        // Disable further clicking
-                        choiceEl.style.pointerEvents = 'none';
-                        choiceEl.style.opacity = '0.8';
-                        
-                    } catch (error) {
-                        console.error('Error sending choice:', error);
-                        
-                        // Remove loading element
-                        if (choiceEl.contains(loadingEl)) {
-                            choiceEl.removeChild(loadingEl);
-                        }
-                        
-                        // Error feedback
-                        choiceEl.style.backgroundColor = '#f8d7da';
-                        choiceEl.style.borderColor = '#dc3545';
-                        
-                        alert('❌ Feil ved sending av valg: ' + error.message + '\\n\\nPrøv igjen eller kontakt admin.');
-                        
-                        // Reset to original state
-                        setTimeout(() => {
-                            choiceEl.style.backgroundColor = originalBg;
-                            choiceEl.style.borderColor = '';
-                        }, 3000);
-                    }
-                }
-            }
-        });
-        
-        // Add visual indication that choices are clickable
-        const choiceContent = choiceEl.querySelector('.choice-content');
-        if (choiceContent) {
-            const clickHint = document.createElement('div');
-            clickHint.innerHTML = '👆 Klikk for å velge';
-            clickHint.style.cssText = 'font-size: 0.8rem; color: #667eea; margin-top: 0.5rem; opacity: 0.7;';
-            choiceContent.appendChild(clickHint);
-        }
-    });
-}, 500);
-
-console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
+            const scenarioCode = 'window.updateGameData({\n  scenario: ' + JSON.stringify(gameData.currentScenario, null, 2) + '\n});\n\nconsole.log("Scenario updated!");';
 
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
             document.getElementById('export-scenario-js').textContent = scenarioCode;
-            
-            console.log('Generated export code with Google Sheets integration');
-            alert('Kode generert med Google Sheets integration! \\n\\nHusk å følge instruksjonene for å sette opp Google Apps Script først.');
         }
 
-        // NEW: Player Choices Management
-        let currentChoicesData = [];
-
-        function fetchPlayerChoices() {
-            const urlInput = document.getElementById('sheets-url-input');
-            const sheetsUrl = urlInput.value.trim();
-            
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                alert('Legg inn din Google Apps Script URL først!');
-                return;
-            }
-            
-            // Show loading
-            document.getElementById('choices-loading').style.display = 'block';
-            document.getElementById('choices-error').style.display = 'none';
-            document.getElementById('choices-summary').style.display = 'none';
-            document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #666;">Laster...</p>';
-            
-            // Fetch choices using JSONP
-            fetchChoicesFromSheets(sheetsUrl)
-                .then(data => {
-                    document.getElementById('choices-loading').style.display = 'none';
-                    currentChoicesData = data;
-                    displayChoicesData(data);
-                    enableActionButtons();
-                })
-                .catch(error => {
-                    document.getElementById('choices-loading').style.display = 'none';
-                    showChoicesError(error.message);
-                });
-        }
-
-        function fetchChoicesFromSheets(url) {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'choicesCallback_' + Date.now();
-                const script = document.createElement('script');
-                
-                window[callbackName] = function(response) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    
-                    console.log('Google Sheets response:', response); // DEBUG
-                    
-                    if (response && response.status === 'success') {
-                        // Handle both array and object responses
-                        let data = response.data || [];
-                        
-                        // If data is an object, try to convert it
-                        if (typeof data === 'object' && !Array.isArray(data)) {
-                            console.log('Converting object to array:', data);
-                            data = Object.values(data);
-                        }
-                        
-                        console.log('Final data:', data); // DEBUG
-                        resolve(data);
-                    } else {
-                        reject(new Error(response ? response.message : 'Unknown error'));
-                    }
-                };
-                
-                script.onerror = function() {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    reject(new Error('Failed to fetch choices from Google Sheets. Check that your URL is correct and the script is deployed.'));
-                };
-                
-                script.src = url + '?callback=' + callbackName + '&action=get';
-                document.head.appendChild(script);
-                
-                setTimeout(() => {
-                    if (document.head.contains(script)) {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('Request timeout - Google Sheets took too long to respond'));
-                    }
-                }, 15000); // Increased timeout
-            });
-        }
-
-        function displayChoicesData(data) {
-            if (!data || data.length === 0) {
-                document.getElementById('choices-content').innerHTML = `
-                    <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
-                        <h3>📭 Ingen valg funnet</h3>
-                        <p>Enten har ingen valgt ennå, eller Google Sheets er tomt.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Show summary
-            showChoicesSummary(data);
-            
-            // Group by scenario
-            const groupedByScenario = {};
-            data.forEach(choice => {
-                const scenario = choice['Scenario Title'] || 'Ukjent Scenario';
-                if (!groupedByScenario[scenario]) {
-                    groupedByScenario[scenario] = [];
-                }
-                groupedByScenario[scenario].push(choice);
-            });
-            
-            let html = '';
-            Object.entries(groupedByScenario).forEach(([scenario, choices]) => {
-                html += `
-                    <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        <h3 style="color: #667eea; margin-bottom: 1rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            🎲 ${scenario}
-                        </h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                `;
-                
-                choices.forEach(choice => {
-                    const timestamp = new Date(choice['Timestamp']).toLocaleDateString('no-NO') + ' ' + 
-                                    new Date(choice['Timestamp']).toLocaleTimeString('no-NO', {hour: '2-digit', minute: '2-digit'});
-                    
-                    html += `
-                        <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; border-left: 4px solid #667eea;">
-                            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
-                                <strong style="color: #667eea; font-size: 1.1rem;">${choice['Player Name']}</strong>
-                                <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
-                                    ${choice['Choice Letter']}
-                                </span>
-                            </div>
-                            <div style="color: #333; margin-bottom: 0.5rem;">${choice['Choice Title']}</div>
-                            <div style="color: #666; font-size: 0.85rem;">⏰ ${timestamp}</div>
-                        </div>
-                    `;
-                });
-                
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('choices-content').innerHTML = html;
-        }
-
-        function showChoicesSummary(data) {
-            const totalChoices = data.length;
-            const uniquePlayers = new Set(data.map(choice => choice['Player Name'])).size;
-            const scenarios = new Set(data.map(choice => choice['Scenario Title'])).size;
-            
-            // Count choices by letter
-            const choiceCounts = {};
-            data.forEach(choice => {
-                const letter = choice['Choice Letter'];
-                choiceCounts[letter] = (choiceCounts[letter] || 0) + 1;
-            });
-            
-            const choiceBreakdown = Object.entries(choiceCounts)
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([letter, count]) => `${letter}: ${count}`)
-                .join(' | ');
-            
-            document.getElementById('summary-stats').innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                    <div><strong>📊 Totalt valg:</strong> ${totalChoices}</div>
-                    <div><strong>👥 Unike spillere:</strong> ${uniquePlayers}</div>
-                    <div><strong>🎯 Scenarioer:</strong> ${scenarios}</div>
-                </div>
-                <div><strong>📈 Valg fordeling:</strong> ${choiceBreakdown}</div>
-            `;
-            document.getElementById('choices-summary').style.display = 'block';
-        }
-
-        function showChoicesError(message) {
-            document.getElementById('error-message').textContent = message;
-            document.getElementById('choices-error').style.display = 'block';
-            document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #dc3545;">Kunne ikke hente valg</p>';
-        }
-
-        function enableActionButtons() {
-            document.getElementById('export-csv-btn').disabled = false;
-            document.getElementById('clear-choices-btn').disabled = false;
-            document.getElementById('refresh-btn').disabled = false;
-        }
-
-        function refreshChoices() {
-            fetchPlayerChoices();
-        }
-
-        function exportChoicesToCSV() {
-            if (currentChoicesData.length === 0) {
-                alert('Ingen data å eksportere');
-                return;
-            }
-            
-            // Create CSV content
-            const headers = ['Timestamp', 'Player Name', 'Choice Letter', 'Choice Title', 'Scenario Title', 'Session/Week'];
-            let csvContent = headers.join(',') + '\\n';
-            
-            currentChoicesData.forEach(choice => {
-                const row = [
-                    choice['Timestamp'],
-                    '"' + choice['Player Name'] + '"',
-                    choice['Choice Letter'],
-                    '"' + choice['Choice Title'] + '"',
-                    '"' + (choice['Scenario Title'] || 'N/A') + '"',
-                    choice['Session/Week'] || 'N/A'
-                ];
-                csvContent += row.join(',') + '\\n';
-            });
-            
-            // Download CSV
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'tripletex_choices_' + new Date().toISOString().split('T')[0] + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            alert('CSV eksportert! 📁');
-        }
-
-        function clearOldChoices() {
-            const confirmed = confirm('Er du sikker på at du vil fjerne alle gamle valg fra visningen?\\n\\nDette påvirker IKKE Google Sheets, bare denne visningen.');
-            
-            if (confirmed) {
-                currentChoicesData = [];
-                document.getElementById('choices-content').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Visning tømt. Klikk "Hent Valg" for å laste på nytt.</p>';
-                document.getElementById('choices-summary').style.display = 'none';
-                
-                // Disable action buttons
-                document.getElementById('export-csv-btn').disabled = true;
-                document.getElementById('clear-choices-btn').disabled = true;
-                document.getElementById('refresh-btn').disabled = true;
-            }
-        }
-
-        // Initialize on load
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             refreshLeaderboard();
             
-            // Set current date/time for scenario deadline
             const now = new Date();
-            now.setDate(now.getDate() + 2); // 2 days from now
+            now.setDate(now.getDate() + 2);
             document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
             
-            // Fill scenario with default data
             document.getElementById('scenario-title').value = gameData.currentScenario.title;
             document.getElementById('scenario-description').value = gameData.currentScenario.description;
-            
-            // Auto-generate preview
-            previewChoices();
+            document.getElementById('choice-a-title').value = gameData.currentScenario.choices.A;
+            document.getElementById('choice-b-title').value = gameData.currentScenario.choices.B;
+            document.getElementById('choice-c-title').value = gameData.currentScenario.choices.C;
+            document.getElementById('choice-d-title').value = gameData.currentScenario.choices.D;
             
             // Load saved URL
-            loadSavedUrl();
+            const savedUrl = localStorage.getItem('tripletex_sheets_url');
+            if (savedUrl) {
+                document.getElementById('sheets-url-input').value = savedUrl;
+            }
         });
     </script>
 </body>
