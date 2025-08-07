@@ -835,14 +835,42 @@
             }
         }
 
+        // FIXED EXPORT FUNCTION with Google Sheets Integration
         function generateExportCode() {
-    // Legg inn din Google Apps Script URL her!
-    const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyfw7-PRHaykd4WwH58t0hU9qLIEJwhPSjB1SQstv_BVQ46jhHpItFLoT8dBmq1WgxmCg/exec';
-    
-    // ... resten av leaderboard kode ...
-    
-    const scenarioCode = `
-// Oppdater scenario data med Google Sheets integration
+            // Ensure we have players data
+            if (!gameData.players || gameData.players.length === 0) {
+                alert('Legg til spillere først!');
+                return;
+            }
+            
+            // IMPORTANT: Set your Google Apps Script URL here!
+            const GOOGLE_SHEETS_URL = prompt(
+                'Lim inn din Google Apps Script Web App URL:\n\n' +
+                '(Følg instruksjonen i "Eksporter Data" fanen for å få denne)',
+                'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'
+            );
+            
+            if (!GOOGLE_SHEETS_URL || GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
+                alert('Du må sette opp Google Apps Script URL først!');
+                return;
+            }
+            
+            // Collect current choices from the form before generating export
+            collectChoicesData();
+            
+            // Generate leaderboard update code
+            const leaderboardCode = `
+// Oppdater leaderboard data
+window.updateGameData({
+    players: ${JSON.stringify(gameData.players, null, 2)},
+    playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)}
+});
+
+console.log('Leaderboard updated successfully!');`;
+
+            // Generate scenario code with Google Sheets Integration (CORS-fixed)
+            const scenarioCode = `
+// Oppdater scenario data med Google Sheets integration (CORS-fixed)
 const GOOGLE_SHEETS_URL = '${GOOGLE_SHEETS_URL}';
 
 const scenarioData = {
@@ -852,30 +880,61 @@ const scenarioData = {
     choices: ${JSON.stringify(gameData.currentScenario.choices, null, 2)}
 };
 
-// Function to send choice to Google Sheets
-async function sendChoiceToSheets(choiceData) {
-    try {
-        const response = await fetch(GOOGLE_SHEETS_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(choiceData)
+// Function to send choice to Google Sheets using JSONP (bypasses CORS)
+function sendChoiceToSheets(choiceData) {
+    return new Promise((resolve, reject) => {
+        // Create a unique callback name
+        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        
+        // Create the script element
+        const script = document.createElement('script');
+        
+        // Set up the callback function
+        window[callbackName] = function(response) {
+            // Clean up
+            document.head.removeChild(script);
+            delete window[callbackName];
+            
+            if (response && response.status === 'success') {
+                resolve(true);
+            } else {
+                reject(new Error(response ? response.message : 'Unknown error'));
+            }
+        };
+        
+        // Handle script load error
+        script.onerror = function() {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Failed to load script'));
+        };
+        
+        // Encode the data for URL
+        const params = new URLSearchParams({
+            callback: callbackName,
+            player: choiceData.player,
+            choice: choiceData.choice,
+            choiceTitle: choiceData.choiceTitle,
+            scenarioTitle: choiceData.scenarioTitle,
+            week: choiceData.week,
+            timestamp: choiceData.timestamp
         });
         
-        const result = await response.json();
+        // Set the script source
+        script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
         
-        if (result.status === 'success') {
-            console.log('Choice successfully sent to Google Sheets!');
-            return true;
-        } else {
-            console.error('Error sending to Google Sheets:', result.message);
-            return false;
-        }
-    } catch (error) {
-        console.error('Network error:', error);
-        return false;
-    }
+        // Add script to head to trigger the request
+        document.head.appendChild(script);
+        
+        // Set a timeout in case the request hangs
+        setTimeout(() => {
+            if (document.head.contains(script)) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Request timeout'));
+            }
+        }, 10000); // 10 second timeout
+    });
 }
 
 // Update scenario with clickable choices
@@ -927,17 +986,17 @@ setTimeout(() => {
                         choice: choiceLetter,
                         choiceTitle: choiceTitle,
                         scenarioTitle: scenarioData.title,
-                        week: 'Current', // You can make this dynamic
+                        week: 'Current',
                         timestamp: new Date().toISOString()
                     };
                     
-                    // Send to Google Sheets
-                    const success = await sendChoiceToSheets(choiceData);
-                    
-                    // Remove loading element
-                    choiceEl.removeChild(loadingEl);
-                    
-                    if (success) {
+                    try {
+                        // Send to Google Sheets using JSONP
+                        await sendChoiceToSheets(choiceData);
+                        
+                        // Remove loading element
+                        choiceEl.removeChild(loadingEl);
+                        
                         // Success feedback
                         choiceEl.style.backgroundColor = '#d4edda';
                         choiceEl.style.borderColor = '#28a745';
@@ -954,12 +1013,19 @@ setTimeout(() => {
                         choiceEl.style.pointerEvents = 'none';
                         choiceEl.style.opacity = '0.8';
                         
-                    } else {
+                    } catch (error) {
+                        console.error('Error sending choice:', error);
+                        
+                        // Remove loading element
+                        if (choiceEl.contains(loadingEl)) {
+                            choiceEl.removeChild(loadingEl);
+                        }
+                        
                         // Error feedback
                         choiceEl.style.backgroundColor = '#f8d7da';
                         choiceEl.style.borderColor = '#dc3545';
                         
-                        alert('❌ Feil ved sending av valg. Prøv igjen eller kontakt admin.');
+                        alert('❌ Feil ved sending av valg: ' + error.message + '\\n\\nPrøv igjen eller kontakt admin.');
                         
                         // Reset to original state
                         setTimeout(() => {
@@ -982,23 +1048,15 @@ setTimeout(() => {
     });
 }, 500);
 
-console.log('Scenario updated with Google Sheets integration!');`;
+console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
 
-    document.getElementById('export-scenario-js').textContent = scenarioCode;
-}
-// Legg til denne funksjonen i admin.html
-async function fetchChoicesFromSheets() {
-    try {
-        const response = await fetch(GOOGLE_SHEETS_URL + '?action=get');
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            displayChoicesInAdmin(result.data);
+            document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
+            document.getElementById('export-scenario-js').textContent = scenarioCode;
+            
+            console.log('Generated export code with Google Sheets integration');
+            alert('Kode generert med Google Sheets integration! \\n\\nHusk å følge instruksjonene for å sette opp Google Apps Script først.');
         }
-    } catch (error) {
-        console.error('Error fetching choices:', error);
-    }
-}
+
         // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
             refreshLeaderboard();
