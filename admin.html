@@ -537,6 +537,30 @@
                     ]
                 }
             }
+        }
+
+        // URL Storage functions
+        function saveUrl() {
+            const urlInput = document.getElementById('sheets-url-input');
+            const url = urlInput.value.trim();
+            
+            if (!url || url.includes('YOUR_SCRIPT_ID')) {
+                alert('Legg inn en gyldig Google Apps Script URL først!');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('tripletex_sheets_url', url);
+            alert('✅ URL lagret! Den vil nå være der neste gang du åpner admin-panelet.');
+        }
+
+        function loadSavedUrl() {
+            const savedUrl = localStorage.getItem('tripletex_sheets_url');
+            if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
+                document.getElementById('sheets-url-input').value = savedUrl;
+                return true;
+            }
+            return false;
         };
 
         // Tab functionality
