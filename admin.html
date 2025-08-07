@@ -339,18 +339,27 @@
         <!-- Simple Dice Tab -->
         <div id="dice" class="tab-content">
             <div class="panel">
-                <h2>🎲 Enkelt Terningkast</h2>
+                <h2>🎲 Terningkast med Spillervalg</h2>
                 
                 <div class="form-group">
-                    <label>Kast terning for alle spillere:</label>
-                    <button class="btn" onclick="rollDiceSimple()">🎲 Kast Terning</button>
+                    <label>Steg 1: Last inn spillernes valg først</label>
+                    <button class="btn" onclick="loadChoicesForDice()">📥 Last inn valg fra Google Sheets</button>
                 </div>
                 
-                <div id="dice-results"></div>
+                <div id="loaded-choices-status" style="display: none; background: #d4edda; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <strong>✅ Valg lastet:</strong>
+                    <div id="loaded-choices-summary"></div>
+                </div>
                 
-                <div class="form-group" style="margin-top: 2rem;">
-                    <label>Eller sett resultater manuelt:</label>
-                    <div id="manual-results"></div>
+                <div class="form-group">
+                    <label>Steg 2: Kast terning for alle spillere</label>
+                    <button class="btn" id="roll-dice-smart-btn" onclick="rollDiceWithChoices()" disabled>🎲 Kast Terning for Alle</button>
+                </div>
+                
+                <div id="dice-results-smart"></div>
+                
+                <div class="form-group" id="apply-results-section" style="display: none; margin-top: 2rem;">
+                    <button class="btn" onclick="applyDiceResults()">✅ Bruk Resultater (Oppdater Business Values)</button>
                 </div>
             </div>
         </div>
@@ -605,30 +614,240 @@
             gameData.currentScenario.description = document.getElementById('scenario-description').value;
             gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
             
-            // Update choices
+            // Update choices with all details
             gameData.currentScenario.choices = {
-                'A': document.getElementById('choice-a-title').value,
-                'B': document.getElementById('choice-b-title').value,
-                'C': document.getElementById('choice-c-title').value,
-                'D': document.getElementById('choice-d-title').value
+                'A': {
+                    title: document.getElementById('choice-a-title').value,
+                    cost: document.getElementById('choice-a-cost').value,
+                    potential: document.getElementById('choice-a-potential').value,
+                    odds: document.getElementById('choice-a-odds').value
+                },
+                'B': {
+                    title: document.getElementById('choice-b-title').value,
+                    cost: document.getElementById('choice-b-cost').value,
+                    potential: document.getElementById('choice-b-potential').value,
+                    odds: document.getElementById('choice-b-odds').value
+                },
+                'C': {
+                    title: document.getElementById('choice-c-title').value,
+                    cost: document.getElementById('choice-c-cost').value,
+                    potential: document.getElementById('choice-c-potential').value,
+                    odds: document.getElementById('choice-c-odds').value
+                },
+                'D': {
+                    title: document.getElementById('choice-d-title').value,
+                    cost: document.getElementById('choice-d-cost').value,
+                    potential: document.getElementById('choice-d-potential').value,
+                    odds: document.getElementById('choice-d-odds').value
+                }
             };
             
+            previewChoices();
             alert('Scenario oppdatert!');
         }
 
-        // Simple dice rolling
-        function rollDiceSimple() {
-            let results = '<h3>🎲 Terningkast Resultater:</h3>';
+        function previewChoices() {
+            let html = '<h4 style="margin-top: 1rem;">Slik ser valgene ut:</h4>';
             
-            gameData.players.forEach(player => {
-                const roll = Math.floor(Math.random() * 6) + 1;
-                const emoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
-                results += '<div class="dice-result">';
-                results += '<strong>' + player.name + ':</strong> Terning ' + roll + ' ' + emoji;
-                results += '</div>';
+            const choices = ['A', 'B', 'C', 'D'];
+            choices.forEach(letter => {
+                const title = document.getElementById('choice-' + letter.toLowerCase() + '-title').value;
+                const cost = document.getElementById('choice-' + letter.toLowerCase() + '-cost').value;
+                const potential = document.getElementById('choice-' + letter.toLowerCase() + '-potential').value;
+                const odds = document.getElementById('choice-' + letter.toLowerCase() + '-odds').value;
+                
+                if (title) {
+                    html += '<div style="border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin: 0.5rem 0; background: white;">';
+                    html += '<div style="font-weight: bold; color: #667eea;">' + letter + ') ' + title + '</div>';
+                    if (cost) html += '<div style="color: #dc3545; font-size: 0.9rem;">💰 ' + cost + '</div>';
+                    if (potential) html += '<div style="color: #28a745; font-size: 0.9rem;">🎯 ' + potential + '</div>';
+                    if (odds) html += '<div style="color: #666; font-size: 0.9rem;">🎲 ' + odds + '</div>';
+                    html += '</div>';
+                }
             });
             
-            document.getElementById('dice-results').innerHTML = results;
+            document.getElementById('preview-content').innerHTML = html;
+        }
+
+        // Smart dice rolling with player choices
+        let loadedPlayerChoices = [];
+        let diceResultsData = [];
+
+        function loadChoicesForDice() {
+            const urlInput = document.getElementById('sheets-url-input');
+            let sheetsUrl = urlInput.value.trim();
+            
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+                if (sheetsUrl && !sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                    urlInput.value = sheetsUrl;
+                } else {
+                    alert('Sett Google Apps Script URL først i "Se Valg" tab!');
+                    return;
+                }
+            }
+            
+            // Use the same fetch function as before
+            const callbackName = 'diceChoicesCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success' && response.data && response.data.length > 0) {
+                    loadedPlayerChoices = response.data;
+                    displayLoadedChoicesForDice(response.data);
+                    document.getElementById('loaded-choices-status').style.display = 'block';
+                    document.getElementById('roll-dice-smart-btn').disabled = false;
+                } else {
+                    alert('Ingen valg funnet! Spillere må velge alternativer først.');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                alert('Kunne ikke hente valg fra Google Sheets');
+            };
+            
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=get';
+            document.head.appendChild(script);
+        }
+
+        function displayLoadedChoicesForDice(data) {
+            // Group by player and get latest choice per player
+            const playerChoices = {};
+            data.forEach(choice => {
+                const player = choice['Player Name'];
+                if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
+                    playerChoices[player] = choice;
+                }
+            });
+            
+            let summary = '';
+            Object.values(playerChoices).forEach(choice => {
+                summary += choice['Player Name'] + ' → Valg ' + choice['Choice Letter'] + ') ' + choice['Choice Title'] + '<br>';
+            });
+            
+            document.getElementById('loaded-choices-summary').innerHTML = summary;
+        }
+
+        function rollDiceWithChoices() {
+            if (loadedPlayerChoices.length === 0) {
+                alert('Last inn spillernes valg først!');
+                return;
+            }
+            
+            // Group by player and get latest choice per player
+            const playerChoices = {};
+            loadedPlayerChoices.forEach(choice => {
+                const player = choice['Player Name'];
+                if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
+                    playerChoices[player] = choice;
+                }
+            });
+            
+            diceResultsData = [];
+            let resultsHtml = '<h3>🎲 Terningkast Resultater med Business Beregninger:</h3>';
+            
+            Object.values(playerChoices).forEach(choice => {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                const playerName = choice['Player Name'];
+                const choiceLetter = choice['Choice Letter'];
+                const choiceTitle = choice['Choice Title'];
+                
+                // Simple business logic based on dice roll
+                let outcome, nokValue, description;
+                
+                if (roll <= 2) {
+                    // Fiasko
+                    outcome = 'Fiasko';
+                    nokValue = -15000;
+                    description = 'Strategien slo ikke til. Tap av investeringer.';
+                } else if (roll <= 4) {
+                    // Moderat suksess  
+                    outcome = 'Moderat Suksess';
+                    nokValue = 15000;
+                    description = 'Strategien fungerte delvis. Mindre gevinst.';
+                } else {
+                    // Full suksess
+                    outcome = 'Full Suksess';
+                    nokValue = 35000;
+                    description = 'Strategien var vellykket! Stor gevinst.';
+                }
+                
+                // Store for later use
+                diceResultsData.push({
+                    player: playerName,
+                    choice: choiceLetter,
+                    choiceTitle: choiceTitle,
+                    roll: roll,
+                    outcome: outcome,
+                    nokValue: nokValue,
+                    description: description
+                });
+                
+                // Visual styling based on outcome
+                const outcomeColor = nokValue > 0 ? '#28a745' : '#dc3545';
+                const rollEmoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
+                
+                resultsHtml += '<div class="dice-result" style="border-left-color: ' + outcomeColor + ';">';
+                resultsHtml += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">';
+                resultsHtml += '<strong style="font-size: 1.1rem;">' + playerName + '</strong>';
+                resultsHtml += '<span style="font-size: 1.2rem;">' + rollEmoji + '</span>';
+                resultsHtml += '</div>';
+                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Valg:</strong> ' + choiceLetter + ') ' + choiceTitle + '</div>';
+                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Terning:</strong> ' + roll + ' → ' + outcome + '</div>';
+                resultsHtml += '<div style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem;">' + description + '</div>';
+                resultsHtml += '<div style="font-size: 1.2rem; font-weight: bold; color: ' + outcomeColor + ';">';
+                resultsHtml += (nokValue > 0 ? '+' : '') + nokValue.toLocaleString() + ' NOK';
+                resultsHtml += '</div>';
+                resultsHtml += '</div>';
+            });
+            
+            document.getElementById('dice-results-smart').innerHTML = resultsHtml;
+            document.getElementById('apply-results-section').style.display = 'block';
+        }
+
+        function applyDiceResults() {
+            if (diceResultsData.length === 0) {
+                alert('Ingen resultater å anvende!');
+                return;
+            }
+            
+            let updatedCount = 0;
+            
+            diceResultsData.forEach(result => {
+                // Find player in gameData and update business value
+                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
+                if (playerIndex !== -1) {
+                    gameData.players[playerIndex].businessValue += result.nokValue;
+                    
+                    // Add to player breakdown
+                    if (!gameData.playerBreakdowns[result.player]) {
+                        gameData.playerBreakdowns[result.player] = {
+                            startCapital: 500000,
+                            scenarioGains: [],
+                            penalties: [],
+                            bonuses: []
+                        };
+                    }
+                    
+                    gameData.playerBreakdowns[result.player].scenarioGains.push({
+                        week: 'Current',
+                        scenario: gameData.currentScenario.title,
+                        choice: result.choice,
+                        outcome: result.outcome,
+                        value: result.nokValue
+                    });
+                    
+                    updatedCount++;
+                }
+            });
+            
+            refreshLeaderboard();
+            alert('✅ Resultater anvendt! ' + updatedCount + ' spillere oppdatert.\n\nHusk å eksportere oppdatert leaderboard til hovedsiden.');
         }
 
         // Player choices management
@@ -773,10 +992,14 @@
             
             document.getElementById('scenario-title').value = gameData.currentScenario.title;
             document.getElementById('scenario-description').value = gameData.currentScenario.description;
-            document.getElementById('choice-a-title').value = gameData.currentScenario.choices.A;
-            document.getElementById('choice-b-title').value = gameData.currentScenario.choices.B;
-            document.getElementById('choice-c-title').value = gameData.currentScenario.choices.C;
-            document.getElementById('choice-d-title').value = gameData.currentScenario.choices.D;
+            
+            // Load choice titles (keeping backward compatibility)
+            document.getElementById('choice-a-title').value = typeof gameData.currentScenario.choices.A === 'string' ? gameData.currentScenario.choices.A : gameData.currentScenario.choices.A.title;
+            document.getElementById('choice-b-title').value = typeof gameData.currentScenario.choices.B === 'string' ? gameData.currentScenario.choices.B : gameData.currentScenario.choices.B.title;
+            document.getElementById('choice-c-title').value = typeof gameData.currentScenario.choices.C === 'string' ? gameData.currentScenario.choices.C : gameData.currentScenario.choices.C.title;
+            document.getElementById('choice-d-title').value = typeof gameData.currentScenario.choices.D === 'string' ? gameData.currentScenario.choices.D : gameData.currentScenario.choices.D.title;
+            
+            previewChoices();
             
             // Load saved URL
             const savedUrl = localStorage.getItem('tripletex_sheets_url');
