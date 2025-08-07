@@ -835,30 +835,16 @@
             }
         }
 
-        // FIXED EXPORT FUNCTION - Now correctly collects scenario choices
         function generateExportCode() {
-            // Ensure we have players data
-            if (!gameData.players || gameData.players.length === 0) {
-                alert('Legg til spillere først!');
-                return;
-            }
-            
-            // Collect current choices from the form before generating export
-            collectChoicesData();
-            
-            // Generate leaderboard update code
-            const leaderboardCode = `
-// Oppdater leaderboard data
-window.updateGameData({
-    players: ${JSON.stringify(gameData.players, null, 2)},
-    playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)}
-});
+    // Legg inn din Google Apps Script URL her!
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyfw7-PRHaykd4WwH58t0hU9qLIEJwhPSjB1SQstv_BVQ46jhHpItFLoT8dBmq1WgxmCg/exec';
+    
+    // ... resten av leaderboard kode ...
+    
+    const scenarioCode = `
+// Oppdater scenario data med Google Sheets integration
+const GOOGLE_SHEETS_URL = '${GOOGLE_SHEETS_URL}';
 
-console.log('Leaderboard updated successfully!');`;
-
-            // Generate scenario code with CLICKABLE choices
-            const scenarioCode = `
-// Oppdater scenario data med klikkbare valg
 const scenarioData = {
     title: "${gameData.currentScenario.title}",
     description: "${gameData.currentScenario.description}",
@@ -866,12 +852,38 @@ const scenarioData = {
     choices: ${JSON.stringify(gameData.currentScenario.choices, null, 2)}
 };
 
+// Function to send choice to Google Sheets
+async function sendChoiceToSheets(choiceData) {
+    try {
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(choiceData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            console.log('Choice successfully sent to Google Sheets!');
+            return true;
+        } else {
+            console.error('Error sending to Google Sheets:', result.message);
+            return false;
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+        return false;
+    }
+}
+
 // Update scenario with clickable choices
 window.updateGameData({
     scenario: scenarioData
 });
 
-// Make choices clickable in the main platform
+// Make choices clickable and integrate with Google Sheets
 setTimeout(() => {
     const choiceElements = document.querySelectorAll('.choice-display');
     choiceElements.forEach((choiceEl, index) => {
@@ -891,27 +903,70 @@ setTimeout(() => {
             choiceEl.style.boxShadow = 'none';
         });
         
-        choiceEl.addEventListener('click', () => {
+        choiceEl.addEventListener('click', async () => {
             const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
-            if (playerName) {
-                // Show confirmation
+            if (playerName && playerName.trim()) {
                 const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
                 const confirmed = confirm(\`\${playerName}, bekrefter du valg \${choiceLetter}: \${choiceTitle}?\`);
                 
                 if (confirmed) {
-                    // Store the choice (you can expand this to send to admin)
-                    localStorage.setItem('playerChoice', JSON.stringify({
-                        player: playerName,
+                    // Show loading state
+                    const originalBg = choiceEl.style.backgroundColor;
+                    choiceEl.style.backgroundColor = '#fff3cd';
+                    choiceEl.style.borderColor = '#ffc107';
+                    
+                    // Add loading text
+                    const loadingEl = document.createElement('div');
+                    loadingEl.innerHTML = '⏳ Sender valg...';
+                    loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
+                    choiceEl.appendChild(loadingEl);
+                    
+                    // Prepare choice data
+                    const choiceData = {
+                        player: playerName.trim(),
                         choice: choiceLetter,
                         choiceTitle: choiceTitle,
+                        scenarioTitle: scenarioData.title,
+                        week: 'Current', // You can make this dynamic
                         timestamp: new Date().toISOString()
-                    }));
+                    };
                     
-                    alert(\`Valg registrert: \${choiceLetter}) \${choiceTitle}\nDette vil bli sendt til admin for behandling.\`);
+                    // Send to Google Sheets
+                    const success = await sendChoiceToSheets(choiceData);
                     
-                    // Visual feedback
-                    choiceEl.style.backgroundColor = '#e8f5e8';
-                    choiceEl.style.borderColor = '#28a745';
+                    // Remove loading element
+                    choiceEl.removeChild(loadingEl);
+                    
+                    if (success) {
+                        // Success feedback
+                        choiceEl.style.backgroundColor = '#d4edda';
+                        choiceEl.style.borderColor = '#28a745';
+                        
+                        alert(\`✅ Valg registrert: \${choiceLetter}) \${choiceTitle}\\n\\nDitt valg er sendt til admin og lagret i systemet!\`);
+                        
+                        // Add success indicator
+                        const successEl = document.createElement('div');
+                        successEl.innerHTML = '✅ Valg registrert!';
+                        successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
+                        choiceEl.appendChild(successEl);
+                        
+                        // Disable further clicking
+                        choiceEl.style.pointerEvents = 'none';
+                        choiceEl.style.opacity = '0.8';
+                        
+                    } else {
+                        // Error feedback
+                        choiceEl.style.backgroundColor = '#f8d7da';
+                        choiceEl.style.borderColor = '#dc3545';
+                        
+                        alert('❌ Feil ved sending av valg. Prøv igjen eller kontakt admin.');
+                        
+                        // Reset to original state
+                        setTimeout(() => {
+                            choiceEl.style.backgroundColor = originalBg;
+                            choiceEl.style.borderColor = '';
+                        }, 3000);
+                    }
                 }
             }
         });
@@ -927,14 +982,23 @@ setTimeout(() => {
     });
 }, 500);
 
-console.log('Scenario updated with clickable choices!');`;
+console.log('Scenario updated with Google Sheets integration!');`;
 
-            document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
-            document.getElementById('export-scenario-js').textContent = scenarioCode;
-            
-            console.log('Generated export code with choices:', gameData.currentScenario.choices);
+    document.getElementById('export-scenario-js').textContent = scenarioCode;
+}
+// Legg til denne funksjonen i admin.html
+async function fetchChoicesFromSheets() {
+    try {
+        const response = await fetch(GOOGLE_SHEETS_URL + '?action=get');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            displayChoicesInAdmin(result.data);
         }
-
+    } catch (error) {
+        console.error('Error fetching choices:', error);
+    }
+}
         // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
             refreshLeaderboard();
