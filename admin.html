@@ -11,6 +11,30 @@
             box-sizing: border-box;
         }
 
+        // URL Storage functions
+        function saveUrl() {
+            const urlInput = document.getElementById('sheets-url-input');
+            const url = urlInput.value.trim();
+            
+            if (!url || url.includes('YOUR_SCRIPT_ID')) {
+                alert('Legg inn en gyldig Google Apps Script URL først!');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('tripletex_sheets_url', url);
+            alert('✅ URL lagret! Den vil nå være der neste gang du åpner admin-panelet.');
+        }
+
+        function loadSavedUrl() {
+            const savedUrl = localStorage.getItem('tripletex_sheets_url');
+            if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
+                document.getElementById('sheets-url-input').value = savedUrl;
+                return true;
+            }
+            return false;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -355,6 +379,7 @@
                 <div class="form-group">
                     <label>Google Apps Script URL for å hente valg:</label>
                     <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+                    <button class="btn btn-small" onclick="saveUrl()" style="margin-top: 0.5rem;">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
                 
@@ -1142,8 +1167,20 @@ console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
                     document.head.removeChild(script);
                     delete window[callbackName];
                     
+                    console.log('Google Sheets response:', response); // DEBUG
+                    
                     if (response && response.status === 'success') {
-                        resolve(response.data || []);
+                        // Handle both array and object responses
+                        let data = response.data || [];
+                        
+                        // If data is an object, try to convert it
+                        if (typeof data === 'object' && !Array.isArray(data)) {
+                            console.log('Converting object to array:', data);
+                            data = Object.values(data);
+                        }
+                        
+                        console.log('Final data:', data); // DEBUG
+                        resolve(data);
                     } else {
                         reject(new Error(response ? response.message : 'Unknown error'));
                     }
@@ -1152,19 +1189,19 @@ console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
                 script.onerror = function() {
                     document.head.removeChild(script);
                     delete window[callbackName];
-                    reject(new Error('Failed to fetch choices from Google Sheets'));
+                    reject(new Error('Failed to fetch choices from Google Sheets. Check that your URL is correct and the script is deployed.'));
                 };
                 
-                script.src = url + '?callback=' + callbackName;
+                script.src = url + '?callback=' + callbackName + '&action=get';
                 document.head.appendChild(script);
                 
                 setTimeout(() => {
                     if (document.head.contains(script)) {
                         document.head.removeChild(script);
                         delete window[callbackName];
-                        reject(new Error('Request timeout'));
+                        reject(new Error('Request timeout - Google Sheets took too long to respond'));
                     }
-                }, 10000);
+                }, 15000); // Increased timeout
             });
         }
 
@@ -1339,6 +1376,9 @@ console.log('Scenario updated with Google Sheets integration (CORS-fixed)!');`;
             
             // Auto-generate preview
             previewChoices();
+            
+            // Load saved URL
+            loadSavedUrl();
         });
     </script>
 </body>
