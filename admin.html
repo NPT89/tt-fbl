@@ -749,25 +749,55 @@ updateMainLeaderboard();`;
 
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
 
-            // Generate scenario code
+            // Generate scenario code - FIXED VERSION
             const scenarioCode = `
 // Oppdater scenario data
 const scenarioData = ${JSON.stringify(gameData.currentScenario, null, 2)};
 
-// Update scenario in main platform
+// Update scenario in main platform - FIXED
 function updateMainScenario() {
-    const scenarioTitle = document.querySelector('.scenario-card h3');
-    const scenarioDesc = document.querySelector('.scenario-card p');
+    const scenarioContent = document.getElementById('scenario-content');
+    if (!scenarioContent) {
+        console.error('Scenario content not found');
+        return;
+    }
     
-    if (scenarioTitle) scenarioTitle.textContent = scenarioData.title;
-    if (scenarioDesc) scenarioDesc.textContent = scenarioData.description;
-    
-    // Update deadline if exists
+    // Calculate time remaining
     const deadline = new Date(scenarioData.deadline);
-    const deadlineElements = document.querySelectorAll('[data-deadline]');
-    deadlineElements.forEach(el => {
-        el.textContent = deadline.toLocaleDateString('no-NO') + ' ' + deadline.toLocaleTimeString('no-NO', {hour: '2-digit', minute: '2-digit'});
-    });
+    const now = new Date();
+    const timeLeft = deadline - now;
+    const isExpired = timeLeft <= 0;
+    
+    let deadlineHtml = '';
+    if (!isExpired && scenarioData.deadline) {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        
+        deadlineHtml = \`
+            <div class="scenario-deadline \${timeLeft < 24 * 60 * 60 * 1000 ? 'urgent' : ''}">
+                ⏰ Deadline: \${days}d \${hours}t \${minutes}m igjen
+            </div>
+        \`;
+    } else if (isExpired) {
+        deadlineHtml = \`
+            <div class="scenario-deadline urgent">
+                ⏰ Deadline passert - venter på resultater
+            </div>
+        \`;
+    }
+    
+    // Update scenario content completely
+    scenarioContent.innerHTML = \`
+        <div class="scenario-card">
+            <h2>\${scenarioData.title}</h2>
+            <p>\${scenarioData.description}</p>
+            \${deadlineHtml}
+            <p><em>Velg ditt alternativ når valgene blir tilgjengelige!</em></p>
+        </div>
+    \`;
+    
+    console.log('Scenario updated successfully!');
 }
 
 updateMainScenario();`;
