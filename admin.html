@@ -161,21 +161,9 @@
             margin-bottom: 0.5rem;
         }
 
-        .choice-title-input {
-            flex-grow: 1;
+        .choice-title {
             font-weight: bold;
             color: #667eea;
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-            margin-right: 1rem;
-        }
-
-        .choice-title-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
         }
 
         .tabs {
@@ -301,12 +289,11 @@
                     <div id="scenario-choices">
                         <div class="scenario-choice">
                             <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="A) Stort kontor + full bemanning" placeholder="A) Valg tittel">
+                                <span class="choice-title">A) Stort kontor + full bemanning</span>
                                 <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
                             </div>
                             <input type="text" placeholder="Kostnad: +80% husleie + 60k/mnd lønn" style="margin-bottom: 0.5rem;">
                             <input type="text" placeholder="Potensial: Maks vekst 30% → 50%">
-                            <input type="text" placeholder="Odds: 60% suksess / 25% delvis / 15% fiasko">
                         </div>
                     </div>
                     <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
@@ -400,13 +387,12 @@
     </div>
 
     <script>
-        // Game data - starts with sample data - MULTI-USER ENHANCED
+        // Game data - starts with sample data
         let gameData = {
             players: [
                 { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
                 { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
-                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 500000, rank: 3 },
-                { name: 'Test Bruker', company: 'Test Selskap AS', businessValue: 485000, rank: 4 }
+                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 485000, rank: 3 }
             ],
             currentScenario: {
                 title: 'Måned 1: Kapasitetsutfordring',
@@ -419,47 +405,7 @@
                     'D': 'Outsourcing-strategi'
                 }
             },
-            penalties: [],
-            // BREAKDOWN DATA FOR ALL USERS
-            playerBreakdowns: {
-                'Anna Nordström': {
-                    startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 },
-                        { week: 2, scenario: 'Markedsføring', choice: 'B', outcome: 'Moderat', value: 10000 }
-                    ],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Marcus Berg': {
-                    startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'B', outcome: 'Suksess', value: 20000 }
-                    ],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Lisa Hansen': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Test Bruker': {
-                    startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 },
-                        { week: 2, scenario: 'Markedsføring', choice: 'C', outcome: 'Moderat', value: 15000 }
-                    ],
-                    penalties: [
-                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' },
-                        { type: 'Setup-feil', value: -50000, date: '2025-08-05', status: 'løst', reason: 'Feil åpningsbalanse' }
-                    ],
-                    bonuses: [
-                        { type: 'Cleanup bonus', value: 15000, date: '2025-08-12', reason: 'Rettet alle setup-feil raskt' }
-                    ]
-                }
-            }
+            penalties: []
         };
 
         // Tab functionality
@@ -611,12 +557,11 @@
             choiceDiv.className = 'scenario-choice';
             choiceDiv.innerHTML = `
                 <div class="choice-header">
-                    <input type="text" class="choice-title-input" value="${choiceLetter}) Nytt valg" placeholder="${choiceLetter}) Valg tittel">
+                    <span class="choice-title">${choiceLetter}) Nytt valg</span>
                     <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
                 </div>
                 <input type="text" placeholder="Kostnad: " style="margin-bottom: 0.5rem;">
                 <input type="text" placeholder="Potensial: ">
-                <input type="text" placeholder="Odds: ">
             `;
             choicesDiv.appendChild(choiceDiv);
         }
@@ -675,9 +620,8 @@
                         break;
                 }
                 
-                const player = gameData.players[playerIndex];
                 const penalty = {
-                    player: player.name,
+                    player: gameData.players[playerIndex].name,
                     type: description,
                     amount: amount,
                     comment: comment,
@@ -687,25 +631,7 @@
                 gameData.penalties.push(penalty);
                 
                 // Apply penalty to business value
-                player.businessValue += amount;
-                
-                // IMPORTANT: Add to player's breakdown data
-                if (!gameData.playerBreakdowns[player.name]) {
-                    gameData.playerBreakdowns[player.name] = {
-                        startCapital: 500000,
-                        scenarioGains: [],
-                        penalties: [],
-                        bonuses: []
-                    };
-                }
-                
-                gameData.playerBreakdowns[player.name].penalties.push({
-                    type: description,
-                    value: amount,
-                    date: new Date().toLocaleDateString(),
-                    status: 'aktiv',
-                    reason: comment || 'Ingen kommentar'
-                });
+                gameData.players[playerIndex].businessValue += amount;
                 
                 // Clear form
                 document.getElementById('penalty-player').value = '';
@@ -715,7 +641,7 @@
                 
                 refreshLeaderboard();
                 refreshPenalties();
-                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}.\n\nHusk å eksportere og oppdatere hovedsiden!`);
+                alert(`Straff på ${amount.toLocaleString()} NOK lagt til for ${penalty.player}`);
             } else {
                 alert('Velg spiller og type straff');
             }
@@ -828,29 +754,6 @@ updateMainLeaderboard();`;
 // Oppdater scenario data
 const scenarioData = ${JSON.stringify(gameData.currentScenario, null, 2)};
 
-// Collect choice data from form
-const choiceElements = document.querySelectorAll('.scenario-choice');
-const choices = {};
-choiceElements.forEach((choiceEl, index) => {
-    const titleInput = choiceEl.querySelector('.choice-title-input');
-    const inputs = choiceEl.querySelectorAll('input:not(.choice-title-input)');
-    
-    if (titleInput && titleInput.value) {
-        const letter = titleInput.value.charAt(0).toUpperCase();
-        const title = titleInput.value.substring(3) || 'Ukjent valg'; // Remove "A) " part
-        
-        choices[letter] = {
-            title: title,
-            cost: inputs[0]?.value || '',
-            potential: inputs[1]?.value || '', 
-            odds: inputs[2]?.value || ''
-        };
-    }
-});
-
-// Update scenario with choices
-scenarioData.choices = choices;
-
 // Update scenario in main platform - FIXED
 function updateMainScenario() {
     const scenarioContent = document.getElementById('scenario-content');
@@ -884,46 +787,17 @@ function updateMainScenario() {
         \`;
     }
     
-    // Build choices HTML
-    let choicesHtml = '';
-    if (choices && Object.keys(choices).length > 0) {
-        choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
-        Object.entries(choices).forEach(([key, choice]) => {
-            choicesHtml += \`
-                <div class="choice-display">
-                    <div class="choice-letter">\${key})</div>
-                    <div class="choice-content">
-                        <div class="choice-title">\${choice.title}</div>
-                        \${choice.cost ? \`<div class="choice-cost">💰 \${choice.cost}</div>\` : ''}
-                        \${choice.potential ? \`<div class="choice-potential">🎯 \${choice.potential}</div>\` : ''}
-                        \${choice.odds ? \`<div class="choice-odds">🎲 \${choice.odds}</div>\` : ''}
-                    </div>
-                </div>
-            \`;
-        });
-        choicesHtml += '</div>';
-        
-        if (!isExpired) {
-            choicesHtml += \`
-                <div class="scenario-note">
-                    <p><strong>📝 Hvordan delta:</strong></p>
-                    <p>Diskuter ditt valg med admin, eller vent på instruksjoner for hvordan du sender inn ditt valg.</p>
-                </div>
-            \`;
-        }
-    }
-    
     // Update scenario content completely
     scenarioContent.innerHTML = \`
         <div class="scenario-card">
             <h2>\${scenarioData.title}</h2>
             <p>\${scenarioData.description}</p>
             \${deadlineHtml}
-            \${choicesHtml}
+            <p><em>Velg ditt alternativ når valgene blir tilgjengelige!</em></p>
         </div>
     \`;
     
-    console.log('Scenario updated with choices:', choices);
+    console.log('Scenario updated successfully!');
 }
 
 updateMainScenario();`;
