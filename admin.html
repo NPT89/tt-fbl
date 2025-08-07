@@ -195,8 +195,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
             <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
-            <button class="tab" onclick="showTab('choices')">Se Valg</button>
-            <button class="tab" onclick="showTab('dice')">Terningkast</button>
+            <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
             <button class="tab" onclick="showTab('penalties')">Straffer</button>
             <button class="tab" onclick="showTab('export')">Eksporter Data</button>
         </div>
@@ -318,13 +317,13 @@
             </div>
         </div>
 
-        <!-- Choices View Tab -->
+        <!-- Combined Choices & Dice Tab -->
         <div id="choices" class="tab-content">
             <div class="panel">
-                <h2>👁️ Spillervalg Oversikt</h2>
+                <h2>👁️ Spillervalg & Terningkast</h2>
                 
                 <div class="form-group">
-                    <label>Google Apps Script URL for å hente valg:</label>
+                    <label>Google Apps Script URL:</label>
                     <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
@@ -333,36 +332,23 @@
                 <div id="choices-content">
                     <p style="text-align: center; color: #666; font-style: italic;">Klikk "Hent Valg" for å se spillernes valg</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Simple Dice Tab -->
-        <div id="dice" class="tab-content">
-            <div class="panel">
-                <h2>🎲 Terningkast med Spillervalg</h2>
-                
-                <div class="form-group">
-                    <label>Steg 1: Last inn spillernes valg først</label>
-                    <button class="btn" onclick="loadChoicesForDice()">📥 Last inn valg fra Google Sheets</button>
-                </div>
-                
-                <div id="loaded-choices-status" style="display: none; background: #d4edda; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-                    <strong>✅ Valg lastet:</strong>
-                    <div id="loaded-choices-summary"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Steg 2: Kast terning for alle spillere</label>
-                    <button class="btn" id="roll-dice-smart-btn" onclick="rollDiceWithChoices()" disabled>🎲 Kast Terning for Alle</button>
+                <div class="form-group" id="dice-section" style="display: none; margin-top: 2rem; border-top: 2px solid #f0f0f0; padding-top: 2rem;">
+                    <h3>🎲 Terningkast</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">Kast terning for spillerne som har valgt:</p>
+                    <button class="btn" onclick="rollDiceWithChoices()">🎲 Kast Terning for Alle</button>
                 </div>
                 
                 <div id="dice-results-smart"></div>
                 
-                <div class="form-group" id="apply-results-section" style="display: none; margin-top: 2rem;">
+                <div class="form-group" id="apply-results-section" style="display: none; margin-top: 1rem;">
                     <button class="btn" onclick="applyDiceResults()">✅ Bruk Resultater (Oppdater Business Values)</button>
+                    <button class="btn btn-small" onclick="exportResultsForPlayers()">📤 Eksporter Resultater til Spillere</button>
                 </div>
             </div>
         </div>
+
+        <!-- Simple Dice Tab - REMOVED -->
 
         <!-- Penalties Tab -->
         <div id="penalties" class="tab-content">
