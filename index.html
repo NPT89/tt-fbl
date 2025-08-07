@@ -141,6 +141,102 @@
         .leaderboard-item.current-user {
             background: linear-gradient(145deg, #e3f2fd, #ffffff);
             border-left: 4px solid #667eea;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .leaderboard-item.current-user:hover {
+            background: linear-gradient(145deg, #bbdefb, #e3f2fd);
+        }
+
+        .leaderboard-item.current-user::after {
+            content: "👆 Klikk for detaljer";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: #667eea;
+            opacity: 0.7;
+        }
+
+        .breakdown {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            padding: 1rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .breakdown.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                padding: 0 1rem;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+                padding: 1rem;
+            }
+        }
+
+        .breakdown-section {
+            margin-bottom: 1rem;
+            border-left: 3px solid #667eea;
+            padding-left: 1rem;
+        }
+
+        .breakdown-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .breakdown-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-item.positive {
+            color: #28a745;
+        }
+
+        .breakdown-item.negative {
+            color: #dc3545;
+        }
+
+        .breakdown-item.neutral {
+            color: #6c757d;
+        }
+
+        .breakdown-total {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            text-align: center;
         }
 
         .rank {
@@ -417,6 +513,42 @@
 
     <main class="main-content">
         <div class="container">
+            <!-- Login Screen -->
+            <div id="login-screen" class="section">
+                <div class="dashboard">
+                    <h1>🏆 Velkommen til Tripletex Business School!</h1>
+                    <p>Velg ditt navn for å starte din business journey</p>
+                    
+                    <div style="max-width: 400px; margin: 2rem auto;">
+                        <div class="form-group">
+                            <label for="user-select" style="font-size: 1.1rem; margin-bottom: 1rem;">Ditt navn:</label>
+                            <select id="user-select" style="width: 100%; padding: 1rem; font-size: 1rem; border: 2px solid #667eea; border-radius: 8px;">
+                                <option value="">Velg ditt navn...</option>
+                                <option value="Anna Nordström">Anna Nordström</option>
+                                <option value="Marcus Berg">Marcus Berg</option>
+                                <option value="Lisa Hansen">Lisa Hansen</option>
+                                <option value="Test Bruker">Test Bruker</option>
+                            </select>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 1.5rem;">
+                            <button class="btn" id="login-btn" disabled onclick="login()" style="width: 200px;">
+                                🚀 Start Business School
+                            </button>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <label style="font-size: 0.9rem; color: #666;">
+                                <input type="checkbox" id="remember-me" checked style="margin-right: 0.5rem;">
+                                Husk meg på denne enheten
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main App (hidden initially) -->
+            <div id="main-app" class="hidden">
             <!-- Dashboard Section -->
             <section id="dashboard" class="section">
                 <div class="dashboard">
@@ -496,24 +628,165 @@
                     <p>Trenger du hjelp? Kontakt admin eller spør i Slack!</p>
                 </div>
             </section>
+            </div>
         </div>
     </main>
 
     <script>
-        // Game state - will be updated from admin panel
+        // Enhanced game state with user management
         let gameState = {
-            currentUser: 'Deg', // Will be set per user
+            currentUser: null, // Will be set by login
+            availableUsers: [
+                'Anna Nordström',
+                'Marcus Berg', 
+                'Lisa Hansen',
+                'Test Bruker'
+            ],
             players: [
                 { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
                 { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
-                { name: 'Deg', company: 'Ditt Selskap AS', businessValue: 500000, rank: 3 },
-                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 485000, rank: 4 }
+                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 500000, rank: 3 },
+                { name: 'Test Bruker', company: 'Test Selskap AS', businessValue: 485000, rank: 4 }
             ],
             currentScenario: null,
             userChoice: null,
             scenarioResults: null,
-            notifications: []
+            notifications: [],
+            // Enhanced data for breakdown - expanded for multiple users
+            playerBreakdowns: {
+                'Anna Nordström': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 },
+                        { week: 2, scenario: 'Markedsføring', choice: 'B', outcome: 'Moderat', value: 10000 }
+                    ],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Marcus Berg': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'B', outcome: 'Suksess', value: 20000 }
+                    ],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Lisa Hansen': {
+                    startCapital: 500000,
+                    scenarioGains: [],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Test Bruker': {
+                    startCapital: 500000,
+                    scenarioGains: [
+                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 },
+                        { week: 2, scenario: 'Markedsføring', choice: 'C', outcome: 'Moderat', value: 15000 }
+                    ],
+                    penalties: [
+                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' },
+                        { type: 'Setup-feil', value: -50000, date: '2025-08-05', status: 'løst', reason: 'Feil åpningsbalanse' }
+                    ],
+                    bonuses: [
+                        { type: 'Cleanup bonus', value: 15000, date: '2025-08-12', reason: 'Rettet alle setup-feil raskt' }
+                    ]
+                }
+            }
         };
+
+        // Login system
+        function initializeApp() {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('businessSchoolUser');
+            const rememberMe = localStorage.getItem('businessSchoolRemember') === 'true';
+            
+            if (savedUser && rememberMe && gameState.availableUsers.includes(savedUser)) {
+                gameState.currentUser = savedUser;
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+            
+            // Enable login button when user is selected
+            document.getElementById('user-select').addEventListener('change', function() {
+                const loginBtn = document.getElementById('login-btn');
+                loginBtn.disabled = !this.value;
+            });
+        }
+
+        function showMainApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Update header with user info
+            updateUserHeader();
+            
+            // Initialize main app components
+            renderLeaderboard();
+            renderScenario();
+            updateUserStats();
+            
+            // Sample notification for logged in user
+            addNotification(`Velkommen tilbake, ${gameState.currentUser}! 🎉`);
+        }
+
+        function login() {
+            const selectedUser = document.getElementById('user-select').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            
+            if (!selectedUser) {
+                alert('Velg ditt navn først!');
+                return;
+            }
+            
+            gameState.currentUser = selectedUser;
+            
+            // Save to localStorage if remember me is checked
+            if (rememberMe) {
+                localStorage.setItem('businessSchoolUser', selectedUser);
+                localStorage.setItem('businessSchoolRemember', 'true');
+            }
+            
+            showMainApp();
+        }
+
+        function logout() {
+            // Clear saved user data
+            localStorage.removeItem('businessSchoolUser');
+            localStorage.removeItem('businessSchoolRemember');
+            
+            // Reset state
+            gameState.currentUser = null;
+            gameState.notifications = [];
+            
+            // Show login screen
+            showLoginScreen();
+        }
+
+        function updateUserHeader() {
+            // Add logout button to header if not exists
+            const nav = document.querySelector('.nav');
+            let logoutBtn = document.getElementById('logout-btn');
+            
+            if (!logoutBtn) {
+                logoutBtn = document.createElement('button');
+                logoutBtn.id = 'logout-btn';
+                logoutBtn.className = 'btn';
+                logoutBtn.style.width = 'auto';
+                logoutBtn.style.padding = '0.5rem 1rem';
+                logoutBtn.style.margin = '0';
+                logoutBtn.style.fontSize = '0.9rem';
+                logoutBtn.onclick = logout;
+                nav.appendChild(logoutBtn);
+            }
+            
+            logoutBtn.textContent = `👋 ${gameState.currentUser} (Logg ut)`;
+        }
 
         // Navigation functionality
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -583,7 +856,7 @@
                 const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
                 
                 html += `
-                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}" ${isCurrentUser ? 'onclick="toggleBreakdown()"' : ''}>
                         <span class="rank ${rankClass}">${player.rank}</span>
                         <div class="player-info">
                             <div class="player-name">${player.name}${isCurrentUser ? ' (Deg)' : ''}</div>
@@ -592,9 +865,160 @@
                         <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
                     </div>
                 `;
+                
+                // Add breakdown for current user
+                if (isCurrentUser) {
+                    html += renderBreakdown();
+                }
             });
             
             container.innerHTML = html;
+        }
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-content');
+            
+            if (!gameState.players || gameState.players.length === 0) {
+                container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
+                return;
+            }
+
+            let html = '';
+            gameState.players.forEach((player, index) => {
+                const isCurrentUser = player.name === gameState.currentUser;
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                
+                html += `
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}" ${isCurrentUser ? 'onclick="toggleBreakdown()"' : ''}>
+                        <span class="rank ${rankClass}">${player.rank}</span>
+                        <div class="player-info">
+                            <div class="player-name">${player.name}${isCurrentUser ? ' (Deg)' : ''}</div>
+                            <div class="player-company">${player.company}</div>
+                        </div>
+                        <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
+                    </div>
+                `;
+                
+                // Add breakdown for current user
+                if (isCurrentUser) {
+                    html += renderBreakdown();
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderBreakdown() {
+            const breakdown = gameState.playerBreakdowns[gameState.currentUser];
+            if (!breakdown) {
+                return `
+                    <div class="breakdown" id="breakdown-section">
+                        <div class="breakdown-section">
+                            <div class="breakdown-title">💰 Start Kapital</div>
+                            <div class="breakdown-item neutral">
+                                <span>Åpningsbalanse</span>
+                                <span>500,000 NOK</span>
+                            </div>
+                        </div>
+                        <div class="breakdown-total">
+                            📊 Total Business Value: 500,000 NOK
+                        </div>
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <button class="btn" onclick="toggleBreakdown()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                Skjul detaljer
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Calculate totals
+            const totalScenarioGains = breakdown.scenarioGains.reduce((sum, gain) => sum + gain.value, 0);
+            const totalPenalties = breakdown.penalties.reduce((sum, penalty) => sum + penalty.value, 0);
+            const totalBonuses = breakdown.bonuses.reduce((sum, bonus) => sum + bonus.value, 0);
+            const calculatedTotal = breakdown.startCapital + totalScenarioGains + totalPenalties + totalBonuses;
+            
+            return `
+                <div class="breakdown" id="breakdown-section">
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">💰 Start Kapital</div>
+                        <div class="breakdown-item neutral">
+                            <span>Åpningsbalanse</span>
+                            <span>${breakdown.startCapital.toLocaleString()} NOK</span>
+                        </div>
+                    </div>
+                    
+                    ${breakdown.scenarioGains.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">🎲 Scenario Resultater</div>
+                        ${breakdown.scenarioGains.map(gain => `
+                            <div class="breakdown-item positive">
+                                <span>Uke ${gain.week} - ${gain.scenario} (${gain.choice})</span>
+                                <span>+${gain.value.toLocaleString()} NOK</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                ${gain.outcome}
+                            </div>
+                        `).join('')}
+                        <div class="breakdown-item positive" style="font-weight: bold; border-top: 2px solid #28a745; padding-top: 0.5rem;">
+                            <span>Total scenario gevinster</span>
+                            <span>+${totalScenarioGains.toLocaleString()} NOK</span>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${breakdown.penalties.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">⚠️ Straffer</div>
+                        ${breakdown.penalties.map(penalty => `
+                            <div class="breakdown-item negative">
+                                <span>${penalty.type} (${penalty.status}) - ${penalty.date}</span>
+                                <span>${penalty.value.toLocaleString()} NOK</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                ${penalty.reason}
+                            </div>
+                        `).join('')}
+                        <div class="breakdown-item negative" style="font-weight: bold; border-top: 2px solid #dc3545; padding-top: 0.5rem;">
+                            <span>Total straffer</span>
+                            <span>${totalPenalties.toLocaleString()} NOK</span>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${breakdown.bonuses.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">🎉 Bonuser</div>
+                        ${breakdown.bonuses.map(bonus => `
+                            <div class="breakdown-item positive">
+                                <span>${bonus.type} - ${bonus.date}</span>
+                                <span>+${bonus.value.toLocaleString()} NOK</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                ${bonus.reason}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="breakdown-total">
+                        📊 Total Business Value: ${calculatedTotal.toLocaleString()} NOK
+                    </div>
+                    
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button class="btn" onclick="toggleBreakdown()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            Skjul detaljer
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleBreakdown() {
+            const breakdown = document.getElementById('breakdown-section');
+            if (breakdown) {
+                breakdown.classList.toggle('visible');
+            }
         }
 
         function renderScenario() {
