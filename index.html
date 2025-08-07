@@ -712,11 +712,23 @@
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-app').classList.add('hidden');
             
+            // Setup event listeners for login screen
+            setupLoginListeners();
+        }
+
+        function setupLoginListeners() {
             // Enable login button when user is selected
-            document.getElementById('user-select').addEventListener('change', function() {
-                const loginBtn = document.getElementById('login-btn');
-                loginBtn.disabled = !this.value;
-            });
+            const userSelect = document.getElementById('user-select');
+            const loginBtn = document.getElementById('login-btn');
+            
+            if (userSelect && loginBtn) {
+                userSelect.addEventListener('change', function() {
+                    loginBtn.disabled = !this.value;
+                });
+                
+                // Also check initial state
+                loginBtn.disabled = !userSelect.value;
+            }
         }
 
         function showMainApp() {
