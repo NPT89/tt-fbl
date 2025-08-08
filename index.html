@@ -707,9 +707,9 @@
                     <div class="breakdown-section">
                         <div class="breakdown-title">🎲 Scenario Resultater</div>
                         ${breakdownData.scenarioGains.map(gain => `
-                            <div class="breakdown-item positive">
+                            <div class="breakdown-item ${gain.value >= 0 ? 'positive' : 'negative'}">
                                 <span>Uke ${gain.week} - ${gain.scenario} (${gain.choice})</span>
-                                <span>+${gain.value.toLocaleString()} NOK</span>
+                                <span>${gain.value >= 0 ? '+' : ''}${gain.value.toLocaleString()} NOK</span>
                             </div>
                             <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
                                 ${gain.outcome}
