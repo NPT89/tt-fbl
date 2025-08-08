@@ -1060,15 +1060,43 @@ console.log("Spillerresultater oppdatert!");`;
                 }
                 
                 const player = gameData.players[playerIndex];
+                const playerName = player.name;
+                
+                // Update business value
                 gameData.players[playerIndex].businessValue += amount;
                 
+                // FIXED: Ensure playerBreakdowns exists and add penalty properly
+                if (!gameData.playerBreakdowns[playerName]) {
+                    gameData.playerBreakdowns[playerName] = {
+                        startCapital: 500000,
+                        scenarioGains: [],
+                        penalties: [],
+                        bonuses: []
+                    };
+                }
+                
+                // Add to penalties array with proper structure
+                gameData.playerBreakdowns[playerName].penalties.push({
+                    type: description,
+                    value: amount,
+                    date: new Date().toLocaleDateString('no-NO'),
+                    status: 'aktiv',
+                    reason: comment || 'Ingen kommentar'
+                });
+                
+                // Clear form
                 document.getElementById('penalty-player').value = '';
                 document.getElementById('penalty-type').value = '';
                 document.getElementById('penalty-amount').value = '';
                 document.getElementById('penalty-comment').value = '';
                 
                 refreshLeaderboard();
-                alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + player.name);
+                refreshPenalties();
+                
+                console.log('Penalty added to player:', playerName);
+                console.log('Current playerBreakdowns:', gameData.playerBreakdowns[playerName]);
+                
+                alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + playerName + '.\n\nStraffen er nå inkludert i playerBreakdowns og vil bli eksportert!');
             } else {
                 alert('Velg spiller og type straff');
             }
