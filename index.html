@@ -701,7 +701,7 @@
                             
                             return `
                                 <div class="breakdown-item ${colorClass}">
-                                    <span>${gain.scenario} - Valg ${gain.choice})</span>
+                                    <span>${gain.scenario} - Valg ${gain.choice}) ${gain.choiceTitle || ''}</span>
                                     <span>${sign}${value.toLocaleString()} NOK</span>
                                 </div>
                                 <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
@@ -860,7 +860,7 @@
                     choicesHtml += `
                         <div class="scenario-note">
                             <p><strong>📝 Hvordan delta:</strong></p>
-                            <p>Diskuter ditt valg med admin, eller vent på instruksjoner for hvordan du sender inn ditt valg.</p>
+                            <p>Klikk på ditt ønskede valg for å registrere det automatisk!</p>
                         </div>
                     `;
                 } else {
