@@ -140,18 +140,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .leaderboard-item:hover::after {
-            content: "👆 Klikk for detaljer";
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.7rem;
-            color: #0066CC;
-            opacity: 0.8;
-            pointer-events: none;
-        }
-
         .rank {
             font-weight: bold;
             font-size: 1.2rem;
@@ -713,11 +701,11 @@
                             
                             return `
                                 <div class="breakdown-item ${colorClass}">
-                                    <span>Uke ${gain.week} - ${gain.scenario} (${gain.choice})</span>
+                                    <span>${gain.scenario} - Valg ${gain.choice})</span>
                                     <span>${sign}${value.toLocaleString()} NOK</span>
                                 </div>
                                 <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
-                                    ${gain.outcome}
+                                    <strong>${gain.outcome}</strong>${gain.description ? ` - ${gain.description}` : ''}
                                 </div>
                             `;
                         }).join('')}
