@@ -659,69 +659,11 @@
         let loadedPlayerChoices = [];
         let diceResultsData = [];
 
-        function loadChoicesForDice() {
-            const urlInput = document.getElementById('sheets-url-input');
-            let sheetsUrl = urlInput.value.trim();
-            
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-                if (sheetsUrl && !sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                    urlInput.value = sheetsUrl;
-                } else {
-                    alert('Sett Google Apps Script URL først i "Se Valg" tab!');
-                    return;
-                }
-            }
-            
-            // Use the same fetch function as before
-            const callbackName = 'diceChoicesCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success' && response.data && response.data.length > 0) {
-                    loadedPlayerChoices = response.data;
-                    displayLoadedChoicesForDice(response.data);
-                    document.getElementById('loaded-choices-status').style.display = 'block';
-                    document.getElementById('roll-dice-smart-btn').disabled = false;
-                } else {
-                    alert('Ingen valg funnet! Spillere må velge alternativer først.');
-                }
-            };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                alert('Kunne ikke hente valg fra Google Sheets');
-            };
-            
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=get';
-            document.head.appendChild(script);
-        }
-
-        function displayLoadedChoicesForDice(data) {
-            // Group by player and get latest choice per player
-            const playerChoices = {};
-            data.forEach(choice => {
-                const player = choice['Player Name'];
-                if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
-                    playerChoices[player] = choice;
-                }
-            });
-            
-            let summary = '';
-            Object.values(playerChoices).forEach(choice => {
-                summary += choice['Player Name'] + ' → Valg ' + choice['Choice Letter'] + ') ' + choice['Choice Title'] + '<br>';
-            });
-            
-            document.getElementById('loaded-choices-summary').innerHTML = summary;
-        }
+        // Remove duplicate functions - keeping the main ones
 
         function rollDiceWithChoices() {
             if (loadedPlayerChoices.length === 0) {
-                alert('Last inn spillernes valg først!');
+                alert('Hent spillernes valg først!');
                 return;
             }
             
@@ -794,6 +736,18 @@
             
             document.getElementById('dice-results-smart').innerHTML = resultsHtml;
             document.getElementById('apply-results-section').style.display = 'block';
+            
+            // Store results in scenario for export
+            gameData.currentScenario.results = {};
+            diceResultsData.forEach(result => {
+                gameData.currentScenario.results[result.player] = {
+                    choice: result.choice,
+                    choiceTitle: result.choiceTitle,
+                    outcome: result.outcome,
+                    valueChange: result.nokValue,
+                    description: result.description
+                };
+            });
         }
 
         function applyDiceResults() {
@@ -834,6 +788,20 @@
             
             refreshLeaderboard();
             alert('✅ Resultater anvendt! ' + updatedCount + ' spillere oppdatert.\n\nHusk å eksportere oppdatert leaderboard til hovedsiden.');
+        }
+
+        function exportResultsForPlayers() {
+            if (diceResultsData.length === 0) {
+                alert('Ingen resultater å eksportere! Kast terning først.');
+                return;
+            }
+            
+            const resultsCode = 'window.updateGameData({\n  scenario: ' + JSON.stringify(gameData.currentScenario, null, 2) + '\n});\n\nconsole.log("Scenario results updated for players!");';
+            
+            // Show in export tab
+            document.getElementById('export-scenario-js').textContent = resultsCode;
+            
+            alert('✅ Resultater klar for eksport!\n\nGå til "Eksporter Data" tab og kopier scenario-koden til hovedsiden.');
         }
 
         // Player choices management
@@ -897,6 +865,12 @@
             });
             
             document.getElementById('choices-content').innerHTML = html;
+            
+            // Show dice section after choices are loaded
+            document.getElementById('dice-section').style.display = 'block';
+            
+            // Store choices for dice rolling
+            loadedPlayerChoices = data;
         }
 
         // Penalty functions
