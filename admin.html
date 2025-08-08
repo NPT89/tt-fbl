@@ -1091,17 +1091,45 @@ console.log("Spillerresultater oppdatert!");`;
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
             // KOMBINERT SCENARIO + LEADERBOARD KODE MED KLIKKBARHET
-            const combinedCode = `// KOMBINERT OPPDATERING - Leaderboard + Klikkbare Valg
-// Alt-i-ett løsning som ikke overskriver hverandre!
+            const combinedCode = `// KOMBINERT OPPDATERING - Dashboard + Leaderboard + Klikkbare Valg
+// Alt-i-ett løsning som oppdaterer HELE siden!
 
 const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // ENDRE DENNE!
 
-// Oppdater både players og scenario samtidig
+// Oppdater ALLE data samtidig
 window.updateGameData({
     players: ${JSON.stringify(gameData.players, null, 2)},
     playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)},
     scenario: ${JSON.stringify(gameData.currentScenario, null, 2)}
 });
+
+// FORCE refresh dashboard stats
+setTimeout(() => {
+    // Manual dashboard update
+    if (typeof updateStats === 'function') {
+        updateStats();
+    }
+    if (typeof renderLeaderboard === 'function') {
+        renderLeaderboard();
+    }
+    if (typeof renderScenario === 'function') {
+        renderScenario();
+    }
+    
+    // Update stats manually if functions don't exist
+    const totalPlayersEl = document.getElementById('total-players');
+    const currentLeaderEl = document.getElementById('current-leader'); 
+    const avgValueEl = document.getElementById('avg-value');
+    
+    if (totalPlayersEl) totalPlayersEl.textContent = ${gameData.players.length};
+    if (currentLeaderEl) currentLeaderEl.textContent = '${gameData.players[0]?.name?.split(' ')[0] || 'N/A'}';
+    if (avgValueEl) {
+        const avg = ${Math.round(gameData.players.reduce((sum, p) => sum + p.businessValue, 0) / gameData.players.length)};
+        avgValueEl.textContent = avg.toLocaleString();
+    }
+    
+    console.log('📊 Dashboard stats manually updated');
+}, 500);
 
 // Function to send choice to Google Sheets using JSONP (bypasses CORS)
 function sendChoiceToSheets(choiceData) {
@@ -1248,7 +1276,7 @@ setTimeout(() => {
     });
 }, 1000);
 
-console.log('✅ KOMBINERT OPPDATERING: Leaderboard + Klikkbare valg + Google Sheets integration!');`;
+console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Google Sheets integration!');`;
 
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
             document.getElementById('export-scenario-js').textContent = combinedCode;
