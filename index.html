@@ -742,7 +742,7 @@
                                 </div>
                             `;
                         }).join('')}
-                        <div class="breakdown-item ${totalPenalties > 0 ? 'positive' : totalPenalities < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalPenalties > 0 ? '#28a745' : totalPenalties < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
+                        <div class="breakdown-item ${totalPenalties > 0 ? 'positive' : totalPenalties < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalPenalties > 0 ? '#28a745' : totalPenalties < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
                             <span>Total straffer</span>
                             <span>${totalPenalties > 0 ? '+' : ''}${totalPenalties.toLocaleString()} NOK</span>
                         </div>
