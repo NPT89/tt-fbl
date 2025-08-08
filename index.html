@@ -834,19 +834,17 @@
                                 </div>
                             </div>
                         `;
-                    } else {
-                        choicesHtml += `
-                            <div class="choice-display">
-                                <div class="choice-letter">${key})</div>
-                                <div class="choice-content">
-                                    <div class="choice-title">${choice.title || choice}</div>
-                                    ${choice.cost ? `<div class="choice-cost">💰 ${choice.cost}</div>` : ''}
-                                    ${choice.potential ? `<div class="choice-potential">🎯 ${choice.potential}</div>` : ''}
-                                    ${choice.odds ? `<div class="choice-odds">🎲 ${choice.odds}</div>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }
+} else {
+    choicesHtml += '<div class="choice-display">';
+    choicesHtml += '<div class="choice-letter">' + key + ')</div>';
+    choicesHtml += '<div class="choice-content">';
+    choicesHtml += '<div class="choice-title">' + (choice.title || choice) + '</div>';
+    if (choice.cost) choicesHtml += '<div class="choice-cost">💰 ' + choice.cost + '</div>';
+    if (choice.potential) choicesHtml += '<div class="choice-potential">🎯 ' + choice.potential + '</div>';
+    if (choice.odds) choicesHtml += '<div class="choice-odds">🎲 ' + choice.odds + '</div>';
+    choicesHtml += '</div>';
+    choicesHtml += '</div>';
+}
                 });
                 choicesHtml += '</div>';
                 
