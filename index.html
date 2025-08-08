@@ -683,10 +683,10 @@
         }
 
         function createBreakdownHTML(playerName, breakdownData) {
-            const totalScenarioGains = breakdownData.scenarioGains.reduce((sum, gain) => sum + gain.value, 0);
-            const totalPenalties = breakdownData.penalties.reduce((sum, penalty) => sum + penalty.value, 0);
-            const totalBonuses = breakdownData.bonuses.reduce((sum, bonus) => sum + bonus.value, 0);
-            const calculatedTotal = breakdownData.startCapital + totalScenarioGains + totalPenalties + totalBonuses;
+            const totalScenarioGains = breakdownData.scenarioGains.reduce((sum, gain) => sum + Number(gain.value), 0);
+            const totalPenalties = breakdownData.penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
+            const totalBonuses = breakdownData.bonuses.reduce((sum, bonus) => sum + Number(bonus.value), 0);
+            const calculatedTotal = Number(breakdownData.startCapital) + totalScenarioGains + totalPenalties + totalBonuses;
             
             return `
                 <div class="breakdown visible" id="breakdown-${playerName.replace(/\s+/g, '-')}">
@@ -699,25 +699,31 @@
                         <div class="breakdown-title">💰 Start Kapital</div>
                         <div class="breakdown-item neutral">
                             <span>Åpningsbalanse</span>
-                            <span>${breakdownData.startCapital.toLocaleString()} NOK</span>
+                            <span>${Number(breakdownData.startCapital).toLocaleString()} NOK</span>
                         </div>
                     </div>
                     
                     ${breakdownData.scenarioGains.length > 0 ? `
                     <div class="breakdown-section">
                         <div class="breakdown-title">🎲 Scenario Resultater</div>
-                        ${breakdownData.scenarioGains.map(gain => `
-                            <div class="breakdown-item ${gain.value >= 0 ? 'positive' : 'negative'}">
-                                <span>Uke ${gain.week} - ${gain.scenario} (${gain.choice})</span>
-                                <span>${gain.value >= 0 ? '+' : ''}${gain.value.toLocaleString()} NOK</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
-                                ${gain.outcome}
-                            </div>
-                        `).join('')}
-                        <div class="breakdown-item positive" style="font-weight: bold; border-top: 2px solid #28a745; padding-top: 0.5rem;">
+                        ${breakdownData.scenarioGains.map(gain => {
+                            const value = Number(gain.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>Uke ${gain.week} - ${gain.scenario} (${gain.choice})</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    ${gain.outcome}
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="breakdown-item ${totalScenarioGains > 0 ? 'positive' : totalScenarioGains < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalScenarioGains > 0 ? '#28a745' : totalScenarioGains < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
                             <span>Total scenario gevinster</span>
-                            <span>+${totalScenarioGains.toLocaleString()} NOK</span>
+                            <span>${totalScenarioGains > 0 ? '+' : ''}${totalScenarioGains.toLocaleString()} NOK</span>
                         </div>
                     </div>
                     ` : `
@@ -733,18 +739,24 @@
                     ${breakdownData.penalties.length > 0 ? `
                     <div class="breakdown-section">
                         <div class="breakdown-title">⚠️ Straffer</div>
-                        ${breakdownData.penalties.map(penalty => `
-                            <div class="breakdown-item negative">
-                                <span>${penalty.type} (${penalty.status}) - ${penalty.date}</span>
-                                <span>${penalty.value.toLocaleString()} NOK</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
-                                ${penalty.reason}
-                            </div>
-                        `).join('')}
-                        <div class="breakdown-item negative" style="font-weight: bold; border-top: 2px solid #dc3545; padding-top: 0.5rem;">
+                        ${breakdownData.penalties.map(penalty => {
+                            const value = Number(penalty.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>${penalty.type} (${penalty.status}) - ${penalty.date}</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    ${penalty.reason}
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="breakdown-item ${totalPenalties > 0 ? 'positive' : totalPenalities < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalPenalties > 0 ? '#28a745' : totalPenalties < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
                             <span>Total straffer</span>
-                            <span>${totalPenalties.toLocaleString()} NOK</span>
+                            <span>${totalPenalties > 0 ? '+' : ''}${totalPenalties.toLocaleString()} NOK</span>
                         </div>
                     </div>
                     ` : ''}
@@ -752,15 +764,21 @@
                     ${breakdownData.bonuses.length > 0 ? `
                     <div class="breakdown-section">
                         <div class="breakdown-title">🎉 Bonuser</div>
-                        ${breakdownData.bonuses.map(bonus => `
-                            <div class="breakdown-item positive">
-                                <span>${bonus.type} - ${bonus.date}</span>
-                                <span>+${bonus.value.toLocaleString()} NOK</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
-                                ${bonus.reason}
-                            </div>
-                        `).join('')}
+                        ${breakdownData.bonuses.map(bonus => {
+                            const value = Number(bonus.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>${bonus.type} - ${bonus.date}</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    ${bonus.reason}
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                     ` : ''}
                     
@@ -1019,5 +1037,4 @@
         });
     </script>
 </body>
-</html>-letter">${key})</div>
-                                <div class="choice
+</html>
