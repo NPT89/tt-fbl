@@ -774,32 +774,53 @@
                 // Find player in gameData and update business value
                 const playerIndex = gameData.players.findIndex(p => p.name === result.player);
                 if (playerIndex !== -1) {
-                    gameData.players[playerIndex].businessValue += result.nokValue;
+                    // Check if already applied to avoid duplicates
+                    const currentValue = gameData.players[playerIndex].businessValue;
+                    const expectedValue = currentValue + result.nokValue;
                     
-                    // Add to player breakdown
-                    if (!gameData.playerBreakdowns[result.player]) {
-                        gameData.playerBreakdowns[result.player] = {
-                            startCapital: 500000,
-                            scenarioGains: [],
-                            penalties: [],
-                            bonuses: []
-                        };
+                    // Only apply if not already applied
+                    if (!gameData.players[playerIndex]._lastResultApplied || 
+                        gameData.players[playerIndex]._lastResultApplied !== result.nokValue) {
+                        
+                        gameData.players[playerIndex].businessValue += result.nokValue;
+                        gameData.players[playerIndex]._lastResultApplied = result.nokValue; // Track last applied
+                        
+                        // Add to player breakdown
+                        if (!gameData.playerBreakdowns[result.player]) {
+                            gameData.playerBreakdowns[result.player] = {
+                                startCapital: 500000,
+                                scenarioGains: [],
+                                penalties: [],
+                                bonuses: []
+                            };
+                        }
+                        
+                        // Check for duplicates in breakdown
+                        const existingGain = gameData.playerBreakdowns[result.player].scenarioGains.find(
+                            gain => gain.scenario === gameData.currentScenario.title && gain.choice === result.choice
+                        );
+                        
+                        if (!existingGain) {
+                            gameData.playerBreakdowns[result.player].scenarioGains.push({
+                                week: 'Current',
+                                scenario: gameData.currentScenario.title,
+                                choice: result.choice,
+                                outcome: result.outcome,
+                                value: result.nokValue
+                            });
+                        }
+                        
+                        updatedCount++;
                     }
-                    
-                    gameData.playerBreakdowns[result.player].scenarioGains.push({
-                        week: 'Current',
-                        scenario: gameData.currentScenario.title,
-                        choice: result.choice,
-                        outcome: result.outcome,
-                        value: result.nokValue
-                    });
-                    
-                    updatedCount++;
                 }
             });
             
-            refreshLeaderboard();
-            alert('✅ Resultater anvendt! ' + updatedCount + ' spillere oppdatert.\n\nHusk å eksportere oppdatert leaderboard til hovedsiden.');
+            if (updatedCount > 0) {
+                refreshLeaderboard();
+                alert('✅ Resultater anvendt i admin! ' + updatedCount + ' spillere oppdatert.\n\n⚠️ VIKTIG: Ikke bruk "Eksporter til Spillere" nå - det vil skape duplikater. Eksporter heller bare leaderboard-data.');
+            } else {
+                alert('ℹ️ Resultater allerede anvendt. Ingen endringer gjort.');
+            }
         }
 
         function exportResultsForPlayers() {
@@ -808,68 +829,64 @@
                 return;
             }
             
-            // Apply results to game data first (if not already done)
-            let updatedCount = 0;
-            diceResultsData.forEach(result => {
-                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
-                if (playerIndex !== -1) {
-                    // Update business value
-                    gameData.players[playerIndex].businessValue += result.nokValue;
-                    
-                    // Add to player breakdown
-                    if (!gameData.playerBreakdowns[result.player]) {
-                        gameData.playerBreakdowns[result.player] = {
-                            startCapital: 500000,
-                            scenarioGains: [],
-                            penalties: [],
-                            bonuses: []
-                        };
-                    }
-                    
-                    // Check if this result is already in breakdown to avoid duplicates
-                    const existingGain = gameData.playerBreakdowns[result.player].scenarioGains.find(
-                        gain => gain.scenario === gameData.currentScenario.title && gain.choice === result.choice
-                    );
-                    
-                    if (!existingGain) {
-                        gameData.playerBreakdowns[result.player].scenarioGains.push({
-                            week: 'Current',
-                            scenario: gameData.currentScenario.title,
-                            choice: result.choice,
-                            outcome: result.outcome,
-                            value: result.nokValue
-                        });
-                        updatedCount++;
-                    }
-                }
-            });
+            // DON'T apply results here - just export them
+            console.log('Eksporterer resultater uten å endre admin-data');
             
-            // Re-rank players
-            gameData.players.sort((a, b) => b.businessValue - a.businessValue);
-            gameData.players.forEach((player, index) => {
-                player.rank = index + 1;
-            });
-            
-            // Create comprehensive export code that updates EVERYTHING
+            // Create export code that applies results on the player side
             const completeUpdateCode = `
-// Komplett oppdatering av alle data - scenario, leaderboard og breakdowns
-window.updateGameData({
-    scenario: ${JSON.stringify(gameData.currentScenario, null, 2)},
-    players: ${JSON.stringify(gameData.players, null, 2)},
-    playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)}
+// Komplett oppdatering - kun for spillersiden
+const newScenarioResults = ${JSON.stringify(gameData.currentScenario, null, 2)};
+
+// Apply results to player breakdowns
+${diceResultsData.map(result => `
+if (gameState.players.find(p => p.name === "${result.player}")) {
+    const playerIndex = gameState.players.findIndex(p => p.name === "${result.player}");
+    gameState.players[playerIndex].businessValue += ${result.nokValue};
+    
+    if (!gameState.playerBreakdowns["${result.player}"]) {
+        gameState.playerBreakdowns["${result.player}"] = {
+            startCapital: 500000,
+            scenarioGains: [],
+            penalties: [],
+            bonuses: []
+        };
+    }
+    
+    // Check for duplicates before adding
+    const existingGain = gameState.playerBreakdowns["${result.player}"].scenarioGains.find(
+        gain => gain.scenario === "${gameData.currentScenario.title}" && gain.choice === "${result.choice}"
+    );
+    
+    if (!existingGain) {
+        gameState.playerBreakdowns["${result.player}"].scenarioGains.push({
+            week: 'Current',
+            scenario: "${gameData.currentScenario.title}",
+            choice: "${result.choice}",
+            outcome: "${result.outcome}",
+            value: ${result.nokValue}
+        });
+    }
+}`).join('\n')}
+
+// Re-rank players
+gameState.players.sort((a, b) => b.businessValue - a.businessValue);
+gameState.players.forEach((player, index) => {
+    player.rank = index + 1;
 });
 
-console.log("Komplett oppdatering utført: scenario-resultater, leaderboard og breakdowns!");`;
+// Update everything
+window.updateGameData({
+    scenario: newScenarioResults,
+    players: gameState.players,
+    playerBreakdowns: gameState.playerBreakdowns
+});
+
+console.log("Spillerresultater oppdatert!");`;
             
             // Show in export tab
             document.getElementById('export-scenario-js').textContent = completeUpdateCode;
             
-            if (updatedCount > 0) {
-                refreshLeaderboard();
-                alert('✅ Resultater klargjort for komplett eksport!\n\n' + updatedCount + ' spillere vil få oppdaterte breakdowns.\n\nGå til "Eksporter Data" tab og kopier scenario-koden til hovedsiden.');
-            } else {
-                alert('✅ Resultater klar for eksport!\n\nGå til "Eksporter Data" tab og kopier scenario-koden til hovedsiden.\n\n(Business values allerede oppdatert)');
-            }
+            alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: Denne funksjonen endrer IKKE admin-data, kun spillersiden.');
         }
 
         // Player choices management
