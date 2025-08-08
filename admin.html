@@ -348,8 +348,6 @@
             </div>
         </div>
 
-        <!-- Simple Dice Tab - REMOVED -->
-
         <!-- Penalties Tab -->
         <div id="penalties" class="tab-content">
             <div class="panel-grid">
@@ -671,8 +669,6 @@
         let loadedPlayerChoices = [];
         let diceResultsData = [];
 
-        // Remove duplicate functions - keeping the main ones
-
         function rollDiceWithChoices() {
             if (loadedPlayerChoices.length === 0) {
                 alert('Hent spillernes valg først!');
@@ -805,7 +801,9 @@
                                 week: 'Current',
                                 scenario: gameData.currentScenario.title,
                                 choice: result.choice,
+                                choiceTitle: result.choiceTitle,
                                 outcome: result.outcome,
+                                description: result.description,
                                 value: result.nokValue
                             });
                         }
@@ -862,7 +860,9 @@ if (gameState.players.find(p => p.name === "${result.player}")) {
             week: 'Current',
             scenario: "${gameData.currentScenario.title}",
             choice: "${result.choice}",
+            choiceTitle: "${result.choiceTitle}",
             outcome: "${result.outcome}",
+            description: "${result.description}",
             value: ${result.nokValue}
         });
     }
