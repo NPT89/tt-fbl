@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0066CC 0%, #00A651 100%);
             min-height: 100vh;
             padding: 2rem;
             color: #333;
@@ -50,7 +50,7 @@
 
         .panel h2 {
             margin-bottom: 1.5rem;
-            color: #667eea;
+            color: #0066CC;
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 0.5rem;
         }
@@ -81,11 +81,11 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0066CC;
         }
 
         .btn {
-            background: linear-gradient(145deg, #667eea, #764ba2);
+            background: linear-gradient(145deg, #0066CC, #00A651);
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -115,7 +115,7 @@
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #0066CC;
         }
 
         .player-row {
@@ -164,8 +164,8 @@
         }
 
         .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #0066CC;
+            border-bottom-color: #0066CC;
         }
 
         .tab-content {
@@ -181,14 +181,14 @@
             border-radius: 8px;
             padding: 1rem;
             margin: 0.5rem 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #0066CC;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏆 Admin Panel - Tripletex Business School</h1>
+            <h1>🏆 Admin Panel - Suppa Business League</h1>
             <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
         </div>
 
@@ -418,57 +418,69 @@
     </div>
 
     <script>
-        // Game data
+        // Game data with real companies
         let gameData = {
             players: [
-                { name: 'Anna Nordström', company: 'EcoTech Solutions AS', businessValue: 545000, rank: 1 },
-                { name: 'Marcus Berg', company: 'Digital Innovation AS', businessValue: 520000, rank: 2 },
-                { name: 'Lisa Hansen', company: 'CreativeHub AS', businessValue: 500000, rank: 3 },
-                { name: 'Test Bruker', company: 'Test Selskap AS', businessValue: 485000, rank: 4 }
+                { name: 'Digital Partner AS', company: 'Digital Partner AS', businessValue: 500000, rank: 1 },
+                { name: 'Frøken Kjeks AS', company: 'Frøken Kjeks AS', businessValue: 500000, rank: 2 },
+                { name: 'Levende Planter AS', company: 'Levende Planter AS', businessValue: 500000, rank: 3 },
+                { name: 'Sedush AS', company: 'Sedush AS', businessValue: 500000, rank: 4 }
             ],
             currentScenario: {
                 title: 'Måned 1: Kapasitetsutfordring',
                 description: 'Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger...',
                 deadline: '2025-08-16T14:00',
                 choices: {
-                    'A': 'Stort kontor + full bemanning',
-                    'B': 'Medium kontor', 
-                    'C': 'Automatiseringsløsning',
-                    'D': 'Outsourcing-strategi'
+                    'A': {
+                        title: 'Stort kontor + full bemanning',
+                        cost: 'Kostnad: +80% husleie + 60k/mnd lønn',
+                        potential: 'Potensial: Maks vekst 30% → 50%',
+                        odds: 'Odds: 60% suksess / 25% delvis / 15% fiasko'
+                    },
+                    'B': {
+                        title: 'Medium kontor',
+                        cost: 'Kostnad: +40% husleie + 30k/mnd lønn',
+                        potential: 'Potensial: Moderat vekst',
+                        odds: 'Odds: 70% suksess / 20% delvis / 10% fiasko'
+                    },
+                    'C': {
+                        title: 'Automatiseringsløsning',
+                        cost: 'Kostnad: 100k engangs + vedlikehold',
+                        potential: 'Potensial: Skalerbar vekst',
+                        odds: 'Odds: 50% suksess / 30% delvis / 20% fiasko'
+                    },
+                    'D': {
+                        title: 'Outsourcing-strategi',
+                        cost: 'Kostnad: Lavere faste kostnader',
+                        potential: 'Potensial: Fleksibel vekst',
+                        odds: 'Odds: 65% suksess / 25% delvis / 10% fiasko'
+                    }
                 }
             },
             penalties: [],
             playerBreakdowns: {
-                'Anna Nordström': {
-                    startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess!', value: 35000 }
-                    ],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Marcus Berg': {
-                    startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'B', outcome: 'Suksess', value: 20000 }
-                    ],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Lisa Hansen': {
+                'Digital Partner AS': {
                     startCapital: 500000,
                     scenarioGains: [],
                     penalties: [],
                     bonuses: []
                 },
-                'Test Bruker': {
+                'Frøken Kjeks AS': {
                     startCapital: 500000,
-                    scenarioGains: [
-                        { week: 1, scenario: 'Kapasitetsutfordring', choice: 'A', outcome: 'Suksess', value: 25000 }
-                    ],
-                    penalties: [
-                        { type: 'MVA-feil', value: -25000, date: '2025-08-10', status: 'aktiv', reason: 'Feil MVA-kode på salg' }
-                    ],
+                    scenarioGains: [],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Levende Planter AS': {
+                    startCapital: 500000,
+                    scenarioGains: [],
+                    penalties: [],
+                    bonuses: []
+                },
+                'Sedush AS': {
+                    startCapital: 500000,
+                    scenarioGains: [],
+                    penalties: [],
                     bonuses: []
                 }
             }
