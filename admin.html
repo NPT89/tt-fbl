@@ -826,58 +826,64 @@
 
         function loadTasksIntoUI() {
             const tasksDiv = document.getElementById('scenario-tasks');
-            tasksDiv.innerHTML = ''; // Clear existing tasks
+            if (!tasksDiv) {
+                console.log('❌ scenario-tasks element not found');
+                return;
+            }
+            
+            let html = '';
             
             if (gameData.currentScenario.tasks && gameData.currentScenario.tasks.length > 0) {
                 gameData.currentScenario.tasks.forEach((task, index) => {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.className = 'scenario-task';
-                    taskDiv.setAttribute('data-task', task.number || (index + 1));
-                    taskDiv.innerHTML = `
-                        <div class="task-header">
-                            <span class="task-number">${task.number || (index + 1)})</span>
-                            <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
-                            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                        </div>
-                        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
-                        <div class="task-rewards">
-                            <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
-                            <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
+                    html += `
+                        <div class="scenario-task" data-task="${task.number || (index + 1)}">
+                            <div class="task-header">
+                                <span class="task-number">${task.number || (index + 1)})</span>
+                                <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
+                                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                            </div>
+                            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
+                            <div class="task-rewards">
+                                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
+                                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
+                            </div>
                         </div>
                     `;
-                    tasksDiv.appendChild(taskDiv);
                 });
             }
             
-            // Add "Legg til oppgave" button
-            const addButton = document.createElement('button');
-            addButton.className = 'btn btn-small';
-            addButton.textContent = 'Legg til oppgave';
-            addButton.onclick = addTask;
-            tasksDiv.parentNode.appendChild(addButton);
+            tasksDiv.innerHTML = html;
+            console.log('✅ Tasks loaded into UI:', gameData.currentScenario.tasks ? gameData.currentScenario.tasks.length : 0, 'tasks');
         }
 
         function loadChoicesIntoUI() {
             const choicesDiv = document.getElementById('scenario-choices');
-            choicesDiv.innerHTML = ''; // Clear existing choices
+            if (!choicesDiv) {
+                console.log('❌ scenario-choices element not found');
+                return;
+            }
+            
+            let html = '';
             
             if (gameData.currentScenario.choices && Object.keys(gameData.currentScenario.choices).length > 0) {
                 Object.entries(gameData.currentScenario.choices).forEach(([key, choice]) => {
-                    const choiceDiv = document.createElement('div');
-                    choiceDiv.className = 'scenario-choice';
-                    choiceDiv.setAttribute('data-choice', key);
-                    choiceDiv.innerHTML = `
-                        <div class="choice-header">
-                            <input type="text" class="choice-title-input" value="${key}) ${choice.title || choice}" placeholder="${key}) Valg tittel" oninput="previewChoices()">
-                            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                    const title = typeof choice === 'string' ? choice : choice.title || '';
+                    html += `
+                        <div class="scenario-choice" data-choice="${key}">
+                            <div class="choice-header">
+                                <input type="text" class="choice-title-input" value="${key}) ${title}" placeholder="${key}) Valg tittel" oninput="previewChoices()">
+                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                            </div>
+                            <input type="text" class="choice-cost" placeholder="Kostnad: " value="${choice.cost || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+                            <input type="text" class="choice-potential" placeholder="Potensial: " value="${choice.potential || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+                            <input type="text" class="choice-odds" placeholder="Odds: " value="${choice.odds || ''}" oninput="previewChoices()">
                         </div>
-                        <input type="text" class="choice-cost" placeholder="Kostnad: " value="${choice.cost || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                        <input type="text" class="choice-potential" placeholder="Potensial: " value="${choice.potential || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                        <input type="text" class="choice-odds" placeholder="Odds: " value="${choice.odds || ''}" oninput="previewChoices()">
                     `;
-                    choicesDiv.appendChild(choiceDiv);
                 });
             }
+            
+            choicesDiv.innerHTML = html;
+            console.log('✅ Choices loaded into UI:', gameData.currentScenario.choices ? Object.keys(gameData.currentScenario.choices).length : 0, 'choices');
         }
 
         // NEW GOOGLE SHEETS INTEGRATION FOR PLAYERS
