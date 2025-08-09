@@ -757,7 +757,11 @@
                     });
                     
                     console.log('✅ Players loaded from Google Sheets:', gameData.players.length, 'players');
-                    refreshLeaderboard();
+                    
+                    // FIXED: Force UI refresh after loading
+                    setTimeout(() => {
+                        refreshLeaderboard();
+                    }, 100);
                 } else {
                     console.log('ℹ️ No players found in Google Sheets - using defaults');
                 }
@@ -910,7 +914,8 @@
                 document.getElementById('new-player-value').value = '500000';
                 
                 refreshLeaderboard();
-                alert(name + ' lagt til!');
+                savePlayersToSheets();
+                alert(name + ' lagt til og lagret!');
             } else {
                 alert('Fyll inn alle felt');
             }
@@ -920,12 +925,14 @@
             if (confirm('Sikker på at du vil fjerne ' + gameData.players[index].name + '?')) {
                 gameData.players.splice(index, 1);
                 refreshLeaderboard();
+                savePlayersToSheets();
             }
         }
 
         function updatePlayerValue(index, newValue) {
             gameData.players[index].businessValue = parseInt(newValue);
             refreshLeaderboard();
+            savePlayersToSheets();
         }
 
         function applyQuickChange() {
@@ -941,14 +948,16 @@
                 document.getElementById('quick-change-reason').value = '';
                 
                 refreshLeaderboard();
-                alert('Endring på ' + change.toLocaleString() + ' NOK utført for ' + gameData.players[playerIndex].name);
+                savePlayersToSheets();
+                alert('Endring på ' + change.toLocaleString() + ' NOK utført og lagret for ' + gameData.players[playerIndex].name);
             } else {
                 alert('Velg spiller og angi endring');
             }
         }
 
         function updateLeaderboard() {
-            alert('Leaderboard oppdatert! Kopier JavaScript-koden fra "Eksporter Data" fanen.');
+            savePlayersToSheets();
+            alert('Leaderboard oppdatert og lagret til Google Sheets!');
         }
 
         // UPDATED Scenario functions
@@ -1674,6 +1683,15 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             
             // Load saved URL
             loadSavedUrl();
+            
+            // Auto-load players from Google Sheets if URL is saved
+            setTimeout(() => {
+                const savedUrl = localStorage.getItem('tripletex_sheets_url');
+                if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
+                    console.log('🔄 Auto-loading players from Google Sheets...');
+                    loadPlayersFromSheets();
+                }
+            }, 1000);
         });
     </script>
 </body>
