@@ -515,6 +515,35 @@
             display: none;
         }
 
+        /* NEW - Connection status indicator */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.8rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.connected {
+            color: #28a745;
+            border-left: 4px solid #28a745;
+        }
+
+        .connection-status.loading {
+            color: #ffc107;
+            border-left: 4px solid #ffc107;
+        }
+
+        .connection-status.error {
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 0 1rem;
@@ -541,10 +570,22 @@
             .task-rewards {
                 grid-template-columns: 1fr;
             }
+
+            .connection-status {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Connection status indicator -->
+    <div id="connection-status" class="connection-status loading">
+        🔄 Kobler til Google Sheets...
+    </div>
+
     <header class="header">
         <div class="container">
             <nav class="nav">
@@ -644,6 +685,73 @@
     </main>
 
     <script>
+        // GOOGLE SHEETS CONFIGURATION - STEG 1
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzG9YKhZXlUtVLG5MSUGDI7yJ5ovyxzeErV7oVRuhg_CDayRcii2NzZiGtsQs2dqyzZ/exec';
+
+        // Connection status functions
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.className = `connection-status ${status}`;
+            
+            const icons = {
+                loading: '🔄',
+                connected: '✅',
+                error: '❌'
+            };
+            
+            statusEl.innerHTML = `${icons[status]} ${message}`;
+            
+            // Auto-hide after 5 seconds if connected
+            if (status === 'connected') {
+                setTimeout(() => {
+                    statusEl.style.opacity = '0.7';
+                    statusEl.style.transform = 'scale(0.9)';
+                }, 5000);
+            }
+        }
+
+        // Test connection to Google Sheets
+        function testGoogleSheetsConnection() {
+            updateConnectionStatus('loading', 'Tester forbindelse...');
+            
+            const callbackName = 'testCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success') {
+                    updateConnectionStatus('connected', 'Tilkoblet Google Sheets');
+                    console.log('✅ Google Sheets connection successful');
+                } else {
+                    updateConnectionStatus('error', 'Forbindelsesfeil');
+                    console.log('❌ Google Sheets connection failed:', response);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                updateConnectionStatus('error', 'Kan ikke nå Google Sheets');
+                console.log('❌ Google Sheets network error');
+            };
+            
+            // Test with a simple ping
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=ping';
+            document.head.appendChild(script);
+            
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Forbindelse timeout');
+                    console.log('❌ Google Sheets connection timeout');
+                }
+            }, 10000);
+        }
+
         // Game state with real companies
         let gameState = {
             players: [
@@ -1136,6 +1244,9 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Test Google Sheets connection first
+            testGoogleSheetsConnection();
+            
             renderLeaderboard();
             renderScenario();
             updateStats();
