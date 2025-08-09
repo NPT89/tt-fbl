@@ -223,6 +223,88 @@
             margin: 0.5rem 0;
             border-left: 4px solid #0066CC;
         }
+
+        /* NEW TASK STYLING */
+        .scenario-task {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            gap: 0.5rem;
+        }
+
+        .task-number {
+            font-weight: bold;
+            color: #0066CC;
+            font-size: 1.1rem;
+            min-width: 30px;
+        }
+
+        .task-title-input {
+            flex-grow: 1;
+            font-weight: bold;
+            color: #333;
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .task-title-input:focus {
+            outline: none;
+            border-color: #0066CC;
+            background: white;
+        }
+
+        .task-description {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .task-description:focus {
+            outline: none;
+            border-color: #0066CC;
+        }
+
+        .task-rewards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .task-reward {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .task-penalty {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .task-reward, .task-penalty {
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .task-reward:focus, .task-penalty:focus {
+            outline: none;
+            border-color: #0066CC;
+        }
     </style>
 </head>
 <body>
@@ -301,8 +383,40 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Beskrivelse:</label>
-                        <textarea id="scenario-description" rows="3" placeholder="Din bedrift vokser raskt, men..."></textarea>
+                        <label>Scenario Bakgrunn:</label>
+                        <textarea id="scenario-background" rows="2" placeholder="Din bedrift vokser raskt, men du støter på nye utfordringer..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Obligatoriske Oppgaver:</label>
+                        <div id="scenario-tasks">
+                            <div class="scenario-task" data-task="1">
+                                <div class="task-header">
+                                    <span class="task-number">1)</span>
+                                    <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="Åpningsbalanse med åpne poster">
+                                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                                </div>
+                                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">Registrer åpningsbalanse som balanserer. Opprett åpne poster for 2 kunder og 1 leverandør.</textarea>
+                                <div class="task-rewards">
+                                    <input type="text" class="task-reward" placeholder="Gevinst: +40,000 NOK" value="Gevinst: +40,000 NOK">
+                                    <input type="text" class="task-penalty" placeholder="Straff: -50,000 NOK" value="Straff: -50,000 NOK">
+                                </div>
+                            </div>
+                            
+                            <div class="scenario-task" data-task="2">
+                                <div class="task-header">
+                                    <span class="task-number">2)</span>
+                                    <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="Fakturaoppsett og logo">
+                                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                                </div>
+                                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">Last opp logo til fakturamal. Tilpass fakturaoppsett med selskapsinfo.</textarea>
+                                <div class="task-rewards">
+                                    <input type="text" class="task-reward" placeholder="Gevinst: +25,000 NOK" value="Gevinst: +25,000 NOK">
+                                    <input type="text" class="task-penalty" placeholder="Straff: -15,000 NOK" value="Straff: -15,000 NOK">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
                     </div>
                     
                     <div class="form-group">
@@ -473,8 +587,24 @@
             ],
             currentScenario: {
                 title: 'Måned 1: Kapasitetsutfordring',
-                description: 'Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger...',
+                background: 'Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger...',
                 deadline: '2025-08-16T14:00',
+                tasks: [
+                    {
+                        number: 1,
+                        title: 'Åpningsbalanse med åpne poster',
+                        description: 'Registrer åpningsbalanse som balanserer. Opprett åpne poster for 2 kunder og 1 leverandør.',
+                        reward: 'Gevinst: +40,000 NOK',
+                        penalty: 'Straff: -50,000 NOK'
+                    },
+                    {
+                        number: 2,
+                        title: 'Fakturaoppsett og logo',
+                        description: 'Last opp logo til fakturamal. Tilpass fakturaoppsett med selskapsinfo.',
+                        reward: 'Gevinst: +25,000 NOK',
+                        penalty: 'Straff: -15,000 NOK'
+                    }
+                ],
                 choices: {
                     'A': {
                         title: 'Aggressiv ekspansjon',
@@ -530,6 +660,71 @@
                 }
             }
         };
+
+        // NEW TASK FUNCTIONS
+        function addTask() {
+            const tasksDiv = document.getElementById('scenario-tasks');
+            const taskCount = tasksDiv.children.length;
+            const taskNumber = taskCount + 1;
+            
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'scenario-task';
+            taskDiv.setAttribute('data-task', taskNumber);
+            taskDiv.innerHTML = `
+                <div class="task-header">
+                    <span class="task-number">${taskNumber})</span>
+                    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                </div>
+                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+                <div class="task-rewards">
+                    <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                    <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+                </div>
+            `;
+            tasksDiv.appendChild(taskDiv);
+            
+            updateTaskNumbers();
+        }
+
+        function removeTask(button) {
+            const taskDiv = button.closest('.scenario-task');
+            taskDiv.remove();
+            updateTaskNumbers();
+        }
+
+        function updateTaskNumbers() {
+            const tasks = document.querySelectorAll('.scenario-task');
+            tasks.forEach((task, index) => {
+                const taskNumber = index + 1;
+                task.setAttribute('data-task', taskNumber);
+                task.querySelector('.task-number').textContent = taskNumber + ')';
+            });
+        }
+
+        function collectTasksData() {
+            const tasks = [];
+            const taskElements = document.querySelectorAll('.scenario-task');
+            
+            taskElements.forEach((taskEl, index) => {
+                const title = taskEl.querySelector('.task-title-input').value.trim();
+                const description = taskEl.querySelector('.task-description').value.trim();
+                const reward = taskEl.querySelector('.task-reward').value.trim();
+                const penalty = taskEl.querySelector('.task-penalty').value.trim();
+                
+                if (title) {
+                    tasks.push({
+                        number: index + 1,
+                        title: title,
+                        description: description,
+                        reward: reward,
+                        penalty: penalty
+                    });
+                }
+            });
+            
+            return tasks;
+        }
 
         // URL Storage functions
         function saveUrl() {
@@ -674,11 +869,12 @@
             alert('Leaderboard oppdatert! Kopier JavaScript-koden fra "Eksporter Data" fanen.');
         }
 
-        // Scenario functions
+        // UPDATED Scenario functions
         function updateScenario() {
             gameData.currentScenario.title = document.getElementById('scenario-title').value;
-            gameData.currentScenario.description = document.getElementById('scenario-description').value;
+            gameData.currentScenario.background = document.getElementById('scenario-background').value;
             gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
+            gameData.currentScenario.tasks = collectTasksData();
             
             collectChoicesData();
             
@@ -1134,7 +1330,7 @@ console.log("Spillerresultater oppdatert!");`;
             document.getElementById('active-penalties').innerHTML = '<p>Straffer vises etter at de er lagt til spillere</p>';
         }
 
-        // FIXED Export function - KOMBINERT KODE
+        // UPDATED Export function - KOMBINERT KODE MED TASKS
         function generateExportCode() {
             if (!gameData.players || gameData.players.length === 0) {
                 alert('Legg til spillere først!');
@@ -1145,8 +1341,8 @@ console.log("Spillerresultater oppdatert!");`;
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
-            // KOMBINERT SCENARIO + LEADERBOARD KODE MED KLIKKBARHET
-            const combinedCode = `// KOMBINERT OPPDATERING - Dashboard + Leaderboard + Klikkbare Valg
+            // KOMBINERT SCENARIO + LEADERBOARD KODE MED KLIKKBARHET + TASKS
+            const combinedCode = `// KOMBINERT OPPDATERING - Dashboard + Leaderboard + Klikkbare Valg + STRUKTURERTE OPPGAVER
 // Alt-i-ett løsning som oppdaterer HELE siden!
 
 const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // ENDRE DENNE!
@@ -1331,12 +1527,12 @@ setTimeout(() => {
     });
 }, 1000);
 
-console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Google Sheets integration!');`;
+console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Strukturerte oppgaver + Google Sheets integration!');`;
 
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
             document.getElementById('export-scenario-js').textContent = combinedCode;
             
-            alert('✅ KOMBINERT kode generert!\n\n🎯 Bruk SCENARIO-boksen (nederst) for alt-i-ett oppdatering!\n\n🔧 VIKTIG: Endre YOUR_SCRIPT_ID til din Google Apps Script ID!');
+            alert('✅ KOMBINERT kode generert med strukturerte oppgaver!\n\n🎯 Bruk SCENARIO-boksen (nederst) for alt-i-ett oppdatering!\n\n🔧 VIKTIG: Endre YOUR_SCRIPT_ID til din Google Apps Script ID!');
         }
 
         // Initialize
@@ -1348,10 +1544,7 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Go
             document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
             
             document.getElementById('scenario-title').value = gameData.currentScenario.title;
-            document.getElementById('scenario-description').value = gameData.currentScenario.description;
-            
-            // Load choice titles
-            document.getElementById('choice-a-title').value = typeof gameData.currentScenario.choices.A === 'string' ? gameData.currentScenario.choices.A : gameData.currentScenario.choices.A.title;
+            document.getElementById('scenario-background').value = gameData.currentScenario.background || gameData.currentScenario.description || '';
             
             previewChoices();
             
@@ -1361,3 +1554,4 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Go
     </script>
 </body>
 </html>
+                
