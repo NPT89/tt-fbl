@@ -1372,13 +1372,17 @@ console.log("Spillerresultater oppdatert!");`;
             
             collectChoicesData();
             
+            // Get saved Google Sheets URL
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+            
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
             // KOMBINERT SCENARIO + LEADERBOARD KODE MED KLIKKBARHET + TASKS
             const combinedCode = `// KOMBINERT OPPDATERING - Dashboard + Leaderboard + Klikkbare Valg + STRUKTURERTE OPPGAVER
 // Alt-i-ett løsning som oppdaterer HELE siden!
 
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // ENDRE DENNE!
+// ENDRE DENNE URL-EN OM NØDVENDIG:
+const GOOGLE_SHEETS_URL = '${savedSheetsUrl}';
 
 // Oppdater ALLE data samtidig
 window.updateGameData({
@@ -1566,7 +1570,11 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
             document.getElementById('export-scenario-js').textContent = combinedCode;
             
-            alert('✅ KOMBINERT kode generert med strukturerte oppgaver!\n\n🎯 Bruk SCENARIO-boksen (nederst) for alt-i-ett oppdatering!\n\n🔧 VIKTIG: Endre YOUR_SCRIPT_ID til din Google Apps Script ID!');
+            const urlMessage = savedSheetsUrl.includes('YOUR_SCRIPT_ID') ? 
+                '\n\n🔧 VIKTIG: Endre YOUR_SCRIPT_ID til din Google Apps Script ID!' : 
+                '\n\n✅ Google Sheets URL automatisk inkludert!';
+            
+            alert('✅ KOMBINERT kode generert med strukturerte oppgaver!' + urlMessage);
         }
 
         // Initialize
