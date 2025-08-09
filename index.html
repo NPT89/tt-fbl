@@ -277,6 +277,87 @@
             font-weight: bold;
         }
 
+        /* NEW TASK STYLING */
+        .scenario-tasks {
+            margin: 1.5rem 0;
+        }
+
+        .task-display {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(145deg, #f8f9ff, #ffffff);
+            border-radius: 12px;
+            border-left: 4px solid #0066CC;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .task-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-number {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #0066CC;
+            min-width: 35px;
+            background: rgba(0, 102, 204, 0.1);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .task-description {
+            color: #666;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .task-rewards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .task-reward {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            font-weight: bold;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .task-penalty {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            font-weight: bold;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
         .scenario-choices {
             margin: 1.5rem 0;
         }
@@ -445,6 +526,19 @@
             }
             
             .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .task-display {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .task-number {
+                align-self: flex-start;
+            }
+
+            .task-rewards {
                 grid-template-columns: 1fr;
             }
         }
@@ -785,6 +879,7 @@
             }
         }
 
+        // UPDATED renderScenario function with structured tasks
         function renderScenario() {
             const container = document.getElementById('scenario-content');
             
@@ -823,6 +918,29 @@
                         ⏰ Deadline passert - venter på resultater
                     </div>
                 `;
+            }
+
+            // Build tasks HTML if available
+            let tasksHtml = '';
+            if (scenario.tasks && scenario.tasks.length > 0) {
+                tasksHtml = '<div class="scenario-tasks"><h3>📋 Obligatoriske Oppgaver:</h3>';
+                
+                scenario.tasks.forEach(task => {
+                    tasksHtml += `
+                        <div class="task-display">
+                            <div class="task-number">${task.number}</div>
+                            <div class="task-content">
+                                <div class="task-title">${task.title}</div>
+                                <div class="task-description">${task.description}</div>
+                                <div class="task-rewards">
+                                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
+                                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                tasksHtml += '</div>';
             }
 
             // Build choices HTML if available
@@ -905,11 +1023,14 @@
                 `;
             }
 
+            // Combine all HTML parts
             container.innerHTML = `
                 <div class="scenario-card">
                     <h2>${scenario.title}</h2>
-                    <p>${scenario.description}</p>
+                    ${scenario.background ? `<p>${scenario.background}</p>` : 
+                      scenario.description ? `<p>${scenario.description}</p>` : ''}
                     ${deadlineHtml}
+                    ${tasksHtml}
                     ${choicesHtml}
                     ${resultsHtml}
                 </div>
