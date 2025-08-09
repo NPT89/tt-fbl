@@ -1180,7 +1180,7 @@ window.updateGameData({
 
 console.log("Spillerresultater oppdatert!");`;
             
-            // Show in export tab
+            // FIXED: Actually write to export tab
             document.getElementById('export-scenario-js').textContent = completeUpdateCode;
             
             alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: Denne funksjonen endrer IKKE admin-data, kun spillersiden.');
