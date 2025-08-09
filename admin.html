@@ -726,6 +726,85 @@
             return tasks;
         }
 
+        // NEW GOOGLE SHEETS INTEGRATION FOR PLAYERS
+        function loadPlayersFromSheets() {
+            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                console.log('No valid Google Sheets URL saved - using default players');
+                return;
+            }
+            
+            const callbackName = 'loadPlayersCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success' && response.data && response.data.length > 0) {
+                    // Update gameData with loaded players
+                    gameData.players = response.data.map((player, index) => ({
+                        name: player.name,
+                        company: player.company,
+                        businessValue: parseInt(player.businessValue) || 500000,
+                        rank: parseInt(player.rank) || (index + 1)
+                    }));
+                    
+                    // Sort by business value and update ranks
+                    gameData.players.sort((a, b) => b.businessValue - a.businessValue);
+                    gameData.players.forEach((player, index) => {
+                        player.rank = index + 1;
+                    });
+                    
+                    console.log('✅ Players loaded from Google Sheets:', gameData.players.length, 'players');
+                    refreshLeaderboard();
+                } else {
+                    console.log('ℹ️ No players found in Google Sheets - using defaults');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ Failed to load players from Google Sheets');
+            };
+            
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayers';
+            document.head.appendChild(script);
+        }
+
+        function savePlayersToSheets() {
+            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                console.log('No valid Google Sheets URL - cannot save players');
+                return;
+            }
+            
+            const callbackName = 'savePlayersCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success') {
+                    console.log('✅ Players saved to Google Sheets successfully');
+                } else {
+                    console.log('❌ Failed to save players:', response ? response.message : 'Unknown error');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ Failed to save players to Google Sheets');
+            };
+            
+            const playersData = encodeURIComponent(JSON.stringify(gameData.players));
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayers&data=' + playersData;
+            document.head.appendChild(script);
+        }
+
         // URL Storage functions
         function saveUrl() {
             const urlInput = document.getElementById('sheets-url-input');
@@ -738,6 +817,9 @@
             
             localStorage.setItem('tripletex_sheets_url', url);
             alert('✅ URL lagret!');
+            
+            // Auto-load players after saving URL
+            setTimeout(loadPlayersFromSheets, 1000);
         }
 
         function loadSavedUrl() {
