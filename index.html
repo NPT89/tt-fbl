@@ -718,7 +718,7 @@
             }
         }
 
-        // STEG 2: Load players from Google Sheets
+        // STEG 2: Load players from Google Sheets - ALWAYS use Sheets data if available
         function loadPlayersFromSheets() {
             console.log('🔄 Loading players from Google Sheets...');
             updateConnectionStatus('loading', 'Laster spillere...');
@@ -733,10 +733,10 @@
                 console.log('📊 Players response:', response);
                 
                 if (response && response.status === 'success' && response.data && response.data.length > 0) {
-                    // Update gameState with loaded players
+                    // ALWAYS use data from Google Sheets - it's our database!
                     gameState.players = response.data.map((player, index) => ({
-                        name: player.name,
-                        company: player.company,
+                        name: player.name || `Spiller ${index + 1}`,
+                        company: player.company || player.name || `Selskap ${index + 1}`,
                         businessValue: parseInt(player.businessValue) || 500000,
                         rank: parseInt(player.rank) || (index + 1)
                     }));
@@ -747,17 +747,19 @@
                         player.rank = index + 1;
                     });
                     
-                    console.log('✅ Players loaded from Google Sheets:', gameState.players.length, 'players');
+                    console.log('✅ Players loaded from Google Sheets database:', gameState.players.length, 'players');
+                    console.log('📋 Player data:', gameState.players);
                     
                     // Update UI
                     renderLeaderboard();
                     updateStats();
-                    updateConnectionStatus('connected', 'Data oppdatert fra Sheets');
+                    updateConnectionStatus('connected', 'Live data fra Sheets');
                     
-                    addNotification(`📊 Spillerdata oppdatert! ${gameState.players.length} spillere lastet fra Google Sheets.`);
+                    addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
                 } else {
-                    console.log('ℹ️ No players found in Google Sheets - using defaults');
-                    updateConnectionStatus('connected', 'Tilkoblet (bruker defaults)');
+                    console.log('ℹ️ No players found in Google Sheets - database is empty');
+                    updateConnectionStatus('connected', 'Tilkoblet (database tom)');
+                    addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
             };
             
@@ -766,6 +768,7 @@
                 delete window[callbackName];
                 updateConnectionStatus('error', 'Feil ved lasting av spillere');
                 console.log('❌ Failed to load players from Google Sheets');
+                addNotification(`❌ Kunne ikke laste spillerdata fra Google Sheets database.`);
             };
             
             script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
@@ -778,6 +781,7 @@
                     delete window[callbackName];
                     updateConnectionStatus('error', 'Timeout ved lasting av spillere');
                     console.log('❌ Players loading timeout');
+                    addNotification(`⏰ Timeout ved lasting fra Google Sheets database.`);
                 }
             }, 15000);
         }
