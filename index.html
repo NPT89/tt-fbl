@@ -518,30 +518,38 @@
         /* NEW - Connection status indicator */
         .connection-status {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            font-size: 0.8rem;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-size: 0.85rem;
+            font-weight: 500;
             z-index: 1000;
             transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            min-width: 180px;
+            text-align: center;
         }
 
         .connection-status.connected {
             color: #28a745;
-            border-left: 4px solid #28a745;
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
         }
 
         .connection-status.loading {
             color: #ffc107;
-            border-left: 4px solid #ffc107;
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
         }
 
         .connection-status.error {
             color: #dc3545;
-            border-left: 4px solid #dc3545;
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
         }
 
         @media (max-width: 768px) {
@@ -710,8 +718,73 @@
             }
         }
 
+        // STEG 2: Load players from Google Sheets
+        function loadPlayersFromSheets() {
+            console.log('🔄 Loading players from Google Sheets...');
+            updateConnectionStatus('loading', 'Laster spillere...');
+            
+            const callbackName = 'loadPlayersCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('📊 Players response:', response);
+                
+                if (response && response.status === 'success' && response.data && response.data.length > 0) {
+                    // Update gameState with loaded players
+                    gameState.players = response.data.map((player, index) => ({
+                        name: player.name,
+                        company: player.company,
+                        businessValue: parseInt(player.businessValue) || 500000,
+                        rank: parseInt(player.rank) || (index + 1)
+                    }));
+                    
+                    // Sort by business value and update ranks
+                    gameState.players.sort((a, b) => b.businessValue - a.businessValue);
+                    gameState.players.forEach((player, index) => {
+                        player.rank = index + 1;
+                    });
+                    
+                    console.log('✅ Players loaded from Google Sheets:', gameState.players.length, 'players');
+                    
+                    // Update UI
+                    renderLeaderboard();
+                    updateStats();
+                    updateConnectionStatus('connected', 'Data oppdatert fra Sheets');
+                    
+                    addNotification(`📊 Spillerdata oppdatert! ${gameState.players.length} spillere lastet fra Google Sheets.`);
+                } else {
+                    console.log('ℹ️ No players found in Google Sheets - using defaults');
+                    updateConnectionStatus('connected', 'Tilkoblet (bruker defaults)');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                updateConnectionStatus('error', 'Feil ved lasting av spillere');
+                console.log('❌ Failed to load players from Google Sheets');
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
+            document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Timeout ved lasting av spillere');
+                    console.log('❌ Players loading timeout');
+                }
+            }, 15000);
+        }
+
         // Test connection to Google Sheets
         function testGoogleSheetsConnection() {
+            console.log('🔄 Testing Google Sheets connection...');
             updateConnectionStatus('loading', 'Tester forbindelse...');
             
             const callbackName = 'testCallback_' + Date.now();
@@ -720,6 +793,8 @@
             window[callbackName] = function(response) {
                 document.head.removeChild(script);
                 delete window[callbackName];
+                
+                console.log('📡 Google Sheets response:', response);
                 
                 if (response && response.status === 'success') {
                     updateConnectionStatus('connected', 'Tilkoblet Google Sheets');
@@ -737,11 +812,11 @@
                 console.log('❌ Google Sheets network error');
             };
             
-            // Test with a simple ping
-            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=ping';
+            // Test with a simple ping - try getPlayers action instead of ping
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
             document.head.appendChild(script);
             
-            // Timeout after 10 seconds
+            // Timeout after 15 seconds
             setTimeout(() => {
                 if (document.head.contains(script)) {
                     document.head.removeChild(script);
@@ -749,7 +824,7 @@
                     updateConnectionStatus('error', 'Forbindelse timeout');
                     console.log('❌ Google Sheets connection timeout');
                 }
-            }, 10000);
+            }, 15000);
         }
 
         // Game state with real companies
@@ -1244,8 +1319,13 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Test Google Sheets connection first
+            // Test Google Sheets connection first, then load data
             testGoogleSheetsConnection();
+            
+            // Load real data from Google Sheets after a short delay
+            setTimeout(() => {
+                loadPlayersFromSheets();
+            }, 2000);
             
             renderLeaderboard();
             renderScenario();
