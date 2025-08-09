@@ -789,9 +789,12 @@
                 return;
             }
             
-            // Collect current scenario data
-            collectChoicesData();
+            // FIRST: Collect current data from UI
+            gameData.currentScenario.title = document.getElementById('scenario-title').value;
+            gameData.currentScenario.background = document.getElementById('scenario-background').value;
+            gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
             gameData.currentScenario.tasks = collectTasksData();
+            collectChoicesData(); // This updates gameData.currentScenario.choices
             
             const callbackName = 'saveScenarioCallback_' + Date.now();
             const script = document.createElement('script');
