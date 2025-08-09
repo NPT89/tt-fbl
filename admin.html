@@ -1124,10 +1124,42 @@
                 return;
             }
             
-            // DON'T apply results here - just export them
-            console.log('Eksporterer resultater uten å endre admin-data');
+            // Apply results to admin data first
+            diceResultsData.forEach(result => {
+                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
+                if (playerIndex !== -1) {
+                    gameData.players[playerIndex].businessValue += result.nokValue;
+                    
+                    if (!gameData.playerBreakdowns[result.player]) {
+                        gameData.playerBreakdowns[result.player] = {
+                            startCapital: 500000,
+                            scenarioGains: [],
+                            penalties: [],
+                            bonuses: []
+                        };
+                    }
+                    
+                    gameData.playerBreakdowns[result.player].scenarioGains.push({
+                        week: 'Current',
+                        scenario: gameData.currentScenario.title,
+                        choice: result.choice,
+                        choiceTitle: result.choiceTitle,
+                        outcome: result.outcome,
+                        description: result.description,
+                        value: result.nokValue
+                    });
+                }
+            });
             
-            // Create export code that applies results on the player side
+            // Re-rank players
+            gameData.players.sort((a, b) => b.businessValue - a.businessValue);
+            gameData.players.forEach((player, index) => {
+                player.rank = index + 1;
+            });
+            
+            // Generate both codes with updated data
+            const updatedLeaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
+            
             const completeUpdateCode = `
 // Komplett oppdatering - kun for spillersiden
 const newScenarioResults = ${JSON.stringify(gameData.currentScenario, null, 2)};
@@ -1180,7 +1212,8 @@ window.updateGameData({
 
 console.log("Spillerresultater oppdatert!");`;
             
-            // FIXED: Actually write to export tab
+            // Update BOTH export boxes
+            document.getElementById('export-leaderboard-js').textContent = updatedLeaderboardCode;
             document.getElementById('export-scenario-js').textContent = completeUpdateCode;
             
             alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: Denne funksjonen endrer IKKE admin-data, kun spillersiden.');
