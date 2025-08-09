@@ -726,6 +726,157 @@
             return tasks;
         }
 
+        // NEW GOOGLE SHEETS INTEGRATION FOR SCENARIOS
+        function loadScenarioFromSheets() {
+            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                console.log('No valid Google Sheets URL saved - using default scenario');
+                return;
+            }
+            
+            const callbackName = 'loadScenarioCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success' && response.data) {
+                    // Update gameData with loaded scenario
+                    gameData.currentScenario = {
+                        id: response.data.id,
+                        title: response.data.title || '',
+                        background: response.data.background || '',
+                        deadline: response.data.deadline || '',
+                        tasks: response.data.tasks || [],
+                        choices: response.data.choices || {},
+                        results: response.data.results || {}
+                    };
+                    
+                    console.log('✅ Scenario loaded from Google Sheets:', gameData.currentScenario.title);
+                    
+                    // Update UI
+                    document.getElementById('scenario-title').value = gameData.currentScenario.title;
+                    document.getElementById('scenario-background').value = gameData.currentScenario.background;
+                    document.getElementById('scenario-deadline').value = gameData.currentScenario.deadline;
+                    
+                    // Load tasks into UI
+                    loadTasksIntoUI();
+                    
+                    // Load choices into UI  
+                    loadChoicesIntoUI();
+                    
+                    previewChoices();
+                } else {
+                    console.log('ℹ️ No scenario found in Google Sheets - using defaults');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ Failed to load scenario from Google Sheets');
+            };
+            
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=getCurrentScenario';
+            document.head.appendChild(script);
+        }
+
+        function saveScenarioToSheets() {
+            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+                console.log('No valid Google Sheets URL - cannot save scenario');
+                return;
+            }
+            
+            // Collect current scenario data
+            collectChoicesData();
+            gameData.currentScenario.tasks = collectTasksData();
+            
+            const callbackName = 'saveScenarioCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (response && response.status === 'success') {
+                    console.log('✅ Scenario saved to Google Sheets successfully');
+                    if (response.id) {
+                        gameData.currentScenario.id = response.id;
+                    }
+                } else {
+                    console.log('❌ Failed to save scenario:', response ? response.message : 'Unknown error');
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ Failed to save scenario to Google Sheets');
+            };
+            
+            const scenarioData = encodeURIComponent(JSON.stringify(gameData.currentScenario));
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenario&data=' + scenarioData;
+            document.head.appendChild(script);
+        }
+
+        function loadTasksIntoUI() {
+            const tasksDiv = document.getElementById('scenario-tasks');
+            tasksDiv.innerHTML = ''; // Clear existing tasks
+            
+            if (gameData.currentScenario.tasks && gameData.currentScenario.tasks.length > 0) {
+                gameData.currentScenario.tasks.forEach((task, index) => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'scenario-task';
+                    taskDiv.setAttribute('data-task', task.number || (index + 1));
+                    taskDiv.innerHTML = `
+                        <div class="task-header">
+                            <span class="task-number">${task.number || (index + 1)})</span>
+                            <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
+                            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                        </div>
+                        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
+                        <div class="task-rewards">
+                            <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
+                            <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
+                        </div>
+                    `;
+                    tasksDiv.appendChild(taskDiv);
+                });
+            }
+            
+            // Add "Legg til oppgave" button
+            const addButton = document.createElement('button');
+            addButton.className = 'btn btn-small';
+            addButton.textContent = 'Legg til oppgave';
+            addButton.onclick = addTask;
+            tasksDiv.parentNode.appendChild(addButton);
+        }
+
+        function loadChoicesIntoUI() {
+            const choicesDiv = document.getElementById('scenario-choices');
+            choicesDiv.innerHTML = ''; // Clear existing choices
+            
+            if (gameData.currentScenario.choices && Object.keys(gameData.currentScenario.choices).length > 0) {
+                Object.entries(gameData.currentScenario.choices).forEach(([key, choice]) => {
+                    const choiceDiv = document.createElement('div');
+                    choiceDiv.className = 'scenario-choice';
+                    choiceDiv.setAttribute('data-choice', key);
+                    choiceDiv.innerHTML = `
+                        <div class="choice-header">
+                            <input type="text" class="choice-title-input" value="${key}) ${choice.title || choice}" placeholder="${key}) Valg tittel" oninput="previewChoices()">
+                            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                        </div>
+                        <input type="text" class="choice-cost" placeholder="Kostnad: " value="${choice.cost || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+                        <input type="text" class="choice-potential" placeholder="Potensial: " value="${choice.potential || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+                        <input type="text" class="choice-odds" placeholder="Odds: " value="${choice.odds || ''}" oninput="previewChoices()">
+                    `;
+                    choicesDiv.appendChild(choiceDiv);
+                });
+            }
+        }
+
         // NEW GOOGLE SHEETS INTEGRATION FOR PLAYERS
         function loadPlayersFromSheets() {
             const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
@@ -969,7 +1120,10 @@
             
             collectChoicesData();
             
-            alert('Scenario oppdatert!');
+            // Save to Google Sheets
+            saveScenarioToSheets();
+            
+            alert('Scenario oppdatert og lagret til Google Sheets!');
         }
 
         function collectChoicesData() {
@@ -1690,6 +1844,9 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
                 if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
                     console.log('🔄 Auto-loading players from Google Sheets...');
                     loadPlayersFromSheets();
+                    
+                    console.log('🔄 Auto-loading scenario from Google Sheets...');
+                    loadScenarioFromSheets();
                 }
             }, 1000);
         });
