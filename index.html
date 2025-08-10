@@ -696,7 +696,171 @@
         // GOOGLE SHEETS CONFIGURATION - UPDATED URL
         const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycby7N5EQSpVNsnQsobxLhfKV2JRBD_bZ93Aj4f-bLXP_V_dsOLFRXVZhqsxlO5g1SSTNgw/exec';
 
-        // Connection status functions
+        // STEG 4: Make choices clickable and send to Google Sheets
+        function makeChoicesClickable() {
+            const choiceElements = document.querySelectorAll('.choice-display');
+            
+            choiceElements.forEach((choiceEl) => {
+                // Skip if already clickable
+                if (choiceEl.hasAttribute('data-clickable')) return;
+                choiceEl.setAttribute('data-clickable', 'true');
+                
+                // Get choice letter from the choice-letter element or extract from title
+                let choiceLetter = '';
+                const choiceLetterEl = choiceEl.querySelector('.choice-letter');
+                if (choiceLetterEl) {
+                    choiceLetter = choiceLetterEl.textContent.replace(')', '');
+                } else {
+                    // Extract from choice title (A), B), etc.)
+                    const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                    const letterMatch = choiceTitle.match(/^([A-Z])\)/);
+                    choiceLetter = letterMatch ? letterMatch[1] : 'A';
+                }
+                
+                // Add click styling
+                choiceEl.style.cursor = 'pointer';
+                choiceEl.style.transition = 'all 0.3s ease';
+                
+                // Add hover effects
+                choiceEl.addEventListener('mouseenter', () => {
+                    choiceEl.style.transform = 'translateX(5px)';
+                    choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                });
+                
+                choiceEl.addEventListener('mouseleave', () => {
+                    choiceEl.style.transform = 'translateX(0)';
+                    choiceEl.style.boxShadow = 'none';
+                });
+                
+                // Add click handler
+                choiceEl.addEventListener('click', async () => {
+                    const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
+                    if (playerName && playerName.trim()) {
+                        const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                        const confirmed = confirm(`${playerName}, bekrefter du valg ${choiceLetter}: ${choiceTitle}?`);
+                        
+                        if (confirmed) {
+                            await sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName.trim());
+                        }
+                    }
+                });
+                
+                // Add visual indication that choices are clickable
+                const choiceContent = choiceEl.querySelector('.choice-content');
+                if (choiceContent && !choiceContent.querySelector('.click-hint')) {
+                    const clickHint = document.createElement('div');
+                    clickHint.innerHTML = '👆 Klikk for å velge';
+                    clickHint.className = 'click-hint';
+                    clickHint.style.cssText = 'font-size: 0.8rem; color: #0066CC; margin-top: 0.5rem; opacity: 0.7;';
+                    choiceContent.appendChild(clickHint);
+                }
+            });
+        }
+
+        // Function to send choice to Google Sheets
+        async function sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName) {
+            const originalBg = choiceEl.style.backgroundColor;
+            choiceEl.style.backgroundColor = '#fff3cd';
+            choiceEl.style.borderColor = '#ffc107';
+            
+            // Add loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.innerHTML = '⏳ Sender valg...';
+            loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
+            choiceEl.appendChild(loadingEl);
+            
+            const choiceData = {
+                player: playerName,
+                choice: choiceLetter,
+                choiceTitle: choiceTitle,
+                scenarioTitle: gameState.currentScenario ? gameState.currentScenario.title : 'Unknown Scenario',
+                week: 'Current',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // Use JSONP to send choice to Google Sheets (same method as admin)
+                await new Promise((resolve, reject) => {
+                    const callbackName = 'choiceCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        if (response && response.status === 'success') {
+                            resolve(true);
+                        } else {
+                            reject(new Error(response ? response.message : 'Unknown error'));
+                        }
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('Failed to load script'));
+                    };
+                    
+                    const params = new URLSearchParams({
+                        callback: callbackName,
+                        player: choiceData.player,
+                        choice: choiceData.choice,
+                        choiceTitle: choiceData.choiceTitle,
+                        scenarioTitle: choiceData.scenarioTitle,
+                        week: choiceData.week,
+                        timestamp: choiceData.timestamp
+                    });
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
+                    document.head.appendChild(script);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        if (document.head.contains(script)) {
+                            document.head.removeChild(script);
+                            delete window[callbackName];
+                            reject(new Error('Request timeout'));
+                        }
+                    }, 10000);
+                });
+                
+                // Success
+                choiceEl.removeChild(loadingEl);
+                choiceEl.style.backgroundColor = '#d4edda';
+                choiceEl.style.borderColor = '#28a745';
+                
+                alert(`✅ Valg registrert: ${choiceLetter}) ${choiceTitle}\n\nDitt valg er sendt til admin og lagret i systemet!`);
+                
+                const successEl = document.createElement('div');
+                successEl.innerHTML = '✅ Valg registrert!';
+                successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
+                choiceEl.appendChild(successEl);
+                
+                // Disable further clicks
+                choiceEl.style.pointerEvents = 'none';
+                choiceEl.style.opacity = '0.8';
+                
+                addNotification(`✅ ${playerName} valgte ${choiceLetter}: ${choiceTitle}`);
+                
+            } catch (error) {
+                console.error('Error sending choice:', error);
+                
+                if (choiceEl.contains(loadingEl)) {
+                    choiceEl.removeChild(loadingEl);
+                }
+                
+                choiceEl.style.backgroundColor = '#f8d7da';
+                choiceEl.style.borderColor = '#dc3545';
+                
+                alert('❌ Feil ved sending av valg: ' + error.message + '\n\nPrøv igjen eller kontakt admin.');
+                
+                // Reset styling after 3 seconds
+                setTimeout(() => {
+                    choiceEl.style.backgroundColor = originalBg;
+                    choiceEl.style.borderColor = '';
+                }, 3000);
+            }
+        }
         function updateConnectionStatus(status, message) {
             const statusEl = document.getElementById('connection-status');
             statusEl.className = `connection-status ${status}`;
@@ -1242,7 +1406,7 @@
             }
         }
 
-        // UPDATED renderScenario function with structured tasks
+        // UPDATED renderScenario function with clickable choices
         function renderScenario() {
             const container = document.getElementById('scenario-content');
             
@@ -1316,6 +1480,7 @@
                     if (typeof choice === 'string') {
                         choicesHtml += `
                             <div class="choice-display">
+                                <div class="choice-letter">${key})</div>
                                 <div class="choice-content">
                                     <div class="choice-title">${choice}</div>
                                 </div>
@@ -1398,6 +1563,11 @@
                     ${resultsHtml}
                 </div>
             `;
+            
+            // Make choices clickable after rendering
+            setTimeout(() => {
+                makeChoicesClickable();
+            }, 100);
         }
 
         function updateStats() {
