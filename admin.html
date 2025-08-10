@@ -580,7 +580,7 @@
         // Game data with real companies
 let gameData = {
     players: [], // TOM - ingen default spillere
-    currentScenario: null, // NULL - ingen default scenario
+    currentScenario: {}, // NULL - ingen default scenario
     penalties: [],
     playerBreakdowns: {}
 };
@@ -1045,19 +1045,24 @@ let gameData = {
         }
 
         // UPDATED Scenario functions
-        function updateScenario() {
-            gameData.currentScenario.title = document.getElementById('scenario-title').value;
-            gameData.currentScenario.background = document.getElementById('scenario-background').value;
-            gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
-            gameData.currentScenario.tasks = collectTasksData();
-            
-            collectChoicesData();
-            
-            // Save to Google Sheets
-            saveScenarioToSheets();
-            
-            alert('Scenario oppdatert og lagret til Google Sheets!');
-        }
+function updateScenario() {
+    // OPPRETT currentScenario hvis den ikke finnes
+    if (!gameData.currentScenario) {
+        gameData.currentScenario = {};
+    }
+    
+    gameData.currentScenario.title = document.getElementById('scenario-title').value;
+    gameData.currentScenario.background = document.getElementById('scenario-background').value;
+    gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
+    gameData.currentScenario.tasks = collectTasksData();
+    
+    collectChoicesData();
+    
+    // Save to Google Sheets
+    saveScenarioToSheets();
+    
+    alert('Scenario oppdatert og lagret til Google Sheets!');
+}
 
         function collectChoicesData() {
             const choiceElements = document.querySelectorAll('.scenario-choice');
