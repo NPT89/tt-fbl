@@ -1172,42 +1172,12 @@
         }
 
         // Game state with real companies
-        let gameState = {
-            players: [
-                { name: 'Digital Partner AS', company: 'Digital Partner AS', businessValue: 500000, rank: 1 },
-                { name: 'Frøken Kjeks AS', company: 'Frøken Kjeks AS', businessValue: 500000, rank: 2 },
-                { name: 'Levende Planter AS', company: 'Levende Planter AS', businessValue: 500000, rank: 3 },
-                { name: 'Sedush AS', company: 'Sedush AS', businessValue: 500000, rank: 4 }
-            ],
-            currentScenario: null,
-            notifications: [],
-            playerBreakdowns: {
-                'Digital Partner AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Frøken Kjeks AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Levende Planter AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Sedush AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                }
-            }
-        };
+let gameState = {
+    players: [], // TOM
+    currentScenario: null, // NULL
+    notifications: [],
+    playerBreakdowns: {}
+};
 
         // Navigation functionality
         document.querySelectorAll('.nav-link').forEach(link => {
