@@ -718,6 +718,37 @@
             }
         }
 
+        // DEBUG: Manual test function for scenario loading
+        window.debugScenarioLoading = function() {
+            console.log('🔧 DEBUG: Manual scenario loading test...');
+            
+            const callbackName = 'debugCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🔍 DEBUG Response type:', typeof response);
+                console.log('🔍 DEBUG Response keys:', Object.keys(response));
+                console.log('🔍 DEBUG Full response:', response);
+                
+                if (response.data) {
+                    console.log('🔍 DEBUG Response.data type:', typeof response.data);
+                    console.log('🔍 DEBUG Response.data:', response.data);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ DEBUG: Script loading failed');
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            document.head.appendChild(script);
+        };
+
         // STEG 3: Load scenario from Google Sheets
         function loadScenarioFromSheets() {
             console.log('🔄 Loading scenario from Google Sheets...');
