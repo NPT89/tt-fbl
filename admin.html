@@ -578,88 +578,12 @@
 
     <script>
         // Game data with real companies
-        let gameData = {
-            players: [
-                { name: 'Digital Partner AS', company: 'Digital Partner AS', businessValue: 500000, rank: 1 },
-                { name: 'Frøken Kjeks AS', company: 'Frøken Kjeks AS', businessValue: 500000, rank: 2 },
-                { name: 'Levende Planter AS', company: 'Levende Planter AS', businessValue: 500000, rank: 3 },
-                { name: 'Sedush AS', company: 'Sedush AS', businessValue: 500000, rank: 4 }
-            ],
-            currentScenario: {
-                title: 'Måned 1: Kapasitetsutfordring',
-                background: 'Din bedrift vokser raskt, men du støter på kapasitetsbegrensninger...',
-                deadline: '2025-08-16T14:00',
-                tasks: [
-                    {
-                        number: 1,
-                        title: 'Åpningsbalanse med åpne poster',
-                        description: 'Registrer åpningsbalanse som balanserer. Opprett åpne poster for 2 kunder og 1 leverandør.',
-                        reward: 'Gevinst: +40,000 NOK',
-                        penalty: 'Straff: -50,000 NOK'
-                    },
-                    {
-                        number: 2,
-                        title: 'Fakturaoppsett og logo',
-                        description: 'Last opp logo til fakturamal. Tilpass fakturaoppsett med selskapsinfo.',
-                        reward: 'Gevinst: +25,000 NOK',
-                        penalty: 'Straff: -15,000 NOK'
-                    }
-                ],
-                choices: {
-                    'A': {
-                        title: 'Aggressiv ekspansjon',
-                        cost: 'Kostnad: Høy investering + stor risiko',
-                        potential: 'Potensial: Maksimal vekst eller store tap',
-                        odds: 'Odds: 70% for stor gevinst, 30% for store tap'
-                    },
-                    'B': {
-                        title: 'Konservativ vekst',
-                        cost: 'Kostnad: Moderat investering',
-                        potential: 'Potensial: Stabil og trygg utvikling',
-                        odds: 'Odds: 80% for trygg gevinst, 20% for mindre tap'
-                    },
-                    'C': {
-                        title: 'Balansert strategi',
-                        cost: 'Kostnad: Variabel investering',
-                        potential: 'Potensial: God balanse risiko/belønning',
-                        odds: 'Odds: 60% for god gevinst, 40% for moderat tap'
-                    },
-                    'D': {
-                        title: 'Effektivitetsfokus',
-                        cost: 'Kostnad: Optimalisering av eksisterende',
-                        potential: 'Potensial: Jevn og forutsigbar vekst',
-                        odds: 'Odds: 70% for jevn gevinst, 30% for kontrollert tap'
-                    }
-                }
-            },
-            penalties: [],
-            playerBreakdowns: {
-                'Digital Partner AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Frøken Kjeks AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Levende Planter AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                },
-                'Sedush AS': {
-                    startCapital: 500000,
-                    scenarioGains: [],
-                    penalties: [],
-                    bonuses: []
-                }
-            }
-        };
+let gameData = {
+    players: [], // TOM - ingen default spillere
+    currentScenario: null, // NULL - ingen default scenario
+    penalties: [],
+    playerBreakdowns: {}
+};
 
         // NEW TASK FUNCTIONS
         function addTask() {
