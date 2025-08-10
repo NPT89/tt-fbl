@@ -718,6 +718,67 @@
             }
         }
 
+        // STEG 3: Load scenario from Google Sheets
+        function loadScenarioFromSheets() {
+            console.log('🔄 Loading scenario from Google Sheets...');
+            
+            const callbackName = 'loadScenarioCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🎲 Scenario response:', response);
+                
+                if (response && response.status === 'success' && response.data) {
+                    // Update gameState with loaded scenario
+                    gameState.currentScenario = {
+                        id: response.data.id,
+                        title: response.data.title || 'Nytt Scenario',
+                        background: response.data.background || '',
+                        deadline: response.data.deadline || '',
+                        tasks: response.data.tasks || [],
+                        choices: response.data.choices || {},
+                        results: response.data.results || {}
+                    };
+                    
+                    console.log('✅ Scenario loaded from Google Sheets:', gameState.currentScenario.title);
+                    console.log('📋 Scenario data:', gameState.currentScenario);
+                    
+                    // Update UI
+                    renderScenario();
+                    updateStats();
+                    
+                    addNotification(`🎲 Scenario oppdatert: ${gameState.currentScenario.title}`);
+                } else {
+                    console.log('ℹ️ No scenario found in Google Sheets - database empty');
+                    gameState.currentScenario = null;
+                    renderScenario();
+                    updateStats();
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ Failed to load scenario from Google Sheets');
+                addNotification(`❌ Kunne ikke laste scenario fra Google Sheets.`);
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    console.log('❌ Scenario loading timeout');
+                }
+            }, 15000);
+        }
+
         // STEG 2: Load players from Google Sheets - ALWAYS use Sheets data if available
         function loadPlayersFromSheets() {
             console.log('🔄 Loading players from Google Sheets...');
@@ -1329,6 +1390,7 @@
             // Load real data from Google Sheets after a short delay
             setTimeout(() => {
                 loadPlayersFromSheets();
+                loadScenarioFromSheets(); // STEG 3: Also load scenario
             }, 2000);
             
             renderLeaderboard();
