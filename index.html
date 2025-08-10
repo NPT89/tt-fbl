@@ -694,7 +694,7 @@
 
     <script>
         // GOOGLE SHEETS CONFIGURATION - UPDATED URL
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycby7N5EQSpVNsnQsobxLhfKV2JRBD_bZ93Aj4f-bLXP_V_dsOLFRXVZhqsxlO5g1SSTNgw/exec';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbypzaAyPLT0O8WUiT3_7aFub7ko7UHZa_xV7HQKuQhbbddBvqoBd29GhGtpI8Q8qDGVgQ/exec';
 
         // STEG 4: Make choices clickable and send to Google Sheets
         function makeChoicesClickable() {
@@ -1658,14 +1658,17 @@
         };
 
         // Auto-refresh countdown timer every minute
-        function startAutoRefresh() {
-            setInterval(() => {
-                if (gameState.currentScenario && gameState.currentScenario.deadline) {
-                    renderScenario(); // Updates countdown
-                    updateStats(); // Updates scenario status
-                }
-            }, 60000); // Every 60 seconds
+function startAutoRefresh() {
+    setInterval(() => {
+        if (gameState.currentScenario && gameState.currentScenario.deadline) {
+            renderScenario(); // Updates countdown
+            updateStats(); // Updates scenario status
         }
+        
+        // Auto-refresh scenario data every 2 minutes to check for new results
+        loadScenarioFromSheets();
+    }, 120000); // Every 2 minutes (changed from 60000)
+}
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
