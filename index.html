@@ -1471,8 +1471,9 @@
             }
 
             // Build choices HTML if available
-            let choicesHtml = '';
-            if (scenario.choices && Object.keys(scenario.choices).length > 0) {
+let choicesHtml = '';
+const hasResults = scenario.results && Object.keys(scenario.results).length > 0;
+if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults) {
                 choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
                 
                 Object.entries(scenario.choices).forEach(([key, choice]) => {
