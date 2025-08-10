@@ -693,8 +693,8 @@
     </main>
 
     <script>
-        // GOOGLE SHEETS CONFIGURATION - STEG 1
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzG9YKhZXlUtVLG5MSUGDI7yJ5ovyxzeErV7oVRuhg_CDayRcii2NzZiGtsQs2dqyzZ/exec';
+        // GOOGLE SHEETS CONFIGURATION - UPDATED URL
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycby7N5EQSpVNsnQsobxLhfKV2JRBD_bZ93Aj4f-bLXP_V_dsOLFRXVZhqsxlO5g1SSTNgw/exec';
 
         // Connection status functions
         function updateConnectionStatus(status, message) {
@@ -717,6 +717,79 @@
                 }, 5000);
             }
         }
+
+        // DEBUG: Test the fixed Google Apps Script
+        window.debugFixedScript = function() {
+            console.log('🔧 DEBUG: Testing fixed Google Apps Script...');
+            
+            // Test getCurrentScenario specifically
+            const callbackName = 'debugFixedCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🔍 Fixed Script Response:');
+                console.log('  Type:', typeof response);
+                console.log('  Keys:', Object.keys(response));
+                console.log('  Status:', response.status);
+                console.log('  Message:', response.message);
+                console.log('  Data:', response.data);
+                console.log('  Full Response:', response);
+                
+                if (response.data) {
+                    console.log('🎯 Scenario Data Found:');
+                    console.log('  ID:', response.data.id);
+                    console.log('  Title:', response.data.title);
+                    console.log('  Tasks:', response.data.tasks);
+                    console.log('  Choices:', response.data.choices);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ DEBUG: Fixed script test failed');
+            };
+            
+            // Test the exact same URL
+            const testUrl = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            console.log('🔗 Testing URL:', testUrl);
+            
+            script.src = testUrl;
+            document.head.appendChild(script);
+        };
+
+        // DEBUG: Test different actions to see what exists
+        window.testGoogleAppsScriptActions = function() {
+            const actions = ['getPlayers', 'getCurrentScenario', 'getScenarios', 'ping'];
+            
+            actions.forEach((action, index) => {
+                setTimeout(() => {
+                    console.log(`🧪 Testing action: ${action}`);
+                    
+                    const callbackName = `testAction_${action}_${Date.now()}`;
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        console.log(`✅ Action "${action}" result:`, response);
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        console.log(`❌ Action "${action}" failed`);
+                    };
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=' + action;
+                    document.head.appendChild(script);
+                }, index * 2000); // 2 second delay between tests
+            });
+        };
 
         // DEBUG: Manual test function for scenario loading
         window.debugScenarioLoading = function() {
@@ -749,7 +822,7 @@
             document.head.appendChild(script);
         };
 
-        // STEG 3: Load scenario from Google Sheets
+        // STEG 3: Load scenario from Google Sheets - FIXED
         function loadScenarioFromSheets() {
             console.log('🔄 Loading scenario from Google Sheets...');
             
@@ -761,6 +834,13 @@
                 delete window[callbackName];
                 
                 console.log('🎲 Scenario response:', response);
+                
+                // Check if we got the wrong response (choices instead of scenario)
+                if (response && response.status === 'success' && response.message === 'Choice recorded successfully') {
+                    console.log('⚠️ Got choices response instead of scenario - Google Apps Script routing issue');
+                    addNotification(`⚠️ Scenario loading har routing-problem i Google Apps Script`);
+                    return;
+                }
                 
                 if (response && response.status === 'success' && response.data) {
                     // Update gameState with loaded scenario
@@ -782,11 +862,15 @@
                     updateStats();
                     
                     addNotification(`🎲 Scenario oppdatert: ${gameState.currentScenario.title}`);
-                } else {
+                } else if (response && response.status === 'success' && !response.data) {
                     console.log('ℹ️ No scenario found in Google Sheets - database empty');
                     gameState.currentScenario = null;
                     renderScenario();
                     updateStats();
+                    addNotification(`ℹ️ Ingen aktive scenarioer i Google Sheets database`);
+                } else {
+                    console.log('❌ Invalid scenario response:', response);
+                    addNotification(`❌ Ugyldig scenario-respons fra Google Sheets`);
                 }
             };
             
