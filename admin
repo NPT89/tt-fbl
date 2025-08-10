@@ -1801,8 +1801,8 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             now.setDate(now.getDate() + 2);
             document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
             
-            document.getElementById('scenario-title').value = gameData.currentScenario.title;
-            document.getElementById('scenario-background').value = gameData.currentScenario.background || gameData.currentScenario.description || '';
+            document.getElementById('scenario-title').value = '';
+            document.getElementById('scenario-background').value = '';
             
             previewChoices();
             
