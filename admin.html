@@ -486,7 +486,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -893,6 +893,38 @@ let gameData = {
             script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayers&data=' + playersData;
             document.head.appendChild(script);
         }
+
+        function savePlayerBreakdownsToSheets() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        console.log('No valid Google Sheets URL - cannot save player breakdowns');
+        return;
+    }
+    
+    const callbackName = 'saveBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            console.log('✅ Player breakdowns saved to Google Sheets successfully');
+        } else {
+            console.log('❌ Failed to save player breakdowns:', response ? response.message : 'Unknown error');
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to save player breakdowns to Google Sheets');
+    };
+    
+    const breakdownsData = encodeURIComponent(JSON.stringify(gameData.playerBreakdowns));
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + breakdownsData;
+    document.head.appendChild(script);
+}
 
         // URL Storage functions
         function saveUrl() {
@@ -1553,12 +1585,13 @@ console.log("Spillerresultater oppdatert!");`;
                 refreshLeaderboard();
                 refreshPenalties();
                 savePlayersToSheets();
-                
-                console.log('Penalty added to player:', playerName);
-                console.log('Current playerBreakdowns:', gameData.playerBreakdowns[playerName]);
-                
-                alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + playerName + '.\n\nStraffen er nå inkludert i playerBreakdowns og vil bli eksportert!');
-            } else {
+                savePlayerBreakdownsToSheets();
+    
+    console.log('Penalty added to player:', playerName);
+    console.log('Current playerBreakdowns:', gameData.playerBreakdowns[playerName]);
+    
+    alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + playerName + '.\n\nStraffen er nå synlig både i admin og spillerside!');
+} else {
                 alert('Velg spiller og type straff');
             }
         }
@@ -1578,7 +1611,7 @@ console.log("Spillerresultater oppdatert!");`;
             collectChoicesData();
             
             // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec';
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
@@ -1796,7 +1829,7 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             previewChoices();
             
             // Load saved URL and set the new URL
-            const newUrl = 'https://script.google.com/a/macros/visma.com/s/AKfycbypzaAyPLT0O8WUiT3_7aFub7ko7UHZa_xV7HQKuQhbbddBvqoBd29GhGtpI8Q8qDGVgQ/exec';
+            const newUrl = 'https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec';
             document.getElementById('sheets-url-input').value = newUrl;
             localStorage.setItem('tripletex_sheets_url', newUrl);
             
