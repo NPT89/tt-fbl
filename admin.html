@@ -486,7 +486,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/a/macros/visma.com/s/AKfycbwWQMpphoxVpWsQAs-isqEqlnsvtar-UuxGVaNDGLOzUTqkEIAC8AvhK8UWJEKxE6q5hA/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -1577,7 +1577,7 @@ console.log("Spillerresultater oppdatert!");`;
             collectChoicesData();
             
             // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/a/macros/visma.com/s/AKfycbwWQMpphoxVpWsQAs-isqEqlnsvtar-UuxGVaNDGLOzUTqkEIAC8AvhK8UWJEKxE6q5hA/exec';
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
