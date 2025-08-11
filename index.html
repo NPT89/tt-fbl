@@ -277,103 +277,7 @@
             font-weight: bold;
         }
 
-        /* Performance Chart Styles */
-        .chart-controls {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-
-        .player-toggles {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .player-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .player-toggle:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
-
-        .player-checkbox {
-            accent-color: #0066CC;
-        }
-
-        .player-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-left: auto;
-        }
-
-        .chart-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            height: 500px;
-        }
-
-        .chart-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .milestone-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .milestone-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .milestone-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .scenario-gain {
-            background: #28a745;
-        }
-
-        .penalty {
-            background: #dc3545;
-        }
-
-        .bonus {
-            background: #ffc107;
-        }
-
-        /* Scenario styling (existing) */
+        /* NEW TASK STYLING */
         .scenario-tasks {
             margin: 1.5rem 0;
         }
@@ -611,6 +515,7 @@
             display: none;
         }
 
+        /* NEW - Connection status indicator */
         .connection-status {
             position: fixed;
             top: 20px;
@@ -682,10 +587,6 @@
             }
         }
     </style>
-    <!-- Chart.js Date Adapter -->
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js"></script>
 </head>
 <body>
     <!-- Connection status indicator -->
@@ -700,7 +601,6 @@
                 <div class="nav-links">
                     <a class="nav-link active" data-section="dashboard">Dashboard</a>
                     <a class="nav-link" data-section="scenario">Scenario</a>
-                    <a class="nav-link" data-section="performance">📈 Performance</a>
                     <a class="nav-link" data-section="help">Hjelp</a>
                 </div>
             </nav>
@@ -757,59 +657,6 @@
                 </div>
             </section>
 
-            <!-- Performance Section -->
-            <section id="performance" class="section hidden">
-                <div class="dashboard">
-                    <h2>📈 Performance Analytics</h2>
-                    <p>Se hvordan spillerne utvikler seg over tid</p>
-                    
-                    <div class="chart-controls">
-                        <h3 style="margin-bottom: 1rem;">Velg spillere å sammenligne:</h3>
-                        <div class="player-toggles" id="player-toggles">
-                            <!-- Player toggles will be populated by JavaScript -->
-                        </div>
-                        
-                        <div class="milestone-legend">
-                            <div class="milestone-item">
-                                <div class="milestone-dot scenario-gain"></div>
-                                <span>Scenario Gevinst</span>
-                            </div>
-                            <div class="milestone-item">
-                                <div class="milestone-dot penalty"></div>
-                                <span>Straff</span>
-                            </div>
-                            <div class="milestone-item">
-                                <div class="milestone-dot bonus"></div>
-                                <span>Bonus/Korreksjon</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="performanceChart"></canvas>
-                    </div>
-
-                    <div class="chart-stats">
-                        <div class="stat-card">
-                            <div class="stat-value" id="best-performer">-</div>
-                            <div class="stat-label">Mest Forbedring</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="most-consistent">-</div>
-                            <div class="stat-label">Mest Konsistent</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="biggest-swing">-</div>
-                            <div class="stat-label">Største Svingning</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="total-events">-</div>
-                            <div class="stat-label">Totale Hendelser</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Help Section -->
             <section id="help" class="section hidden">
                 <div class="dashboard">
@@ -846,28 +693,174 @@
     </main>
 
     <script>
-        // GOOGLE SHEETS CONFIGURATION
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbwWPU-f-cOxUrf0sgJeM7wWZ-VRkAdWbuGmJAvxc-uk32DRygAtwt6sz_Dj-VqpdJqi0Q/exec';
+        // GOOGLE SHEETS CONFIGURATION - UPDATED URL
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec';
 
-        // Game state
-        let gameState = {
-            players: [],
-            currentScenario: null,
-            notifications: [],
-            playerBreakdowns: {}
-        };
+        // STEG 4: Make choices clickable and send to Google Sheets
+        function makeChoicesClickable() {
+            const choiceElements = document.querySelectorAll('.choice-display');
+            
+            choiceElements.forEach((choiceEl) => {
+                // Skip if already clickable
+                if (choiceEl.hasAttribute('data-clickable')) return;
+                choiceEl.setAttribute('data-clickable', 'true');
+                
+                // Get choice letter from the choice-letter element or extract from title
+                let choiceLetter = '';
+                const choiceLetterEl = choiceEl.querySelector('.choice-letter');
+                if (choiceLetterEl) {
+                    choiceLetter = choiceLetterEl.textContent.replace(')', '');
+                } else {
+                    // Extract from choice title (A), B), etc.)
+                    const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                    const letterMatch = choiceTitle.match(/^([A-Z])\)/);
+                    choiceLetter = letterMatch ? letterMatch[1] : 'A';
+                }
+                
+                // Add click styling
+                choiceEl.style.cursor = 'pointer';
+                choiceEl.style.transition = 'all 0.3s ease';
+                
+                // Add hover effects
+                choiceEl.addEventListener('mouseenter', () => {
+                    choiceEl.style.transform = 'translateX(5px)';
+                    choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                });
+                
+                choiceEl.addEventListener('mouseleave', () => {
+                    choiceEl.style.transform = 'translateX(0)';
+                    choiceEl.style.boxShadow = 'none';
+                });
+                
+                // Add click handler
+                choiceEl.addEventListener('click', async () => {
+                    const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
+                    if (playerName && playerName.trim()) {
+                        const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                        const confirmed = confirm(`${playerName}, bekrefter du valg ${choiceLetter}: ${choiceTitle}?`);
+                        
+                        if (confirmed) {
+                            await sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName.trim());
+                        }
+                    }
+                });
+                
+                // Add visual indication that choices are clickable
+                const choiceContent = choiceEl.querySelector('.choice-content');
+                if (choiceContent && !choiceContent.querySelector('.click-hint')) {
+                    const clickHint = document.createElement('div');
+                    clickHint.innerHTML = '👆 Klikk for å velge';
+                    clickHint.className = 'click-hint';
+                    clickHint.style.cssText = 'font-size: 0.8rem; color: #0066CC; margin-top: 0.5rem; opacity: 0.7;';
+                    choiceContent.appendChild(clickHint);
+                }
+            });
+        }
 
-        // Performance Chart Variables
-        let performanceChart = null;
-        let visiblePerformancePlayers = new Set();
-
-        // Color palette for performance chart
-        const playerColors = [
-            '#0066CC', '#00A651', '#FF6B35', '#8E44AD',
-            '#E74C3C', '#F39C12', '#1ABC9C', '#34495E'
-        ];
-
-        // Connection status functions
+        // Function to send choice to Google Sheets
+        async function sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName) {
+            const originalBg = choiceEl.style.backgroundColor;
+            choiceEl.style.backgroundColor = '#fff3cd';
+            choiceEl.style.borderColor = '#ffc107';
+            
+            // Add loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.innerHTML = '⏳ Sender valg...';
+            loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
+            choiceEl.appendChild(loadingEl);
+            
+            const choiceData = {
+                player: playerName,
+                choice: choiceLetter,
+                choiceTitle: choiceTitle,
+                scenarioTitle: gameState.currentScenario ? gameState.currentScenario.title : 'Unknown Scenario',
+                week: 'Current',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // Use JSONP to send choice to Google Sheets (same method as admin)
+                await new Promise((resolve, reject) => {
+                    const callbackName = 'choiceCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        if (response && response.status === 'success') {
+                            resolve(true);
+                        } else {
+                            reject(new Error(response ? response.message : 'Unknown error'));
+                        }
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('Failed to load script'));
+                    };
+                    
+                    const params = new URLSearchParams({
+                        callback: callbackName,
+                        player: choiceData.player,
+                        choice: choiceData.choice,
+                        choiceTitle: choiceData.choiceTitle,
+                        scenarioTitle: choiceData.scenarioTitle,
+                        week: choiceData.week,
+                        timestamp: choiceData.timestamp
+                    });
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
+                    document.head.appendChild(script);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        if (document.head.contains(script)) {
+                            document.head.removeChild(script);
+                            delete window[callbackName];
+                            reject(new Error('Request timeout'));
+                        }
+                    }, 10000);
+                });
+                
+                // Success
+                choiceEl.removeChild(loadingEl);
+                choiceEl.style.backgroundColor = '#d4edda';
+                choiceEl.style.borderColor = '#28a745';
+                
+                alert(`✅ Valg registrert: ${choiceLetter}) ${choiceTitle}\n\nDitt valg er sendt til admin og lagret i systemet!`);
+                
+                const successEl = document.createElement('div');
+                successEl.innerHTML = '✅ Valg registrert!';
+                successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
+                choiceEl.appendChild(successEl);
+                
+                // Disable further clicks
+                choiceEl.style.pointerEvents = 'none';
+                choiceEl.style.opacity = '0.8';
+                
+                addNotification(`✅ ${playerName} valgte ${choiceLetter}: ${choiceTitle}`);
+                
+            } catch (error) {
+                console.error('Error sending choice:', error);
+                
+                if (choiceEl.contains(loadingEl)) {
+                    choiceEl.removeChild(loadingEl);
+                }
+                
+                choiceEl.style.backgroundColor = '#f8d7da';
+                choiceEl.style.borderColor = '#dc3545';
+                
+                alert('❌ Feil ved sending av valg: ' + error.message + '\n\nPrøv igjen eller kontakt admin.');
+                
+                // Reset styling after 3 seconds
+                setTimeout(() => {
+                    choiceEl.style.backgroundColor = originalBg;
+                    choiceEl.style.borderColor = '';
+                }, 3000);
+            }
+        }
         function updateConnectionStatus(status, message) {
             const statusEl = document.getElementById('connection-status');
             statusEl.className = `connection-status ${status}`;
@@ -880,6 +873,7 @@
             
             statusEl.innerHTML = `${icons[status]} ${message}`;
             
+            // Auto-hide after 5 seconds if connected
             if (status === 'connected') {
                 setTimeout(() => {
                     statusEl.style.opacity = '0.7';
@@ -888,468 +882,111 @@
             }
         }
 
-        // Navigation functionality
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                document.querySelectorAll('.section').forEach(section => {
-                    section.classList.add('hidden');
-                });
-                
-                const targetSection = e.target.getAttribute('data-section');
-                document.getElementById(targetSection).classList.remove('hidden');
-                
-                // Initialize performance tab when navigating to it
-                if (targetSection === 'performance') {
-                    setTimeout(initializePerformanceTab, 100);
-                }
-            });
-        });
-
-        // Performance Chart Functions
-        function initializePerformanceChart() {
-            const canvas = document.getElementById('performanceChart');
-            if (!canvas || performanceChart) return;
+        // DEBUG: Test the fixed Google Apps Script
+        window.debugFixedScript = function() {
+            console.log('🔧 DEBUG: Testing fixed Google Apps Script...');
             
-            const ctx = canvas.getContext('2d');
-            
-            performanceChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Business Value Utvikling Over Tid',
-                            font: {
-                                size: 18,
-                                weight: 'bold'
-                            },
-                            color: '#333'
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            titleColor: '#333',
-                            bodyColor: '#666',
-                            borderColor: '#e0e0e0',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            displayColors: true,
-                            callbacks: {
-                                title: function(context) {
-                                    const date = new Date(context[0].parsed.x);
-                                    return date.toLocaleDateString('no-NO');
-                                },
-                                afterBody: function(context) {
-                                    const playerName = context[0].dataset.label;
-                                    const date = new Date(context[0].parsed.x).toISOString().split('T')[0];
-                                    const events = getEventsForDate(playerName, date);
-                                    return events.length > 0 ? '\n' + events.join('\n') : '';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'week',
-                                displayFormats: {
-                                    week: 'dd MMM'
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Tidslinje',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.1)'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Business Value (NOK)',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.1)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString('no-NO') + ' kr';
-                                }
-                            }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 6,
-                            hoverRadius: 8,
-                            borderWidth: 2,
-                            backgroundColor: '#fff'
-                        },
-                        line: {
-                            borderWidth: 3,
-                            tension: 0.1
-                        }
-                    }
-                }
-            });
-        }
-
-        function getEventsForDate(playerName, targetDate) {
-            const breakdown = gameState.playerBreakdowns[playerName];
-            if (!breakdown) return [];
-            
-            const events = [];
-            
-            if (breakdown.scenarioGains) {
-                breakdown.scenarioGains.forEach(gain => {
-                    if (gain.date === targetDate) {
-                        events.push(`🎲 ${gain.scenario}: ${gain.outcome} (${gain.value > 0 ? '+' : ''}${gain.value.toLocaleString()} NOK)`);
-                    }
-                });
-            }
-            
-            if (breakdown.penalties) {
-                breakdown.penalties.forEach(penalty => {
-                    if (penalty.date === targetDate) {
-                        events.push(`⚠️ ${penalty.type}: ${penalty.value.toLocaleString()} NOK`);
-                    }
-                });
-            }
-            
-            if (breakdown.bonuses) {
-                breakdown.bonuses.forEach(bonus => {
-                    if (bonus.date === targetDate) {
-                        events.push(`🎉 ${bonus.type}: +${bonus.value.toLocaleString()} NOK`);
-                    }
-                });
-            }
-            
-            return events;
-        }
-
-        function generateTimeSeriesDataForPlayer(playerName) {
-            const breakdown = gameState.playerBreakdowns[playerName];
-            if (!breakdown) {
-                const player = gameState.players.find(p => p.name === playerName);
-                if (!player) return [];
-                
-                return [
-                    { x: '2024-01-01', y: 500000 },
-                    { x: new Date().toISOString().split('T')[0], y: player.businessValue }
-                ];
-            }
-            
-            const events = [];
-            
-            events.push({
-                date: '2024-01-01',
-                value: breakdown.startCapital || 500000,
-                type: 'start'
-            });
-            
-            if (breakdown.scenarioGains) {
-                breakdown.scenarioGains.forEach(gain => {
-                    events.push({
-                        date: gain.date,
-                        value: gain.value,
-                        type: 'scenario',
-                        details: gain
-                    });
-                });
-            }
-            
-            if (breakdown.penalties) {
-                breakdown.penalties.forEach(penalty => {
-                    events.push({
-                        date: penalty.date,
-                        value: penalty.value,
-                        type: 'penalty',
-                        details: penalty
-                    });
-                });
-            }
-            
-            if (breakdown.bonuses) {
-                breakdown.bonuses.forEach(bonus => {
-                    events.push({
-                        date: bonus.date,
-                        value: bonus.value,
-                        type: 'bonus',
-                        details: bonus
-                    });
-                });
-            }
-            
-            events.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            let runningTotal = breakdown.startCapital || 500000;
-            const timeSeriesData = [{
-                x: events[0].date,
-                y: runningTotal
-            }];
-            
-            for (let i = 1; i < events.length; i++) {
-                const event = events[i];
-                runningTotal += event.value;
-                timeSeriesData.push({
-                    x: event.date,
-                    y: runningTotal
-                });
-            }
-            
-            return timeSeriesData;
-        }
-
-        function createPerformancePlayerToggles() {
-            const container = document.getElementById('player-toggles');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            gameState.players.forEach((player, index) => {
-                const color = playerColors[index % playerColors.length];
-                
-                const toggle = document.createElement('div');
-                toggle.className = 'player-toggle';
-                toggle.innerHTML = `
-                    <input type="checkbox" 
-                           id="perf-player-${index}" 
-                           class="player-checkbox"
-                           ${index < 2 ? 'checked' : ''}>
-                    <label for="perf-player-${index}" style="cursor: pointer; flex-grow: 1;">
-                        ${player.name}
-                    </label>
-                    <div class="player-color" style="background-color: ${color};"></div>
-                `;
-                
-                const checkbox = toggle.querySelector('input');
-                checkbox.addEventListener('change', () => {
-                    if (checkbox.checked) {
-                        visiblePerformancePlayers.add(player.name);
-                    } else {
-                        visiblePerformancePlayers.delete(player.name);
-                    }
-                    updatePerformanceChart();
-                });
-                
-                if (checkbox.checked) {
-                    visiblePerformancePlayers.add(player.name);
-                }
-                
-                container.appendChild(toggle);
-            });
-        }
-
-        function updatePerformanceChart() {
-            if (!performanceChart) return;
-            
-            const datasets = [];
-            
-            Array.from(visiblePerformancePlayers).forEach((playerName, index) => {
-                const playerIndex = gameState.players.findIndex(p => p.name === playerName);
-                const color = playerColors[playerIndex % playerColors.length];
-                const data = generateTimeSeriesDataForPlayer(playerName);
-                
-                datasets.push({
-                    label: playerName,
-                    data: data,
-                    borderColor: color,
-                    backgroundColor: color + '20',
-                    fill: false,
-                    pointBackgroundColor: color,
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: color,
-                    pointHoverBorderColor: '#fff'
-                });
-            });
-            
-            performanceChart.data.datasets = datasets;
-            performanceChart.update('active');
-            
-            updatePerformanceStats();
-        }
-
-        function updatePerformanceStats() {
-            const visiblePlayersArray = Array.from(visiblePerformancePlayers);
-            
-            const bestPerformerEl = document.getElementById('best-performer');
-            const mostConsistentEl = document.getElementById('most-consistent');
-            const biggestSwingEl = document.getElementById('biggest-swing');
-            const totalEventsEl = document.getElementById('total-events');
-            
-            if (!bestPerformerEl) return;
-            
-            if (visiblePlayersArray.length === 0) {
-                bestPerformerEl.textContent = '-';
-                mostConsistentEl.textContent = '-';
-                biggestSwingEl.textContent = '-';
-                totalEventsEl.textContent = '-';
-                return;
-            }
-            
-            let bestPerformer = '';
-            let maxGrowth = -Infinity;
-            let mostConsistent = '';
-            let minVariance = Infinity;
-            let biggestSwing = '';
-            let maxSwing = 0;
-            let totalEvents = 0;
-            
-            visiblePlayersArray.forEach(playerName => {
-                const breakdown = gameState.playerBreakdowns[playerName];
-                const data = generateTimeSeriesDataForPlayer(playerName);
-                
-                if (data.length < 2) return;
-                
-                const startValue = data[0].y;
-                const endValue = data[data.length - 1].y;
-                const growth = endValue - startValue;
-                
-                if (growth > maxGrowth) {
-                    maxGrowth = growth;
-                    bestPerformer = playerName.split(' ')[0];
-                }
-                
-                const values = data.map(d => d.y);
-                const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-                const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-                
-                if (variance < minVariance) {
-                    minVariance = variance;
-                    mostConsistent = playerName.split(' ')[0];
-                }
-                
-                for (let i = 1; i < data.length; i++) {
-                    const swing = Math.abs(data[i].y - data[i-1].y);
-                    if (swing > maxSwing) {
-                        maxSwing = swing;
-                        biggestSwing = playerName.split(' ')[0];
-                    }
-                }
-                
-                if (breakdown) {
-                    totalEvents += (breakdown.scenarioGains?.length || 0) + 
-                                  (breakdown.penalties?.length || 0) + 
-                                  (breakdown.bonuses?.length || 0);
-                }
-            });
-            
-            bestPerformerEl.textContent = bestPerformer || '-';
-            mostConsistentEl.textContent = mostConsistent || '-';
-            biggestSwingEl.textContent = biggestSwing || '-';
-            totalEventsEl.textContent = totalEvents;
-        }
-
-        function initializePerformanceTab() {
-            if (!performanceChart) {
-                initializePerformanceChart();
-            }
-            createPerformancePlayerToggles();
-            updatePerformanceChart();
-        }
-
-        // Load data functions
-        function loadPlayersFromSheets() {
-            console.log('🔄 Loading players from Google Sheets...');
-            updateConnectionStatus('loading', 'Laster spillere...');
-            
-            const callbackName = 'loadPlayersCallback_' + Date.now();
+            // Test getCurrentScenario specifically
+            const callbackName = 'debugFixedCallback_' + Date.now();
             const script = document.createElement('script');
             
             window[callbackName] = function(response) {
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
-                console.log('📊 Players response:', response);
+                console.log('🔍 Fixed Script Response:');
+                console.log('  Type:', typeof response);
+                console.log('  Keys:', Object.keys(response));
+                console.log('  Status:', response.status);
+                console.log('  Message:', response.message);
+                console.log('  Data:', response.data);
+                console.log('  Full Response:', response);
                 
-                if (response && response.status === 'success' && response.data && response.data.length > 0) {
-                    gameState.players = response.data.map((player, index) => ({
-                        name: player.name || `Spiller ${index + 1}`,
-                        company: player.company || player.name || `Selskap ${index + 1}`,
-                        businessValue: parseInt(player.businessValue) || 500000,
-                        rank: parseInt(player.rank) || (index + 1)
-                    }));
-                    
-                    gameState.players.sort((a, b) => b.businessValue - a.businessValue);
-                    gameState.players.forEach((player, index) => {
-                        player.rank = index + 1;
-                    });
-                    
-                    console.log('✅ Players loaded from Google Sheets database:', gameState.players.length, 'players');
-                    
-                    renderLeaderboard();
-                    updateStats();
-                    updateConnectionStatus('connected', 'Live data fra Sheets');
-                    
-                    addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
-                } else {
-                    console.log('ℹ️ No players found in Google Sheets - database is empty');
-                    updateConnectionStatus('connected', 'Tilkoblet (database tom)');
-                    addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
-                }
-                
-                const savedBreakdowns = localStorage.getItem('tripletex_player_breakdowns');
-                if (savedBreakdowns) {
-                    gameState.playerBreakdowns = JSON.parse(savedBreakdowns);
+                if (response.data) {
+                    console.log('🎯 Scenario Data Found:');
+                    console.log('  ID:', response.data.id);
+                    console.log('  Title:', response.data.title);
+                    console.log('  Tasks:', response.data.tasks);
+                    console.log('  Choices:', response.data.choices);
                 }
             };
             
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                updateConnectionStatus('error', 'Feil ved lasting av spillere');
-                console.log('❌ Failed to load players from Google Sheets');
-                addNotification(`❌ Kunne ikke laste spillerdata fra Google Sheets database.`);
+                console.log('❌ DEBUG: Fixed script test failed');
             };
             
-            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
-            document.head.appendChild(script);
+            // Test the exact same URL
+            const testUrl = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            console.log('🔗 Testing URL:', testUrl);
             
-            setTimeout(() => {
-                if (document.head.contains(script)) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    updateConnectionStatus('error', 'Timeout ved lasting av spillere');
-                    console.log('❌ Players loading timeout');
-                    addNotification(`⏰ Timeout ved lasting fra Google Sheets database.`);
-                }
-            }, 15000);
-        }
+            script.src = testUrl;
+            document.head.appendChild(script);
+        };
 
+        // DEBUG: Test different actions to see what exists
+        window.testGoogleAppsScriptActions = function() {
+            const actions = ['getPlayers', 'getCurrentScenario', 'getScenarios', 'ping'];
+            
+            actions.forEach((action, index) => {
+                setTimeout(() => {
+                    console.log(`🧪 Testing action: ${action}`);
+                    
+                    const callbackName = `testAction_${action}_${Date.now()}`;
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        console.log(`✅ Action "${action}" result:`, response);
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        console.log(`❌ Action "${action}" failed`);
+                    };
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=' + action;
+                    document.head.appendChild(script);
+                }, index * 2000); // 2 second delay between tests
+            });
+        };
+
+        // DEBUG: Manual test function for scenario loading
+        window.debugScenarioLoading = function() {
+            console.log('🔧 DEBUG: Manual scenario loading test...');
+            
+            const callbackName = 'debugCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🔍 DEBUG Response type:', typeof response);
+                console.log('🔍 DEBUG Response keys:', Object.keys(response));
+                console.log('🔍 DEBUG Full response:', response);
+                
+                if (response.data) {
+                    console.log('🔍 DEBUG Response.data type:', typeof response.data);
+                    console.log('🔍 DEBUG Response.data:', response.data);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ DEBUG: Script loading failed');
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            document.head.appendChild(script);
+        };
+
+        // STEG 3: Load scenario from Google Sheets - FIXED
         function loadScenarioFromSheets() {
             console.log('🔄 Loading scenario from Google Sheets...');
             
@@ -1362,6 +999,7 @@
                 
                 console.log('🎲 Scenario response:', response);
                 
+                // Check if we got the wrong response (choices instead of scenario)
                 if (response && response.status === 'success' && response.message === 'Choice recorded successfully') {
                     console.log('⚠️ Got choices response instead of scenario - Google Apps Script routing issue');
                     addNotification(`⚠️ Scenario loading har routing-problem i Google Apps Script`);
@@ -1369,6 +1007,7 @@
                 }
                 
                 if (response && response.status === 'success' && response.data) {
+                    // Update gameState with loaded scenario
                     gameState.currentScenario = {
                         id: response.data.id,
                         title: response.data.title || 'Nytt Scenario',
@@ -1380,7 +1019,9 @@
                     };
                     
                     console.log('✅ Scenario loaded from Google Sheets:', gameState.currentScenario.title);
+                    console.log('📋 Scenario data:', gameState.currentScenario);
                     
+                    // Update UI
                     renderScenario();
                     updateStats();
                     
@@ -1407,6 +1048,7 @@
             script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
             document.head.appendChild(script);
             
+            // Timeout after 15 seconds
             setTimeout(() => {
                 if (document.head.contains(script)) {
                     document.head.removeChild(script);
@@ -1417,96 +1059,248 @@
         }
 
         function loadPlayerBreakdownsFromSheets() {
-            const callbackName = 'loadBreakdownsCallback_' + Date.now();
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
+                     'https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec';
+    
+    const callbackName = 'loadBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            gameState.playerBreakdowns = response.data;
+            console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data).length, 'players');
+            
+            // Force re-render leaderboard med penalties
+            renderLeaderboard();
+        } else {
+            console.log('ℹ️ No player breakdowns found in Google Sheets');
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to load player breakdowns from Google Sheets');
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
+    document.head.appendChild(script);
+}
+
+        // STEG 2: Load players from Google Sheets - ALWAYS use Sheets data if available
+        function loadPlayersFromSheets() {
+            console.log('🔄 Loading players from Google Sheets...');
+            updateConnectionStatus('loading', 'Laster spillere...');
+            
+            const callbackName = 'loadPlayersCallback_' + Date.now();
             const script = document.createElement('script');
             
             window[callbackName] = function(response) {
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
-                if (response && response.status === 'success') {
-                    gameState.playerBreakdowns = response.data;
-                    console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data).length, 'players');
+                console.log('📊 Players response:', response);
+                
+                if (response && response.status === 'success' && response.data && response.data.length > 0) {
+                    // ALWAYS use data from Google Sheets - it's our database!
+                    gameState.players = response.data.map((player, index) => ({
+                        name: player.name || `Spiller ${index + 1}`,
+                        company: player.company || player.name || `Selskap ${index + 1}`,
+                        businessValue: parseInt(player.businessValue) || 500000,
+                        rank: parseInt(player.rank) || (index + 1)
+                    }));
                     
+                    // Sort by business value and update ranks
+                    gameState.players.sort((a, b) => b.businessValue - a.businessValue);
+                    gameState.players.forEach((player, index) => {
+                        player.rank = index + 1;
+                    });
+                    
+                    console.log('✅ Players loaded from Google Sheets database:', gameState.players.length, 'players');
+                    console.log('📋 Player data:', gameState.players);
+                    
+                    // Update UI
                     renderLeaderboard();
-                    if (performanceChart) {
-                        updatePerformanceChart();
-                    }
+                    updateStats();
+                    updateConnectionStatus('connected', 'Live data fra Sheets');
+                    
+                    addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
                 } else {
-                    console.log('ℹ️ No player breakdowns found in Google Sheets');
+                    console.log('ℹ️ No players found in Google Sheets - database is empty');
+                    updateConnectionStatus('connected', 'Tilkoblet (database tom)');
+                    addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
+                }
+                // Also load breakdowns from localStorage
+const savedBreakdowns = localStorage.getItem('tripletex_player_breakdowns');
+if (savedBreakdowns) {
+    gameState.playerBreakdowns = JSON.parse(savedBreakdowns);
+}
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                updateConnectionStatus('error', 'Feil ved lasting av spillere');
+                console.log('❌ Failed to load players from Google Sheets');
+                addNotification(`❌ Kunne ikke laste spillerdata fra Google Sheets database.`);
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
+            document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Timeout ved lasting av spillere');
+                    console.log('❌ Players loading timeout');
+                    addNotification(`⏰ Timeout ved lasting fra Google Sheets database.`);
+                }
+            }, 15000);
+        }
+
+        // Test connection to Google Sheets
+        function testGoogleSheetsConnection() {
+            console.log('🔄 Testing Google Sheets connection...');
+            updateConnectionStatus('loading', 'Tester forbindelse...');
+            
+            const callbackName = 'testCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('📡 Google Sheets response:', response);
+                
+                if (response && response.status === 'success') {
+                    updateConnectionStatus('connected', 'Tilkoblet Google Sheets');
+                    console.log('✅ Google Sheets connection successful');
+                } else {
+                    updateConnectionStatus('error', 'Forbindelsesfeil');
+                    console.log('❌ Google Sheets connection failed:', response);
                 }
             };
             
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                console.log('❌ Failed to load player breakdowns from Google Sheets');
+                updateConnectionStatus('error', 'Kan ikke nå Google Sheets');
+                console.log('❌ Google Sheets network error');
             };
             
-            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayerBreakdownsWithHistory';
+            // Test with a simple ping - try getPlayers action instead of ping
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
             document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Forbindelse timeout');
+                    console.log('❌ Google Sheets connection timeout');
+                }
+            }, 15000);
         }
+
+        // Game state with real companies
+let gameState = {
+    players: [], // TOM
+    currentScenario: null, // NULL
+    notifications: [],
+    playerBreakdowns: {}
+};
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                // Show selected section
+                const targetSection = e.target.getAttribute('data-section');
+                document.getElementById(targetSection).classList.remove('hidden');
+            });
+        });
 
         // Render functions
-        function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-content');
-            
-            if (!gameState.players || gameState.players.length === 0) {
-                container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
-                return;
-            }
+function renderLeaderboard() {
+    const container = document.getElementById('leaderboard-content');
+    
+    if (!gameState.players || gameState.players.length === 0) {
+        container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
+        return;
+    }
 
-            let html = '';
-            gameState.players.forEach((player, index) => {
-                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
-                
-                const playerBreakdown = gameState.playerBreakdowns[player.name];
-                let penaltyInfo = '';
-                
-                if (playerBreakdown && playerBreakdown.penalties && playerBreakdown.penalties.length > 0) {
-                    const penalties = playerBreakdown.penalties;
-                    const totalPenalties = penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
-                    const latestPenalty = penalties[penalties.length - 1];
-                    
-                    penaltyInfo = `
-                        <div style="font-size: 0.8rem; color: #dc3545; margin-top: 0.3rem;">
-                            <strong>Straffer:</strong> ${penalties.length} aktive (${totalPenalties.toLocaleString()} NOK totalt)<br>
-                            <strong>Siste:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
-                        </div>
-                    `;
-                }
-                
-                html += `
-                    <div class="leaderboard-item" 
-                         onclick="showPlayerBreakdown('${player.name}')" 
-                         title="Klikk for å se ${player.name}'s detaljer"
-                         data-player="${player.name}">
-                        <span class="rank ${rankClass}">${player.rank}</span>
-                        <div class="player-info">
-                            <div class="player-name">${player.name}</div>
-                            <div class="player-company">${player.company}</div>
-                            ${penaltyInfo}
-                        </div>
-                        <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
-                    </div>
-                `;
-            });
+    let html = '';
+    gameState.players.forEach((player, index) => {
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        
+        // Check for penalties to display
+        const playerBreakdown = gameState.playerBreakdowns[player.name];
+        let penaltyInfo = '';
+        
+        if (playerBreakdown && playerBreakdown.penalties && playerBreakdown.penalties.length > 0) {
+            const penalties = playerBreakdown.penalties;
+            const totalPenalties = penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
+            const latestPenalty = penalties[penalties.length - 1];
             
-            container.innerHTML = html;
+            penaltyInfo = `
+                <div style="font-size: 0.8rem; color: #dc3545; margin-top: 0.3rem;">
+                    <strong>Straffer:</strong> ${penalties.length} aktive (${totalPenalties.toLocaleString()} NOK totalt)<br>
+                    <strong>Siste:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
+                </div>
+            `;
         }
+        
+        html += `
+            <div class="leaderboard-item" 
+                 onclick="showPlayerBreakdown('${player.name}')" 
+                 title="Klikk for å se ${player.name}'s detaljer"
+                 data-player="${player.name}">
+                <span class="rank ${rankClass}">${player.rank}</span>
+                <div class="player-info">
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-company">${player.company}</div>
+                    ${penaltyInfo}
+                </div>
+                <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
 
         function showPlayerBreakdown(playerName) {
+            // Close any existing breakdown
             const existingBreakdown = document.querySelector('.breakdown.visible');
             if (existingBreakdown) {
                 existingBreakdown.classList.remove('visible');
                 existingBreakdown.remove();
             }
             
+            // Find the player's leaderboard item
             const playerItem = document.querySelector(`[data-player="${playerName}"]`);
             if (!playerItem) return;
             
+            // Get breakdown data
             const breakdownData = gameState.playerBreakdowns[playerName];
             if (!breakdownData) {
+                // Create default breakdown for players without data
                 const defaultBreakdown = {
                     startCapital: 500000,
                     scenarioGains: [],
@@ -1637,6 +1431,7 @@
             }
         }
 
+        // UPDATED renderScenario function with clickable choices
         function renderScenario() {
             const container = document.getElementById('scenario-content');
             
@@ -1701,12 +1496,13 @@
             }
 
             // Build choices HTML if available
-            let choicesHtml = '';
-            const hasResults = scenario.results && Object.keys(scenario.results).length > 0;
-            if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults) {
+let choicesHtml = '';
+const hasResults = scenario.results && Object.keys(scenario.results).length > 0;
+if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults) {
                 choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
                 
                 Object.entries(scenario.choices).forEach(([key, choice]) => {
+                    // Handle both string choices and object choices
                     if (typeof choice === 'string') {
                         choicesHtml += `
                             <div class="choice-display">
@@ -1749,7 +1545,7 @@
                 }
             }
 
-            // Build results HTML if available
+            // Build results HTML if available - Business results only (no dice details)
             let resultsHtml = '';
             if (scenario.results && Object.keys(scenario.results).length > 0) {
                 resultsHtml = `
@@ -1801,6 +1597,7 @@
         }
 
         function updateStats() {
+            // Update dashboard stats
             document.getElementById('total-players').textContent = gameState.players.length;
             
             if (gameState.players.length > 0) {
@@ -1811,6 +1608,7 @@
                 document.getElementById('avg-value').textContent = avgValue.toLocaleString();
             }
 
+            // Update scenario status
             const scenarioStatusEl = document.getElementById('scenario-status');
             if (gameState.currentScenario) {
                 const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
@@ -1839,6 +1637,7 @@
             });
             renderNotifications();
             
+            // Auto-remove after 10 seconds
             setTimeout(() => {
                 gameState.notifications = gameState.notifications.filter(n => n.id !== gameState.notifications[0].id);
                 renderNotifications();
@@ -1865,159 +1664,7 @@
             container.innerHTML = html;
         }
 
-        // Choice interaction functions
-        function makeChoicesClickable() {
-            const choiceElements = document.querySelectorAll('.choice-display');
-            
-            choiceElements.forEach((choiceEl) => {
-                if (choiceEl.hasAttribute('data-clickable')) return;
-                choiceEl.setAttribute('data-clickable', 'true');
-                
-                let choiceLetter = '';
-                const choiceLetterEl = choiceEl.querySelector('.choice-letter');
-                if (choiceLetterEl) {
-                    choiceLetter = choiceLetterEl.textContent.replace(')', '');
-                } else {
-                    const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
-                    const letterMatch = choiceTitle.match(/^([A-Z])\)/);
-                    choiceLetter = letterMatch ? letterMatch[1] : 'A';
-                }
-                
-                choiceEl.style.cursor = 'pointer';
-                choiceEl.style.transition = 'all 0.3s ease';
-                
-                choiceEl.addEventListener('mouseenter', () => {
-                    choiceEl.style.transform = 'translateX(5px)';
-                    choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
-                });
-                
-                choiceEl.addEventListener('mouseleave', () => {
-                    choiceEl.style.transform = 'translateX(0)';
-                    choiceEl.style.boxShadow = 'none';
-                });
-                
-                choiceEl.addEventListener('click', async () => {
-                    const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
-                    if (playerName && playerName.trim()) {
-                        const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
-                        const confirmed = confirm(`${playerName}, bekrefter du valg ${choiceLetter}: ${choiceTitle}?`);
-                        
-                        if (confirmed) {
-                            await sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName.trim());
-                        }
-                    }
-                });
-                
-                const choiceContent = choiceEl.querySelector('.choice-content');
-                if (choiceContent && !choiceContent.querySelector('.click-hint')) {
-                    const clickHint = document.createElement('div');
-                    clickHint.innerHTML = '👆 Klikk for å velge';
-                    clickHint.className = 'click-hint';
-                    clickHint.style.cssText = 'font-size: 0.8rem; color: #0066CC; margin-top: 0.5rem; opacity: 0.7;';
-                    choiceContent.appendChild(clickHint);
-                }
-            });
-        }
-
-        async function sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName) {
-            const originalBg = choiceEl.style.backgroundColor;
-            choiceEl.style.backgroundColor = '#fff3cd';
-            choiceEl.style.borderColor = '#ffc107';
-            
-            const loadingEl = document.createElement('div');
-            loadingEl.innerHTML = '⏳ Sender valg...';
-            loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
-            choiceEl.appendChild(loadingEl);
-            
-            const choiceData = {
-                player: playerName,
-                choice: choiceLetter,
-                choiceTitle: choiceTitle,
-                scenarioTitle: gameState.currentScenario ? gameState.currentScenario.title : 'Unknown Scenario',
-                week: 'Current',
-                timestamp: new Date().toISOString()
-            };
-            
-            try {
-                await new Promise((resolve, reject) => {
-                    const callbackName = 'choiceCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                    const script = document.createElement('script');
-                    
-                    window[callbackName] = function(response) {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        
-                        if (response && response.status === 'success') {
-                            resolve(true);
-                        } else {
-                            reject(new Error(response ? response.message : 'Unknown error'));
-                        }
-                    };
-                    
-                    script.onerror = function() {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('Failed to load script'));
-                    };
-                    
-                    const params = new URLSearchParams({
-                        callback: callbackName,
-                        player: choiceData.player,
-                        choice: choiceData.choice,
-                        choiceTitle: choiceData.choiceTitle,
-                        scenarioTitle: choiceData.scenarioTitle,
-                        week: choiceData.week,
-                        timestamp: choiceData.timestamp
-                    });
-                    
-                    script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
-                    document.head.appendChild(script);
-                    
-                    setTimeout(() => {
-                        if (document.head.contains(script)) {
-                            document.head.removeChild(script);
-                            delete window[callbackName];
-                            reject(new Error('Request timeout'));
-                        }
-                    }, 10000);
-                });
-                
-                choiceEl.removeChild(loadingEl);
-                choiceEl.style.backgroundColor = '#d4edda';
-                choiceEl.style.borderColor = '#28a745';
-                
-                alert(`✅ Valg registrert: ${choiceLetter}) ${choiceTitle}\n\nDitt valg er sendt til admin og lagret i systemet!`);
-                
-                const successEl = document.createElement('div');
-                successEl.innerHTML = '✅ Valg registrert!';
-                successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
-                choiceEl.appendChild(successEl);
-                
-                choiceEl.style.pointerEvents = 'none';
-                choiceEl.style.opacity = '0.8';
-                
-                addNotification(`✅ ${playerName} valgte ${choiceLetter}: ${choiceTitle}`);
-                
-            } catch (error) {
-                console.error('Error sending choice:', error);
-                
-                if (choiceEl.contains(loadingEl)) {
-                    choiceEl.removeChild(loadingEl);
-                }
-                
-                choiceEl.style.backgroundColor = '#f8d7da';
-                choiceEl.style.borderColor = '#dc3545';
-                
-                alert('❌ Feil ved sending av valg: ' + error.message + '\n\nPrøv igjen eller kontakt admin.');
-                
-                setTimeout(() => {
-                    choiceEl.style.backgroundColor = originalBg;
-                    choiceEl.style.borderColor = '';
-                }, 3000);
-            }
-        }
-
-        // Global update function for admin panel
+        // Functions that admin panel can call to update this platform
         window.updateGameData = function(newData) {
             if (newData.players) {
                 gameState.players = newData.players;
@@ -2037,36 +1684,39 @@
         };
 
         // Auto-refresh countdown timer every minute
-        function startAutoRefresh() {
-            setInterval(() => {
-                if (gameState.currentScenario && gameState.currentScenario.deadline) {
-                    renderScenario();
-                    updateStats();
-                }
-                
-                loadScenarioFromSheets();
-            }, 120000);
+function startAutoRefresh() {
+    setInterval(() => {
+        if (gameState.currentScenario && gameState.currentScenario.deadline) {
+            renderScenario(); // Updates countdown
+            updateStats(); // Updates scenario status
         }
+        
+        // Auto-refresh scenario data every 2 minutes to check for new results
+        loadScenarioFromSheets();
+    }, 120000); // Every 2 minutes (changed from 60000)
+}
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Test Google Sheets connection first, then load data
+            testGoogleSheetsConnection();
+            
+            // Load real data from Google Sheets after a short delay
             setTimeout(() => {
                 loadPlayersFromSheets();
-                loadScenarioFromSheets();
+                loadScenarioFromSheets(); // STEG 3: Also load scenario
             }, 2000);
-            
-            setTimeout(() => {
-                loadPlayerBreakdownsFromSheets();
-            }, 4000);
-            
+                setTimeout(() => {
+        loadPlayerBreakdownsFromSheets();
+    }, 4000);
             renderLeaderboard();
             renderScenario();
             updateStats();
-            startAutoRefresh();
+            startAutoRefresh(); // Start countdown timer
             
+            // Welcome notification
             addNotification('Velkommen til Suppa Business League! Klikk på spillere for å se detaljer. 🎉');
         });
     </script>
 </body>
 </html>
-                
