@@ -1252,18 +1252,21 @@ function updateScenario() {
             const callbackName = 'saveResultsCallback_' + Date.now();
             const script = document.createElement('script');
             
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success') {
-                    console.log('✅ Terningkast-resultater lagret til Google Sheets!');
-                    alert('✅ Terningkast-resultater automatisk lagret til Google Sheets!\n\nIndex.html vil nå laste disse resultatene automatisk.');
-                } else {
-                    console.log('❌ Feil ved lagring til Google Sheets:', response);
-                    alert('❌ Kunne ikke lagre resultater til Google Sheets: ' + (response ? response.message : 'Ukjent feil'));
-                }
-            };
+window[callbackName] = function(response) {
+    document.head.removeChild(script);
+    delete window[callbackName];
+    
+    if (response && response.status === 'success') {
+        console.log('✅ Terningkast-resultater lagret til Google Sheets!');
+        alert('✅ Terningkast-resultater automatisk lagret til Google Sheets!\n\nAdmin leaderboard oppdateres automatisk.');
+        
+        // NEW: Auto-apply results to admin leaderboard
+        applyDiceResults();
+    } else {
+        console.log('❌ Feil ved lagring til Google Sheets:', response);
+        alert('❌ Kunne ikke lagre resultater til Google Sheets: ' + (response ? response.message : 'Ukjent feil'));
+    }
+};
             
             script.onerror = function() {
                 document.head.removeChild(script);
