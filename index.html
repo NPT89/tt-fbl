@@ -1443,7 +1443,7 @@
                 console.log('❌ Failed to load player breakdowns from Google Sheets');
             };
             
-            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayerBreakdownsWithHistory';
             document.head.appendChild(script);
         }
 
