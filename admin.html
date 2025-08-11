@@ -1053,7 +1053,18 @@ let gameData = {
                 dropdown.innerHTML = options;
             });
         }
-
+        
+        function updatePlayerDropdowns() {
+            const dropdowns = ['quick-player-select', 'correction-player'];
+            dropdowns.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                let options = '<option value="">Velg spiller...</option>';
+                gameData.players.forEach((player, index) => {
+                    options += '<option value="' + index + '">' + player.name + '</option>';
+                });
+                dropdown.innerHTML = options;
+            });
+        }
         function addPlayer() {
             const name = document.getElementById('new-player-name').value;
             const company = document.getElementById('new-player-company').value;
