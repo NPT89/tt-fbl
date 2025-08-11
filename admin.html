@@ -1340,7 +1340,8 @@ if (updatedCount > 0) {
     
     // NEW: Save updated players to Google Sheets
     savePlayersToSheets();
-    
+    // NEW: Save player breakdowns too
+localStorage.setItem('tripletex_player_breakdowns', JSON.stringify(gameData.playerBreakdowns));
     alert('✅ Resultater anvendt i admin! ' + updatedCount + ' spillere oppdatert.\n\n✅ Spillerdata lagret til Google Sheets!');
 } else {
     alert('ℹ️ Resultater allerede anvendt. Ingen endringer gjort.');
