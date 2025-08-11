@@ -707,6 +707,38 @@ let gameData = {
             document.head.appendChild(script);
         }
 
+        function loadPlayerBreakdownsFromSheets() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
+                     'https://script.google.com/a/macros/visma.com/s/AKfycbypzaAyPLT0O8WUiT3_7aFub7ko7UHZa_xV7HQKuQhbbddBvqoBd29GhGtpI8Q8qDGVgQ/exec';
+    
+    const callbackName = 'loadBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            gameState.playerBreakdowns = response.data;
+            console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data).length, 'players');
+            
+            // Force re-render leaderboard med penalties
+            renderLeaderboard();
+        } else {
+            console.log('ℹ️ No player breakdowns found in Google Sheets');
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to load player breakdowns from Google Sheets');
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
+    document.head.appendChild(script);
+}
+
        function saveScenarioToSheets() {
             const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
             if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
