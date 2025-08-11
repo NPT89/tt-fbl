@@ -1129,6 +1129,38 @@ function updateScenario() {
     alert('Scenario oppdatert og lagret til Google Sheets!');
 }
 
+        function loadPlayerBreakdownsFromSheets() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        console.log('No valid Google Sheets URL - cannot load player breakdowns');
+        return;
+    }
+    
+    const callbackName = 'loadAdminBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            gameData.playerBreakdowns = response.data;
+            console.log('✅ Admin loaded existing breakdowns from Google Sheets:', Object.keys(response.data).length, 'players');
+        } else {
+            console.log('ℹ️ No existing breakdowns found in Google Sheets');
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to load breakdowns from Google Sheets');
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
+    document.head.appendChild(script);
+}
+
         function collectChoicesData() {
             const choiceElements = document.querySelectorAll('.scenario-choice');
             const choices = {};
@@ -1866,13 +1898,17 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             localStorage.setItem('tripletex_sheets_url', newUrl);
             
             // Auto-load players from Google Sheets with new URL
-            setTimeout(() => {
-                console.log('🔄 Auto-loading players from Google Sheets...');
-                loadPlayersFromSheets();
-                
-                console.log('🔄 Auto-loading scenario from Google Sheets...');
-                loadScenarioFromSheets();
-            }, 1000);
+setTimeout(() => {
+    console.log('🔄 Auto-loading players from Google Sheets...');
+    loadPlayersFromSheets();
+    
+    console.log('🔄 Auto-loading scenario from Google Sheets...');
+    loadScenarioFromSheets();
+    
+    // LEGG TIL DENNE LINJEN HER:
+    console.log('🔄 Auto-loading breakdowns from Google Sheets...');
+    loadPlayerBreakdownsFromSheets();
+}, 1000);
         });
         // NEW: Create new scenario function
 function newScenario() {
