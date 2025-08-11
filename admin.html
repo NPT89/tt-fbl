@@ -706,7 +706,9 @@ let gameData = {
             document.head.appendChild(script);
         }
 
-        function saveScenarioToSheets() {
+       function saveScenarioToSheets() {
+    console.log('🚨 saveScenarioToSheets called from:', new Error().stack);
+    return; // STOP HER - ingen lagring
             const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
             if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
                 console.log('No valid Google Sheets URL - cannot save scenario');
