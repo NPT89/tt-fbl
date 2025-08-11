@@ -547,16 +547,6 @@
                     <button class="btn" onclick="addPenalty()">Legg til Straff</button>
                 </div>
 
-                <div class="panel">
-                    <h2>📋 Aktive Straffer</h2>
-                    <div id="active-penalties"></div>
-                    <button class="btn" onclick="refreshPenalties()">Oppdater Liste</button>
-                </div>
-            </div>
-        </div>
-
-
-
     <script>
         // Game data with real companies
 let gameData = {
@@ -1638,11 +1628,6 @@ console.log("Spillerresultater oppdatert!");`;
 } else {
                 alert('Velg spiller og type straff');
             }
-        }
-
-        function refreshPenalties() {
-            // Simple penalty display
-            document.getElementById('active-penalties').innerHTML = '<p>Straffer vises etter at de er lagt til spillere</p>';
         }
 
         // UPDATED Export function - KOMBINERT KODE MED TASKS
