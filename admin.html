@@ -1660,7 +1660,6 @@ console.log("Spillerresultater oppdatert!");`;
                 document.getElementById('penalty-comment').value = '';
                 
                 refreshLeaderboard();
-                refreshPenalties();
                 savePlayersToSheets();
                 savePlayerBreakdownsToSheets();
     
@@ -1673,6 +1672,98 @@ console.log("Spillerresultater oppdatert!");`;
             }
         }
 
+function addCorrection() {
+    const playerIndex = document.getElementById('correction-player').value;
+    const correctionType = document.getElementById('correction-type').value;
+    const customAmount = document.getElementById('correction-amount').value;
+    const reason = document.getElementById('correction-reason').value;
+    
+    if (playerIndex !== '' && correctionType) {
+        let amount = 0;
+        let description = '';
+        
+        switch(correctionType) {
+            case 'reverse-setup':
+                amount = 50000;
+                description = 'Korriger Setup-feil';
+                break;
+            case 'reverse-mva':
+                amount = 25000;
+                description = 'Korriger MVA-feil';
+                break;
+            case 'reverse-sale':
+                amount = 10000;
+                description = 'Korriger Manglende salg';
+                break;
+            case 'reverse-account':
+                amount = 5000;
+                description = 'Korriger Feil kontokode';
+                break;
+            case 'custom':
+                amount = parseInt(customAmount);
+                description = 'Egendefinert korreksjon';
+                break;
+        }
+        
+        if (isNaN(amount) || amount <= 0) {
+            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
+            return;
+        }
+        
+        const player = gameData.players[playerIndex];
+        const playerName = player.name;
+        
+        // Bekreft med admin
+        const confirmed = confirm(
+            `Korriger straff for ${playerName}?\n\n` +
+            `Type: ${description}\n` +
+            `Beløp: +${amount.toLocaleString()} NOK\n` +
+            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
+            `Dette vil øke spillerens Business Value.`
+        );
+        
+        if (!confirmed) return;
+        
+        // Update business value LOKALT
+        gameData.players[playerIndex].businessValue += amount;
+        
+        // Add to playerBreakdowns as bonus
+        if (!gameData.playerBreakdowns[playerName]) {
+            gameData.playerBreakdowns[playerName] = {
+                startCapital: 500000,
+                scenarioGains: [],
+                penalties: [],
+                bonuses: []
+            };
+        }
+        
+        gameData.playerBreakdowns[playerName].bonuses.push({
+            type: description,
+            value: amount,
+            date: new Date().toLocaleDateString('no-NO'),
+            status: 'anvendt',
+            reason: reason || 'Ingen årsak oppgitt'
+        });
+        
+        // Clear form
+        document.getElementById('correction-player').value = '';
+        document.getElementById('correction-type').value = '';
+        document.getElementById('correction-amount').value = '';
+        document.getElementById('correction-reason').value = '';
+        
+        // Sync to Google Sheets
+        savePlayersToSheets();
+        savePlayerBreakdownsToSheets();
+        
+        refreshLeaderboard();
+        
+        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
+        
+    } else {
+        alert('Velg spiller og type korreksjon');
+    }
+}
+        
 function addCorrection() {
     const playerIndex = document.getElementById('correction-player').value;
     const correctionType = document.getElementById('correction-type').value;
