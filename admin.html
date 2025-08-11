@@ -1339,106 +1339,80 @@ function updateScenario() {
             }
         }
 
-        function exportResultsForPlayers() {
-            if (diceResultsData.length === 0) {
-                alert('Ingen resultater å eksportere! Kast terning først.');
-                return;
+function exportResultsForPlayers() {
+    if (diceResultsData.length === 0) {
+        alert('Ingen resultater å eksportere! Kast terning først.');
+        return;
+    }
+    
+    // LAGER LOKAL KOPI - IKKE ENDRE gameData!
+    const localPlayers = JSON.parse(JSON.stringify(gameData.players)); // Deep copy
+    const localBreakdowns = JSON.parse(JSON.stringify(gameData.playerBreakdowns)); // Deep copy
+    const localScenario = JSON.parse(JSON.stringify(gameData.currentScenario)); // Deep copy
+    
+    // Apply results to LOCAL copies only
+    diceResultsData.forEach(result => {
+        const playerIndex = localPlayers.findIndex(p => p.name === result.player);
+        if (playerIndex !== -1) {
+            localPlayers[playerIndex].businessValue += result.nokValue;
+            
+            if (!localBreakdowns[result.player]) {
+                localBreakdowns[result.player] = {
+                    startCapital: 500000,
+                    scenarioGains: [],
+                    penalties: [],
+                    bonuses: []
+                };
             }
             
-            // Apply results to admin data first
-            diceResultsData.forEach(result => {
-                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
-                if (playerIndex !== -1) {
-                    gameData.players[playerIndex].businessValue += result.nokValue;
-                    
-                    if (!gameData.playerBreakdowns[result.player]) {
-                        gameData.playerBreakdowns[result.player] = {
-                            startCapital: 500000,
-                            scenarioGains: [],
-                            penalties: [],
-                            bonuses: []
-                        };
-                    }
-                    
-                    gameData.playerBreakdowns[result.player].scenarioGains.push({
-                        week: 'Current',
-                        scenario: gameData.currentScenario.title,
-                        choice: result.choice,
-                        choiceTitle: result.choiceTitle,
-                        outcome: result.outcome,
-                        description: result.description,
-                        value: result.nokValue
-                    });
-                }
+            localBreakdowns[result.player].scenarioGains.push({
+                week: 'Current',
+                scenario: localScenario.title,
+                choice: result.choice,
+                choiceTitle: result.choiceTitle,
+                outcome: result.outcome,
+                description: result.description,
+                value: result.nokValue
             });
-            
-            // Re-rank players
-            gameData.players.sort((a, b) => b.businessValue - a.businessValue);
-            gameData.players.forEach((player, index) => {
-                player.rank = index + 1;
-            });
-            
-            // Generate both codes with updated data
-            const updatedLeaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
-            
-            const completeUpdateCode = `
-// Komplett oppdatering - kun for spillersiden
-const newScenarioResults = ${JSON.stringify(gameData.currentScenario, null, 2)};
-
-// Apply results to player breakdowns
-${diceResultsData.map(result => `
-if (gameState.players.find(p => p.name === "${result.player}")) {
-    const playerIndex = gameState.players.findIndex(p => p.name === "${result.player}");
-    gameState.players[playerIndex].businessValue += ${result.nokValue};
+        }
+    });
     
-    if (!gameState.playerBreakdowns["${result.player}"]) {
-        gameState.playerBreakdowns["${result.player}"] = {
-            startCapital: 500000,
-            scenarioGains: [],
-            penalties: [],
-            bonuses: []
+    // Re-rank LOCAL players
+    localPlayers.sort((a, b) => b.businessValue - a.businessValue);
+    localPlayers.forEach((player, index) => {
+        player.rank = index + 1;
+    });
+    
+    // Add results to LOCAL scenario
+    localScenario.results = {};
+    diceResultsData.forEach(result => {
+        localScenario.results[result.player] = {
+            choice: result.choice,
+            choiceTitle: result.choiceTitle,
+            outcome: result.outcome,
+            valueChange: result.nokValue,
+            description: result.description
         };
-    }
+    });
     
-    // Check for duplicates before adding
-    const existingGain = gameState.playerBreakdowns["${result.player}"].scenarioGains.find(
-        gain => gain.scenario === "${gameData.currentScenario.title}" && gain.choice === "${result.choice}"
-    );
+    // Generate codes with LOCAL data (not gameData!)
+    const updatedLeaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(localPlayers, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(localBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
     
-    if (!existingGain) {
-        gameState.playerBreakdowns["${result.player}"].scenarioGains.push({
-            week: 'Current',
-            scenario: "${gameData.currentScenario.title}",
-            choice: "${result.choice}",
-            choiceTitle: "${result.choiceTitle}",
-            outcome: "${result.outcome}",
-            description: "${result.description}",
-            value: ${result.nokValue}
-        });
-    }
-}`).join('\n')}
-
-// Re-rank players
-gameState.players.sort((a, b) => b.businessValue - a.businessValue);
-gameState.players.forEach((player, index) => {
-    player.rank = index + 1;
-});
-
-// Update everything
+    const completeUpdateCode = `// Spillerside oppdatering
 window.updateGameData({
-    scenario: newScenarioResults,
-    players: gameState.players,
-    playerBreakdowns: gameState.playerBreakdowns
+    scenario: ${JSON.stringify(localScenario, null, 2)},
+    players: ${JSON.stringify(localPlayers, null, 2)},
+    playerBreakdowns: ${JSON.stringify(localBreakdowns, null, 2)}
 });
 
 console.log("Spillerresultater oppdatert!");`;
-            
-            // Update BOTH export boxes
-            document.getElementById('export-leaderboard-js').textContent = updatedLeaderboardCode;
-            document.getElementById('export-scenario-js').textContent = completeUpdateCode;
-            
-            alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: Denne funksjonen endrer IKKE admin-data, kun spillersiden.');
-        }
+    
+    // Update export boxes
+    document.getElementById('export-leaderboard-js').textContent = updatedLeaderboardCode;
+    document.getElementById('export-scenario-js').textContent = completeUpdateCode;
+    
+    alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: gameData forblir uendret i admin!');
+}
 
         // Player choices management
         function fetchPlayerChoices() {
