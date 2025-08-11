@@ -510,44 +510,82 @@
             </div>
         </div>
 
-        <!-- Penalties Tab -->
-        <div id="penalties" class="tab-content">
-            <div class="panel-grid">
-                <div class="panel">
-                    <h2>⚠️ Legg til Straff</h2>
-                    
-                    <div class="form-group">
-                        <label>Spiller:</label>
-                        <select id="penalty-player">
-                            <option value="">Velg spiller...</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Type straff:</label>
-                        <select id="penalty-type">
-                            <option value="">Velg type...</option>
-                            <option value="setup">Setup-feil (-50,000 NOK)</option>
-                            <option value="mva">MVA-feil (-25,000 NOK/dag)</option>
-                            <option value="sale">Manglende salg (-10,000 NOK/dag)</option>
-                            <option value="account">Feil kontokode (-5,000 NOK)</option>
-                            <option value="custom">Egendefinert</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Beløp (hvis egendefinert):</label>
-                        <input type="number" id="penalty-amount" placeholder="-15000">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Kommentar:</label>
-                        <input type="text" id="penalty-comment" placeholder="Årsak til straff">
-                    </div>
-                    
-                    <button class="btn" onclick="addPenalty()">Legg til Straff</button>
-                </div>
+<!-- Penalties Tab -->
+<div id="penalties" class="tab-content">
+    <div class="panel-grid">
+        <!-- FØRSTE PANEL - STRAFF -->
+        <div class="panel">
+            <h2>⚠️ Legg til Straff</h2>
+            
+            <div class="form-group">
+                <label>Spiller:</label>
+                <select id="penalty-player">
+                    <option value="">Velg spiller...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Type straff:</label>
+                <select id="penalty-type">
+                    <option value="">Velg type...</option>
+                    <option value="setup">Setup-feil (-50,000 NOK)</option>
+                    <option value="mva">MVA-feil (-25,000 NOK)</option>
+                    <option value="sale">Manglende salg (-10,000 NOK)</option>
+                    <option value="account">Feil kontokode (-5,000 NOK)</option>
+                    <option value="custom">Egendefinert</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Beløp (hvis egendefinert):</label>
+                <input type="number" id="penalty-amount" placeholder="-15000">
+            </div>
+            
+            <div class="form-group">
+                <label>Kommentar:</label>
+                <input type="text" id="penalty-comment" placeholder="Årsak til straff">
+            </div>
+            
+            <button class="btn" onclick="addPenalty()">Legg til Straff</button>
+        </div>
 
+        <!-- ANDRE PANEL - KORREKSJON -->
+        <div class="panel">
+            <h2>↩️ Korriger Straff</h2>
+            
+            <div class="form-group">
+                <label>Spiller:</label>
+                <select id="correction-player">
+                    <option value="">Velg spiller...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Type korreksjon:</label>
+                <select id="correction-type">
+                    <option value="">Velg korreksjon...</option>
+                    <option value="reverse-setup">Korriger Setup-feil (+50,000 NOK)</option>
+                    <option value="reverse-mva">Korriger MVA-feil (+25,000 NOK)</option>
+                    <option value="reverse-sale">Korriger Manglende salg (+10,000 NOK)</option>
+                    <option value="reverse-account">Korriger Feil kontokode (+5,000 NOK)</option>
+                    <option value="custom">Egendefinert korreksjon</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Beløp (hvis egendefinert):</label>
+                <input type="number" id="correction-amount" placeholder="+25000">
+            </div>
+            
+            <div class="form-group">
+                <label>Årsak for korreksjon:</label>
+                <input type="text" id="correction-reason" placeholder="Feil tildelt straff">
+            </div>
+            
+            <button class="btn" onclick="addCorrection()" style="background: #28a745;">Korriger Straff</button>
+        </div>
+    </div>
+</div>
     <script>
         // Game data with real companies
 let gameData = {
@@ -1631,6 +1669,188 @@ console.log("Spillerresultater oppdatert!");`;
             }
         }
 
+function addCorrection() {
+    const playerIndex = document.getElementById('correction-player').value;
+    const correctionType = document.getElementById('correction-type').value;
+    const customAmount = document.getElementById('correction-amount').value;
+    const reason = document.getElementById('correction-reason').value;
+    
+    if (playerIndex !== '' && correctionType) {
+        let amount = 0;
+        let description = '';
+        
+        switch(correctionType) {
+            case 'reverse-setup':
+                amount = 50000;
+                description = 'Korriger Setup-feil';
+                break;
+            case 'reverse-mva':
+                amount = 25000;
+                description = 'Korriger MVA-feil';
+                break;
+            case 'reverse-sale':
+                amount = 10000;
+                description = 'Korriger Manglende salg';
+                break;
+            case 'reverse-account':
+                amount = 5000;
+                description = 'Korriger Feil kontokode';
+                break;
+            case 'custom':
+                amount = parseInt(customAmount);
+                description = 'Egendefinert korreksjon';
+                break;
+        }
+        
+        if (isNaN(amount) || amount <= 0) {
+            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
+            return;
+        }
+        
+        const player = gameData.players[playerIndex];
+        const playerName = player.name;
+        
+        // Bekreft med admin
+        const confirmed = confirm(
+            `Korriger straff for ${playerName}?\n\n` +
+            `Type: ${description}\n` +
+            `Beløp: +${amount.toLocaleString()} NOK\n` +
+            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
+            `Dette vil øke spillerens Business Value.`
+        );
+        
+        if (!confirmed) return;
+        
+        // Update business value LOKALT
+        gameData.players[playerIndex].businessValue += amount;
+        
+        // Add to playerBreakdowns as bonus
+        if (!gameData.playerBreakdowns[playerName]) {
+            gameData.playerBreakdowns[playerName] = {
+                startCapital: 500000,
+                scenarioGains: [],
+                penalties: [],
+                bonuses: []
+            };
+        }
+        
+        gameData.playerBreakdowns[playerName].bonuses.push({
+            type: description,
+            value: amount,
+            date: new Date().toLocaleDateString('no-NO'),
+            status: 'anvendt',
+            reason: reason || 'Ingen årsak oppgitt'
+        });
+        
+        // Clear form
+        document.getElementById('correction-player').value = '';
+        document.getElementById('correction-type').value = '';
+        document.getElementById('correction-amount').value = '';
+        document.getElementById('correction-reason').value = '';
+        
+        // Sync to Google Sheets
+        savePlayersToSheets();
+        savePlayerBreakdownsToSheets();
+        
+        refreshLeaderboard();
+        
+        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
+        
+    } else {
+        alert('Velg spiller og type korreksjon');
+    }
+}        
+function addCorrection() {
+    const playerIndex = document.getElementById('correction-player').value;
+    const correctionType = document.getElementById('correction-type').value;
+    const customAmount = document.getElementById('correction-amount').value;
+    const reason = document.getElementById('correction-reason').value;
+    
+    if (playerIndex !== '' && correctionType) {
+        let amount = 0;
+        let description = '';
+        
+        switch(correctionType) {
+            case 'reverse-setup':
+                amount = 50000;
+                description = 'Korriger Setup-feil';
+                break;
+            case 'reverse-mva':
+                amount = 25000;
+                description = 'Korriger MVA-feil';
+                break;
+            case 'reverse-sale':
+                amount = 10000;
+                description = 'Korriger Manglende salg';
+                break;
+            case 'reverse-account':
+                amount = 5000;
+                description = 'Korriger Feil kontokode';
+                break;
+            case 'custom':
+                amount = parseInt(customAmount);
+                description = 'Egendefinert korreksjon';
+                break;
+        }
+        
+        if (isNaN(amount) || amount <= 0) {
+            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
+            return;
+        }
+        
+        const player = gameData.players[playerIndex];
+        const playerName = player.name;
+        
+        // Bekreft med admin
+        const confirmed = confirm(
+            `Korriger straff for ${playerName}?\n\n` +
+            `Type: ${description}\n` +
+            `Beløp: +${amount.toLocaleString()} NOK\n` +
+            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
+            `Dette vil øke spillerens Business Value.`
+        );
+        
+        if (!confirmed) return;
+        
+        // Update business value LOKALT
+        gameData.players[playerIndex].businessValue += amount;
+        
+        // Add to playerBreakdowns as bonus
+        if (!gameData.playerBreakdowns[playerName]) {
+            gameData.playerBreakdowns[playerName] = {
+                startCapital: 500000,
+                scenarioGains: [],
+                penalties: [],
+                bonuses: []
+            };
+        }
+        
+        gameData.playerBreakdowns[playerName].bonuses.push({
+            type: description,
+            value: amount,
+            date: new Date().toLocaleDateString('no-NO'),
+            status: 'anvendt',
+            reason: reason || 'Ingen årsak oppgitt'
+        });
+        
+        // Clear form
+        document.getElementById('correction-player').value = '';
+        document.getElementById('correction-type').value = '';
+        document.getElementById('correction-amount').value = '';
+        document.getElementById('correction-reason').value = '';
+        
+        // Sync to Google Sheets
+        savePlayersToSheets();
+        savePlayerBreakdownsToSheets();
+        
+        refreshLeaderboard();
+        
+        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
+        
+    } else {
+        alert('Velg spiller og type korreksjon');
+    }
+}
         // UPDATED Export function - KOMBINERT KODE MED TASKS
         function generateExportCode() {
             if (!gameData.players || gameData.players.length === 0) {
