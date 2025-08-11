@@ -699,7 +699,7 @@
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-value" id="total-players">4</div>
-                            <div class="stat-label">Aktive Spillere</div>
+                            <div class="stat-label">Deltakere</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" id="current-leader">Ingen leder</div>
@@ -1257,7 +1257,7 @@ if (savedBreakdowns) {
                 console.log('📡 Google Sheets response:', response);
                 
                 if (response && response.status === 'success') {
-                    updateConnectionStatus('connected', 'Tilkoblet Google Sheets');
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
                     console.log('✅ Google Sheets connection successful');
                 } else {
                     updateConnectionStatus('error', 'Forbindelsesfeil');
@@ -1268,7 +1268,7 @@ if (savedBreakdowns) {
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                updateConnectionStatus('error', 'Kan ikke nå Google Sheets');
+                updateConnectionStatus('error', 'Kan ikke nå databasen');
                 console.log('❌ Google Sheets network error');
             };
             
@@ -1688,23 +1688,21 @@ if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults)
             }
 
             // Update scenario status
-            const scenarioStatusEl = document.getElementById('scenario-status');
-            if (gameState.currentScenario) {
-                const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
-                const now = new Date();
-                
-                if (gameState.currentScenario.results) {
-                    scenarioStatusEl.textContent = 'Resultater klar';
-                } else if (deadline && deadline < now) {
-                    scenarioStatusEl.textContent = 'Venter resultater';
-                } else if (deadline) {
-                    scenarioStatusEl.textContent = 'Aktiv';
-                } else {
-                    scenarioStatusEl.textContent = 'Planlagt';
-                }
-            } else {
-                scenarioStatusEl.textContent = 'Ingen aktive';
-            }
+const scenarioStatusEl = document.getElementById('scenario-status');
+if (gameState.currentScenario) {
+    const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
+    const now = new Date();
+    
+    if (deadline && deadline < now) {
+        scenarioStatusEl.textContent = 'Utløpt';
+    } else if (deadline) {
+        scenarioStatusEl.textContent = 'Aktiv';
+    } else {
+        scenarioStatusEl.textContent = 'Oppgaver tilgjengelig';
+    }
+} else {
+    scenarioStatusEl.textContent = 'Ingen aktive';
+}
         }
 
         function addNotification(message, type = 'info') {
