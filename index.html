@@ -1058,6 +1058,38 @@
             }, 15000);
         }
 
+        function loadPlayerBreakdownsFromSheets() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
+                     'https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec';
+    
+    const callbackName = 'loadBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            gameState.playerBreakdowns = response.data;
+            console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data).length, 'players');
+            
+            // Force re-render leaderboard med penalties
+            renderLeaderboard();
+        } else {
+            console.log('ℹ️ No player breakdowns found in Google Sheets');
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to load player breakdowns from Google Sheets');
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
+    document.head.appendChild(script);
+}
+
         // STEG 2: Load players from Google Sheets - ALWAYS use Sheets data if available
         function loadPlayersFromSheets() {
             console.log('🔄 Loading players from Google Sheets...');
