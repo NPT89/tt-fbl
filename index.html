@@ -586,6 +586,74 @@
                 margin-bottom: 1rem;
             }
         }
+        .task-description {
+    white-space: pre-line; /* Behold linjeskift og formatering */
+    line-height: 1.5;
+    font-size: 0.95rem;
+    max-height: 120px; /* Fast maksimumshøyde */
+    overflow-y: auto; /* Scroll hvis innholdet er for langt */
+    padding: 0.75rem;
+    background: #f8f9fa; /* Lett grå bakgrunn */
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Styling for lister i task descriptions */
+.task-description ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.task-description li {
+    margin-bottom: 0.25rem;
+}
+
+/* Styling for bold tekst i descriptions */
+.task-description strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Scrollbar styling for better appearance */
+.task-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-description::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Ensure task display has consistent spacing */
+.task-display {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(145deg, #f8f9ff, #ffffff);
+    border-radius: 12px;
+    border-left: 4px solid #0066CC;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .task-description {
+        font-size: 0.9rem;
+        max-height: 100px;
+        padding: 0.6rem;
+    }
+}
     </style>
 </head>
 <body>
