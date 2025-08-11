@@ -670,7 +670,7 @@
 <body>
     <!-- Connection status indicator -->
     <div id="connection-status" class="connection-status loading">
-        🔄 Kobler til Google Sheets...
+        🔄 Kobler til database...
     </div>
 
     <header class="header">
@@ -1204,12 +1204,12 @@
                     // Update UI
                     renderLeaderboard();
                     updateStats();
-                    updateConnectionStatus('connected', 'Live data fra Sheets');
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
                     
                     addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
                 } else {
                     console.log('ℹ️ No players found in Google Sheets - database is empty');
-                    updateConnectionStatus('connected', 'Tilkoblet (database tom)');
+                    updateConnectionStatus('connected', 'Database tom');
                     addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
                 // Also load breakdowns from localStorage
