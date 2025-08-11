@@ -1485,49 +1485,133 @@ console.log("Spillerresultater oppdatert!");`;
             loadedPlayerChoices = data;
         }
 
-        // Penalty functions
-        function addPenalty() {
-            const playerIndex = document.getElementById('penalty-player').value;
-            const penaltyType = document.getElementById('penalty-type').value;
-            const customAmount = document.getElementById('penalty-amount').value;
-            const comment = document.getElementById('penalty-comment').value;
+// ===== ERSTATT DENNE FUNKSJONEN I ADMIN.HTML =====
+// Finn og erstatt hele addPenalty() funksjonen med denne:
+
+function addPenalty() {
+    const playerIndex = document.getElementById('penalty-player').value;
+    const penaltyType = document.getElementById('penalty-type').value;
+    const customAmount = document.getElementById('penalty-amount').value;
+    const comment = document.getElementById('penalty-comment').value;
+    
+    if (playerIndex !== '' && penaltyType) {
+        let amount = 0;
+        let description = '';
+        
+        // FORHÅNDSDEFINERTE BELØP
+        switch(penaltyType) {
+            case 'setup':
+                amount = -50000;
+                description = 'Setup-feil (åpningsbalanse)';
+                break;
+            case 'mva':
+                amount = -75000; // Estimert 3 dagers kostnad
+                description = 'MVA-feil';
+                break;
+            case 'sale':
+                amount = -30000; // Estimert 3 dagers kostnad
+                description = 'Manglende første salg';
+                break;
+            case 'account':
+                amount = -5000;
+                description = 'Feil kontokode';
+                break;
+            case 'custom':
+                amount = parseInt(customAmount);
+                description = 'Egendefinert straff';
+                break;
+        }
+        
+        if (isNaN(amount) || amount >= 0) {
+            alert('Ugyldig straffebeløp - må være negativt tall');
+            return;
+        }
+        
+        const player = gameData.players[playerIndex];
+        const playerName = player.name;
+        
+        // Bekreft med admin
+        const confirmed = confirm(
+            `Legg til straff for ${playerName}?\n\n` +
+            `Type: ${description}\n` +
+            `Beløp: ${amount.toLocaleString()} NOK\n` +
+            `Kommentar: ${comment || 'Ingen'}\n\n` +
+            `Dette vil oppdatere leaderboard umiddelbart i Google Sheets.`
+        );
+        
+        if (!confirmed) return;
+        
+        // Prepare minimal penalty data for NEW API
+        const penaltyData = {
+            playerName: playerName,  // Viktig: playerName, ikke playerId
+            amount: amount,          // Negativt beløp
+            description: description,
+            comment: comment || ''
+        };
+        
+        // Send til Google Sheets med NY funksjon
+        applyPenaltyDirectly(penaltyData);
+        
+        // Clear form
+        document.getElementById('penalty-player').value = '';
+        document.getElementById('penalty-type').value = '';
+        document.getElementById('penalty-amount').value = '';
+        document.getElementById('penalty-comment').value = '';
+        
+    } else {
+        alert('Velg spiller og type straff');
+    }
+}
+
+// ===== LEGG TIL DENNE NYE FUNKSJONEN I ADMIN.HTML =====
+function applyPenaltyDirectly(penaltyData) {
+    console.log('🔧 applyPenaltyDirectly called with:', penaltyData);
+    
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    console.log('📡 Using sheets URL:', sheetsUrl);
+    
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        console.error('❌ Invalid sheets URL');
+        alert('Ingen Google Sheets URL lagret!');
+        return;
+    }
+    
+    // Visual feedback
+    const playerSelect = document.getElementById('penalty-player');
+    const originalBg = playerSelect.style.backgroundColor;
+    playerSelect.style.backgroundColor = '#fff3cd';
+    
+    const callbackName = 'penaltyCallback_' + Date.now();
+    console.log('🔄 Creating callback:', callbackName);
+    
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        console.log('📨 Penalty response received:', response);
+        
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        // Reset visual feedback
+        playerSelect.style.backgroundColor = originalBg;
+        
+        if (response && response.status === 'success') {
+            console.log('✅ Straff anvendt i Google Sheets:', response);
             
-            if (playerIndex !== '' && penaltyType) {
-                let amount = 0;
-                let description = '';
+            // Oppdater lokal gameData umiddelbart
+            const playerIndex = gameData.players.findIndex(p => p.name === penaltyData.playerName);
+            console.log('🔍 Found player at index:', playerIndex);
+            
+            if (playerIndex !== -1) {
+                const oldValue = gameData.players[playerIndex].businessValue;
+                gameData.players[playerIndex].businessValue += penaltyData.amount;
+                const newValue = gameData.players[playerIndex].businessValue;
                 
-                switch(penaltyType) {
-                    case 'setup':
-                        amount = -50000;
-                        description = 'Setup-feil';
-                        break;
-                    case 'mva':
-                        amount = -25000;
-                        description = 'MVA-feil';
-                        break;
-                    case 'sale':
-                        amount = -10000;
-                        description = 'Manglende salg';
-                        break;
-                    case 'account':
-                        amount = -5000;
-                        description = 'Feil kontokode';
-                        break;
-                    case 'custom':
-                        amount = parseInt(customAmount);
-                        description = 'Egendefinert straff';
-                        break;
-                }
+                console.log(`💰 Updated ${penaltyData.playerName}: ${oldValue} → ${newValue}`);
                 
-                const player = gameData.players[playerIndex];
-                const playerName = player.name;
-                
-                // Update business value
-                gameData.players[playerIndex].businessValue += amount;
-                
-                // FIXED: Ensure playerBreakdowns exists and add penalty properly
-                if (!gameData.playerBreakdowns[playerName]) {
-                    gameData.playerBreakdowns[playerName] = {
+                // Oppdater breakdown for transparency
+                if (!gameData.playerBreakdowns[penaltyData.playerName]) {
+                    gameData.playerBreakdowns[penaltyData.playerName] = {
                         startCapital: 500000,
                         scenarioGains: [],
                         penalties: [],
@@ -1535,44 +1619,78 @@ console.log("Spillerresultater oppdatert!");`;
                     };
                 }
                 
-                // Add to penalties array with proper structure
-                gameData.playerBreakdowns[playerName].penalties.push({
-                    type: description,
-                    value: amount,
+                gameData.playerBreakdowns[penaltyData.playerName].penalties.push({
+                    type: penaltyData.description,
+                    value: penaltyData.amount,
                     date: new Date().toLocaleDateString('no-NO'),
-                    status: 'aktiv',
-                    reason: comment || 'Ingen kommentar'
+                    status: 'anvendt',
+                    reason: penaltyData.comment || penaltyData.description
                 });
                 
-                // Clear form
-                document.getElementById('penalty-player').value = '';
-                document.getElementById('penalty-type').value = '';
-                document.getElementById('penalty-amount').value = '';
-                document.getElementById('penalty-comment').value = '';
+                console.log('📊 Updated breakdown for:', penaltyData.playerName);
                 
-                refreshLeaderboard();
-                refreshPenalties();
-                
-                console.log('Penalty added to player:', playerName);
-                console.log('Current playerBreakdowns:', gameData.playerBreakdowns[playerName]);
-                
-                alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + playerName + '.\n\nStraffen er nå inkludert i playerBreakdowns og vil bli eksportert!');
+                // Lagre breakdown lokalt
+                localStorage.setItem('tripletex_player_breakdowns', JSON.stringify(gameData.playerBreakdowns));
+                console.log('💾 Saved breakdown to localStorage');
             } else {
-                alert('Velg spiller og type straff');
+                console.error('❌ Could not find player in local gameData:', penaltyData.playerName);
             }
+            
+            // Refresh UI - VIKTIG!
+            console.log('🔄 Refreshing leaderboard...');
+            refreshLeaderboard();
+            
+            // OGSÅ lagre oppdaterte spillere til Google Sheets
+            savePlayersToSheets();
+            
+            alert(
+                `✅ Straff anvendt for ${response.playerName || penaltyData.playerName}!\n\n` +
+                `Beløp: ${response.penaltyAmount?.toLocaleString() || penaltyData.amount.toLocaleString()} NOK\n` +
+                `Ny Business Value: ${response.newBusinessValue?.toLocaleString() || 'Ukjent'} NOK\n\n` +
+                `Leaderboard er oppdatert både lokalt og i Google Sheets.`
+            );
+        } else {
+            console.error('❌ Feil ved anvendelse av straff:', response);
+            alert('❌ Kunne ikke anvende straff: ' + (response ? response.message : 'Ukjent feil'));
         }
+    };
+    
+    script.onerror = function() {
+        console.error('❌ Network error in penalty script loading');
+        document.head.removeChild(script);
+        delete window[callbackName];
+        playerSelect.style.backgroundColor = originalBg;
+        alert('❌ Nettverksfeil ved anvendelse av straff');
+    };
+    
+    const encodedData = encodeURIComponent(JSON.stringify(penaltyData));
+    const finalUrl = sheetsUrl + '?callback=' + callbackName + '&action=addSimplePenalty&data=' + encodedData;
+    
+    console.log('🔗 Final penalty URL:', finalUrl);
+    console.log('📤 Sending penalty data:', penaltyData);
+    
+    script.src = finalUrl;
+    document.head.appendChild(script);
+}
 
-        function refreshPenalties() {
-            // Simple penalty display
-            document.getElementById('active-penalties').innerHTML = '<p>Straffer vises etter at de er lagt til spillere</p>';
-        }
-
-        // UPDATED Export function - KOMBINERT KODE MED TASKS
-        function generateExportCode() {
-            if (!gameData.players || gameData.players.length === 0) {
-                alert('Legg til spillere først!');
-                return;
-            }
+// ===== OGSÅ ERSTATT refreshPenalties FUNKSJONEN =====
+function refreshPenalties() {
+    // Enkel info siden alt er umiddelbart og i breakdown
+    document.getElementById('active-penalties').innerHTML = `
+        <div style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; padding: 1rem;">
+            <h4>📋 Forenklet straffelogikk</h4>
+            <p><strong>Alle straffer påføres umiddelbart som enkeltbeløp:</strong></p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li>Setup-feil: -50,000 NOK</li>
+                <li>MVA-feil: -75,000 NOK (estimert)</li>
+                <li>Manglende salg: -30,000 NOK (estimert)</li>
+                <li>Feil kontokode: -5,000 NOK per feil</li>
+            </ul>
+            <p><strong>📊 Se individual spillerbreakdown for detaljer</strong></p>
+            <p><em>Ingen aktive straffer å spore - alt er umiddelbart!</em></p>
+        </div>
+    `;
+}
             
             collectChoicesData();
             
