@@ -424,7 +424,8 @@
                         <input type="datetime-local" id="scenario-deadline">
                     </div>
                     
-                    <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+                   <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+<button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
                 </div>
 
                 <div class="panel">
@@ -1806,6 +1807,61 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
                 loadScenarioFromSheets();
             }, 1000);
         });
+        // NEW: Create new scenario function
+function newScenario() {
+    if (!confirm('Er du sikker? Dette vil slette all data i skjemaet og starte på nytt.')) {
+        return;
+    }
+    
+    // Clear all input fields
+    document.getElementById('scenario-title').value = '';
+    document.getElementById('scenario-background').value = '';
+    document.getElementById('scenario-deadline').value = '';
+    
+    // Reset deadline to default (2 days from now)
+    const now = new Date();
+    now.setDate(now.getDate() + 2);
+    document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
+    
+    // Clear tasks - keep default structure
+    document.getElementById('scenario-tasks').innerHTML = `
+        <div class="scenario-task" data-task="1">
+            <div class="task-header">
+                <span class="task-number">1)</span>
+                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+            </div>
+            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+            <div class="task-rewards">
+                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+            </div>
+        </div>
+        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
+    `;
+    
+    // Clear choices - keep default structure  
+    document.getElementById('scenario-choices').innerHTML = `
+        <div class="scenario-choice" data-choice="A">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" placeholder="A) Valg tittel" oninput="previewChoices()">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+            <input type="text" class="choice-potential" placeholder="Potensial: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
+            <input type="text" class="choice-odds" placeholder="Odds: " oninput="previewChoices()">
+        </div>
+        <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
+    `;
+    
+    // Clear gameData scenario
+    gameData.currentScenario = {};
+    
+    // Update preview
+    previewChoices();
+    
+    alert('✅ Nytt scenario opprettet! Alle felter er tømt og klare for inndata.');
+}
     </script>
 </body>
 </html>
