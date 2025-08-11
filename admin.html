@@ -184,21 +184,22 @@
             border-bottom: 1px solid #e0e0e0;
         }
 
-        .tab {
-            padding: 0.75rem 1.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #666;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
+.tab {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;  /* <- Hvit tekst */
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
 
-        .tab.active {
-            color: #0066CC;
-            border-bottom-color: #0066CC;
-        }
+.tab.active {
+    color: #ffffff;  /* <- Hvit også når aktiv */
+    border-bottom-color: #ffffff;  /* <- Hvit underline */
+    background: rgba(255, 255, 255, 0.1);  /* <- Subtil bakgrunn */
+}
 
         .tab-content {
             display: none;
