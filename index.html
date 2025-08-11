@@ -1254,11 +1254,14 @@ function renderLeaderboard() {
         let penaltyInfo = '';
         
         if (playerBreakdown && playerBreakdown.penalties && playerBreakdown.penalties.length > 0) {
-            const latestPenalty = playerBreakdown.penalties[playerBreakdown.penalties.length - 1];
+            const penalties = playerBreakdown.penalties;
+            const totalPenalties = penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
+            const latestPenalty = penalties[penalties.length - 1];
+            
             penaltyInfo = `
                 <div style="font-size: 0.8rem; color: #dc3545; margin-top: 0.3rem;">
-                    <strong>Siste straff:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
-                    ${latestPenalty.reason ? `<br><em>${latestPenalty.reason}</em>` : ''}
+                    <strong>Straffer:</strong> ${penalties.length} aktive (${totalPenalties.toLocaleString()} NOK totalt)<br>
+                    <strong>Siste:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
                 </div>
             `;
         }
