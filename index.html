@@ -1101,6 +1101,11 @@
                     updateConnectionStatus('connected', 'Tilkoblet (database tom)');
                     addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
+                // Also load breakdowns from localStorage
+const savedBreakdowns = localStorage.getItem('tripletex_player_breakdowns');
+if (savedBreakdowns) {
+    gameState.playerBreakdowns = JSON.parse(savedBreakdowns);
+}
             };
             
             script.onerror = function() {
