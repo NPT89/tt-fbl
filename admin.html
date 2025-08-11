@@ -1824,14 +1824,6 @@ function newScenario() {
     now.setDate(now.getDate() + 2);
     document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
     
-    // LEGG TIL DETTE:
-    // Reset choices to default HTML values
-    const choicesDiv = document.getElementById('scenario-choices');
-    if (choicesDiv) {
-        location.reload(); // Enkleste løsning - reload siden
-    }
-
-    
     // Clear tasks - keep default structure
     document.getElementById('scenario-tasks').innerHTML = `
         <div class="scenario-task" data-task="1">
