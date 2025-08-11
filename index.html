@@ -1205,35 +1205,50 @@ let gameState = {
         });
 
         // Render functions
-        function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-content');
-            
-            if (!gameState.players || gameState.players.length === 0) {
-                container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
-                return;
-            }
+function renderLeaderboard() {
+    const container = document.getElementById('leaderboard-content');
+    
+    if (!gameState.players || gameState.players.length === 0) {
+        container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
+        return;
+    }
 
-            let html = '';
-            gameState.players.forEach((player, index) => {
-                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
-                
-                html += `
-                    <div class="leaderboard-item" 
-                         onclick="showPlayerBreakdown('${player.name}')" 
-                         title="Klikk for å se ${player.name}'s detaljer"
-                         data-player="${player.name}">
-                        <span class="rank ${rankClass}">${player.rank}</span>
-                        <div class="player-info">
-                            <div class="player-name">${player.name}</div>
-                            <div class="player-company">${player.company}</div>
-                        </div>
-                        <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+    let html = '';
+    gameState.players.forEach((player, index) => {
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        
+        // Check for penalties to display
+        const playerBreakdown = gameState.playerBreakdowns[player.name];
+        let penaltyInfo = '';
+        
+        if (playerBreakdown && playerBreakdown.penalties && playerBreakdown.penalties.length > 0) {
+            const latestPenalty = playerBreakdown.penalties[playerBreakdown.penalties.length - 1];
+            penaltyInfo = `
+                <div style="font-size: 0.8rem; color: #dc3545; margin-top: 0.3rem;">
+                    <strong>Siste straff:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
+                    ${latestPenalty.reason ? `<br><em>${latestPenalty.reason}</em>` : ''}
+                </div>
+            `;
         }
+        
+        html += `
+            <div class="leaderboard-item" 
+                 onclick="showPlayerBreakdown('${player.name}')" 
+                 title="Klikk for å se ${player.name}'s detaljer"
+                 data-player="${player.name}">
+                <span class="rank ${rankClass}">${player.rank}</span>
+                <div class="player-info">
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-company">${player.company}</div>
+                    ${penaltyInfo}
+                </div>
+                <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
 
         function showPlayerBreakdown(playerName) {
             // Close any existing breakdown
@@ -1656,7 +1671,9 @@ function startAutoRefresh() {
                 loadPlayersFromSheets();
                 loadScenarioFromSheets(); // STEG 3: Also load scenario
             }, 2000);
-            
+                setTimeout(() => {
+        loadPlayerBreakdownsFromSheets();
+    }, 4000);
             renderLeaderboard();
             renderScenario();
             updateStats();
