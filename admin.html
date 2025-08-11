@@ -314,6 +314,13 @@
             <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
         </div>
 
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
+            <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
+            <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
+            <button class="tab" onclick="showTab('penalties')">Straffer</button>
+        </div>
+
         <!-- Leaderboard Tab -->
         <div id="leaderboard" class="tab-content active">
             <div class="panel-grid">
@@ -547,6 +554,8 @@
                 </div>
             </div>
         </div>
+
+
 
     <script>
         // Game data with real companies
