@@ -1334,12 +1334,16 @@ window[callbackName] = function(response) {
                 }
             });
             
-            if (updatedCount > 0) {
-                refreshLeaderboard();
-                alert('✅ Resultater anvendt i admin! ' + updatedCount + ' spillere oppdatert.\n\n⚠️ VIKTIG: Ikke bruk "Eksporter til Spillere" nå - det vil skape duplikater. Eksporter heller bare leaderboard-data.');
-            } else {
-                alert('ℹ️ Resultater allerede anvendt. Ingen endringer gjort.');
-            }
+if (updatedCount > 0) {
+    refreshLeaderboard();
+    
+    // NEW: Save updated players to Google Sheets
+    savePlayersToSheets();
+    
+    alert('✅ Resultater anvendt i admin! ' + updatedCount + ' spillere oppdatert.\n\n✅ Spillerdata lagret til Google Sheets!');
+} else {
+    alert('ℹ️ Resultater allerede anvendt. Ingen endringer gjort.');
+}
         }
 
 function exportResultsForPlayers() {
