@@ -314,14 +314,6 @@
             <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
         </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
-            <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
-            <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
-            <button class="tab" onclick="showTab('penalties')">Straffer</button>
-            <button class="tab" onclick="showTab('export')">Eksporter Data</button>
-        </div>
-
         <!-- Leaderboard Tab -->
         <div id="leaderboard" class="tab-content active">
             <div class="panel-grid">
@@ -555,27 +547,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Export Tab -->
-        <div id="export" class="tab-content">
-            <div class="panel">
-                <h2>📤 Eksporter Data til HTML Platform</h2>
-                <p>Kopier og lim inn denne koden i den eksisterende HTML-plattformen:</p>
-                
-                <div class="form-group">
-                    <label>JavaScript for leaderboard:</label>
-                    <div class="export-area" id="export-leaderboard-js"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>JavaScript for scenario:</label>
-                    <div class="export-area" id="export-scenario-js"></div>
-                </div>
-                
-                <button class="btn" onclick="generateExportCode()">Generer Kode</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Game data with real companies
