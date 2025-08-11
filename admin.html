@@ -486,7 +486,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/a/macros/visma.com/s/AKfycbylrwnyAAWZGtcbMrLF5tDKl-P4ign6ZtVAJgsvYOGgatOyOhCagrXN885UUqSYBiE-ng/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/a/macros/visma.com/s/AKfycby8O4wZLmoG6e-W1w9GVZUBwlRkhNMQyKZnBhEIfGiyUM_yNWwTNnV3-dP0kJ5H9HNUJQ/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -718,7 +718,7 @@ let gameData = {
 
         function loadPlayerBreakdownsFromSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/a/macros/visma.com/s/AKfycbypzaAyPLT0O8WUiT3_7aFub7ko7UHZa_xV7HQKuQhbbddBvqoBd29GhGtpI8Q8qDGVgQ/exec';
+                     'https://script.google.com/a/macros/visma.com/s/AKfycby8O4wZLmoG6e-W1w9GVZUBwlRkhNMQyKZnBhEIfGiyUM_yNWwTNnV3-dP0kJ5H9HNUJQ/exec';
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
