@@ -752,29 +752,57 @@ let gameData = {
             });
         }
 
-        function collectTasksData() {
-            const tasks = [];
-            const taskElements = document.querySelectorAll('.scenario-task');
+ function collectTasksData() {
+    const tasks = [];
+    const taskElements = document.querySelectorAll('.scenario-task');
+    
+    taskElements.forEach((taskEl, index) => {
+        const title = taskEl.querySelector('.task-title-input').value.trim();
+        const typeSelect = taskEl.querySelector('.task-type-select');
+        const type = typeSelect ? typeSelect.value : 'text';
+        const reward = taskEl.querySelector('.task-reward').value.trim();
+        const penalty = taskEl.querySelector('.task-penalty').value.trim();
+        
+        if (title) {
+            const taskData = {
+                number: index + 1,
+                title: title,
+                type: type,
+                reward: reward,
+                penalty: penalty
+            };
             
-            taskElements.forEach((taskEl, index) => {
-                const title = taskEl.querySelector('.task-title-input').value.trim();
-                const description = taskEl.querySelector('.task-description').value.trim();
-                const reward = taskEl.querySelector('.task-reward').value.trim();
-                const penalty = taskEl.querySelector('.task-penalty').value.trim();
+            if (type === 'table') {
+                // Collect table data
+                const tableRows = taskEl.querySelectorAll('.table-row');
+                const tableData = [];
                 
-                if (title) {
-                    tasks.push({
-                        number: index + 1,
-                        title: title,
-                        description: description,
-                        reward: reward,
-                        penalty: penalty
-                    });
-                }
-            });
+                tableRows.forEach(row => {
+                    const account = row.querySelector('.account-input').value.trim();
+                    const description = row.querySelector('.description-input').value.trim();
+                    const amount = row.querySelector('.amount-input').value.trim();
+                    
+                    if (account || description || amount) {
+                        tableData.push({
+                            account: account,
+                            description: description,
+                            amount: amount
+                        });
+                    }
+                });
+                
+                taskData.tableData = tableData;
+            } else {
+                // Collect text description
+                taskData.description = taskEl.querySelector('.task-description').value.trim();
+            }
             
-            return tasks;
+            tasks.push(taskData);
         }
+    });
+    
+    return tasks;
+}
 
         // NEW GOOGLE SHEETS INTEGRATION FOR SCENARIOS
         function loadScenarioFromSheets() {
