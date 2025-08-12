@@ -234,12 +234,42 @@
             margin-bottom: 1rem;
         }
 
-        .task-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            gap: 0.5rem;
-        }
+.task-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+}
+
+.drag-handle {
+    cursor: move;
+    color: #666;
+    font-size: 1rem;
+    user-select: none;
+    padding: 0.25rem;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.drag-handle:hover {
+    background: #e0e0e0;
+    color: #0066CC;
+}
+
+.scenario-task {
+    transition: all 0.2s ease;
+}
+
+.scenario-task.dragging {
+    opacity: 0.6;
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+.scenario-task.drag-over {
+    border-top: 3px solid #0066CC;
+}
 
         .task-number {
             font-weight: bold;
@@ -479,10 +509,11 @@
                         <div id="scenario-tasks">
 <div class="scenario-task" data-task="1">
     <div class="task-header">
-        <span class="task-number">1)</span>
-        <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-        <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-    </div>
+    <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+    <span class="task-number">1)</span>
+    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+</div>
     
     <!-- NY: Type selector -->
     <div class="form-group" style="margin-bottom: 1rem;">
@@ -757,6 +788,10 @@ function addTask() {
     tasksDiv.insertBefore(taskDiv, addButton);
     
     updateTaskNumbers();
+        // Make new task draggable
+    setTimeout(() => {
+        makeDraggable();
+    }, 100);
 }
 
         function removeTask(button) {
@@ -1039,6 +1074,11 @@ function loadTasksIntoUI() {
     }, 100);
     
     console.log('✅ Tasks loaded into UI:', gameData.currentScenario.tasks ? gameData.currentScenario.tasks.length : 0, 'tasks');
+    
+    // Make loaded tasks draggable
+    setTimeout(() => {
+        makeDraggable();
+    }, 200);
 }
 
         function loadChoicesIntoUI() {
@@ -2405,9 +2445,12 @@ setTimeout(() => {
     console.log('🔄 Auto-loading scenario from Google Sheets...');
     loadScenarioFromSheets();
     
-    // LEGG TIL DENNE LINJEN HER:
     console.log('🔄 Auto-loading breakdowns from Google Sheets...');
     loadPlayerBreakdownsFromSheets();
+    
+    // Add drag & drop initialization
+    console.log('🔄 Initializing drag & drop...');
+    makeDraggable();
 }, 1000);
         });
         // NEW: Create new scenario function
@@ -2597,6 +2640,78 @@ document.addEventListener('input', function(e) {
         updateTablePreview(taskElement);
     }
 });
+        // DRAG & DROP FUNCTIONALITY
+function makeDraggable() {
+    const tasksContainer = document.getElementById('scenario-tasks');
+    const tasks = tasksContainer.querySelectorAll('.scenario-task');
+    
+    tasks.forEach(task => {
+        task.draggable = true;
+        
+        task.addEventListener('dragstart', handleDragStart);
+        task.addEventListener('dragover', handleDragOver);
+        task.addEventListener('drop', handleDrop);
+        task.addEventListener('dragend', handleDragEnd);
+        task.addEventListener('dragenter', handleDragEnter);
+        task.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    if (this !== draggedElement) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    if (draggedElement !== this) {
+        const allTasks = Array.from(document.querySelectorAll('.scenario-task'));
+        const draggedIndex = allTasks.indexOf(draggedElement);
+        const targetIndex = allTasks.indexOf(this);
+        
+        if (draggedIndex < targetIndex) {
+            this.parentNode.insertBefore(draggedElement, this.nextSibling);
+        } else {
+            this.parentNode.insertBefore(draggedElement, this);
+        }
+        
+        updateTaskNumbers();
+    }
+    
+    return false;
+}
+
+function handleDragEnd(e) {
+    document.querySelectorAll('.scenario-task').forEach(task => {
+        task.classList.remove('dragging', 'drag-over');
+    });
+    draggedElement = null;
+}
     </script>
 </body>
 </html>
