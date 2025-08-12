@@ -1674,14 +1674,14 @@ if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults)
                 });
                 choicesHtml += '</div>';
                 
-                if (!isExpired) {
-                    choicesHtml += `
-                        <div class="scenario-note">
-                            <p><strong>📝 Hvordan delta:</strong></p>
-                            <p>Klikk på ditt ønskede valg for å registrere det automatisk!</p>
-                        </div>
-                    `;
-                } else {
+if (!isExpired) {
+    choicesHtml += `
+        <div class="scenario-note">
+            <p><strong>⏰ VIKTIG:</strong> Du må velge ett alternativ før deadline</p>
+            <p><strong>👆</strong> Klikk på ønsket valg for å registrere</p>
+        </div>
+    `;
+} else {
                     choicesHtml += `
                         <div class="scenario-note">
                             <p><strong>⏰ Valg-periode avsluttet</strong></p>
