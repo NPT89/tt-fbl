@@ -267,13 +267,42 @@
             transition: all 0.3s ease;
         }
 
-        .scenario-deadline {
+.scenario-deadline {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
             text-align: center;
+            font-weight: bold;
+        }
+
+        /* Accounting table styling */
+        .accounting-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .accounting-table th,
+        .accounting-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .accounting-table th {
+            background: #f8f9ff;
+            font-weight: bold;
+            color: #0066CC;
+            border-bottom: 2px solid #0066CC;
+        }
+
+        .accounting-table .amount {
+            text-align: right;
+            font-family: 'Courier New', monospace;
             font-weight: bold;
         }
 
@@ -1556,21 +1585,59 @@ function renderLeaderboard() {
             if (scenario.tasks && scenario.tasks.length > 0) {
                 tasksHtml = '<div class="scenario-tasks"><h3>📋 Obligatoriske Oppgaver:</h3>';
                 
-                scenario.tasks.forEach(task => {
-                    tasksHtml += `
-                        <div class="task-display">
-                            <div class="task-number">${task.number}</div>
-                            <div class="task-content">
-                                <div class="task-title">${task.title}</div>
-                                <div class="task-description">${task.description}</div>
-                                <div class="task-rewards">
-                                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
-                                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+scenario.tasks.forEach(task => {
+    let taskContent = '';
+    
+    if (task.type === 'table' && task.tableData && task.tableData.length > 0) {
+        // Render as table
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <table class="accounting-table">
+                <thead>
+                    <tr>
+                        <th>Konto</th>
+                        <th>Beskrivelse</th>
+                        <th class="amount">Beløp</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        task.tableData.forEach(row => {
+            taskContent += `
+                <tr>
+                    <td><strong>${row.account}</strong></td>
+                    <td>${row.description}</td>
+                    <td class="amount">${row.amount}</td>
+                </tr>
+            `;
+        });
+        
+        taskContent += `
+                </tbody>
+            </table>
+        `;
+    } else {
+        // Render as text
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <div class="task-description">${task.description || ''}</div>
+        `;
+    }
+    
+    tasksHtml += `
+        <div class="task-display">
+            <div class="task-number">${task.number}</div>
+            <div class="task-content">
+                ${taskContent}
+                <div class="task-rewards">
+                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
+                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+});
                 tasksHtml += '</div>';
             }
 
