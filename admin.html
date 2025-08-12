@@ -745,7 +745,7 @@ let gameData = {
         // NEW TASK FUNCTIONS
 function addTask() {
     const tasksDiv = document.getElementById('scenario-tasks');
-    const taskCount = tasksDiv.children.length - 1; // -1 for "Legg til oppgave" knappen
+    const taskCount = tasksDiv.querySelectorAll('.scenario-task').length;
     const taskNumber = taskCount + 1;
     
     const taskDiv = document.createElement('div');
@@ -753,6 +753,7 @@ function addTask() {
     taskDiv.setAttribute('data-task', taskNumber);
     taskDiv.innerHTML = `
         <div class="task-header">
+            <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
             <span class="task-number">${taskNumber})</span>
             <input type="text" class="task-title-input" placeholder="Oppgave tittel">
             <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
@@ -783,12 +784,12 @@ function addTask() {
         </div>
     `;
     
-    // Insert before the "Legg til oppgave" button
-    const addButton = tasksDiv.querySelector('button');
-    tasksDiv.insertBefore(taskDiv, addButton);
+    // Simply append to the container
+    tasksDiv.appendChild(taskDiv);
     
     updateTaskNumbers();
-        // Make new task draggable
+    
+    // Make new task draggable
     setTimeout(() => {
         makeDraggable();
     }, 100);
