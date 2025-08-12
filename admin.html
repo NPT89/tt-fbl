@@ -1004,13 +1004,14 @@ function loadTasksIntoUI() {
         gameData.currentScenario.tasks.forEach((task, index) => {
             const taskType = task.type || 'text';
             
-            html += `
-                <div class="scenario-task" data-task="${task.number || (index + 1)}">
-                    <div class="task-header">
-                        <span class="task-number">${task.number || (index + 1)})</span>
-                        <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
-                        <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                    </div>
+html += `
+    <div class="scenario-task" data-task="${task.number || (index + 1)}">
+        <div class="task-header">
+            <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+            <span class="task-number">${task.number || (index + 1)})</span>
+            <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
+            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+        </div>
                     
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label>Type oppgave:</label>
