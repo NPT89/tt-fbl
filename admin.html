@@ -712,30 +712,52 @@ let gameData = {
 };
 
         // NEW TASK FUNCTIONS
-        function addTask() {
-            const tasksDiv = document.getElementById('scenario-tasks');
-            const taskCount = tasksDiv.children.length;
-            const taskNumber = taskCount + 1;
-            
-            const taskDiv = document.createElement('div');
-            taskDiv.className = 'scenario-task';
-            taskDiv.setAttribute('data-task', taskNumber);
-            taskDiv.innerHTML = `
-                <div class="task-header">
-                    <span class="task-number">${taskNumber})</span>
-                    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                </div>
-                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-                <div class="task-rewards">
-                    <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-                    <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-                </div>
-            `;
-            tasksDiv.appendChild(taskDiv);
-            
-            updateTaskNumbers();
-        }
+function addTask() {
+    const tasksDiv = document.getElementById('scenario-tasks');
+    const taskCount = tasksDiv.children.length - 1; // -1 for "Legg til oppgave" knappen
+    const taskNumber = taskCount + 1;
+    
+    const taskDiv = document.createElement('div');
+    taskDiv.className = 'scenario-task';
+    taskDiv.setAttribute('data-task', taskNumber);
+    taskDiv.innerHTML = `
+        <div class="task-header">
+            <span class="task-number">${taskNumber})</span>
+            <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label>Type oppgave:</label>
+            <select class="task-type-select" onchange="toggleTaskType(this)">
+                <option value="text">📝 Tekst beskrivelse</option>
+                <option value="table">📊 Regnskapstabell</option>
+            </select>
+        </div>
+        
+        <div class="text-mode">
+            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+        </div>
+        
+        <div class="table-mode" style="display: none;">
+            <div class="table-builder">
+                <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                <div class="table-rows"></div>
+            </div>
+        </div>
+        
+        <div class="task-rewards">
+            <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+            <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+        </div>
+    `;
+    
+    // Insert before the "Legg til oppgave" button
+    const addButton = tasksDiv.querySelector('button');
+    tasksDiv.insertBefore(taskDiv, addButton);
+    
+    updateTaskNumbers();
+}
 
         function removeTask(button) {
             const taskDiv = button.closest('.scenario-task');
@@ -934,37 +956,90 @@ let gameData = {
             document.head.appendChild(script);
         }
 
-        function loadTasksIntoUI() {
-            const tasksDiv = document.getElementById('scenario-tasks');
-            if (!tasksDiv) {
-                console.log('❌ scenario-tasks element not found');
-                return;
-            }
+function loadTasksIntoUI() {
+    const tasksDiv = document.getElementById('scenario-tasks');
+    if (!tasksDiv) {
+        console.log('❌ scenario-tasks element not found');
+        return;
+    }
+    
+    let html = '';
+    
+    if (gameData.currentScenario.tasks && gameData.currentScenario.tasks.length > 0) {
+        gameData.currentScenario.tasks.forEach((task, index) => {
+            const taskType = task.type || 'text';
             
-            let html = '';
+            html += `
+                <div class="scenario-task" data-task="${task.number || (index + 1)}">
+                    <div class="task-header">
+                        <span class="task-number">${task.number || (index + 1)})</span>
+                        <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
+                        <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Type oppgave:</label>
+                        <select class="task-type-select" onchange="toggleTaskType(this)">
+                            <option value="text" ${taskType === 'text' ? 'selected' : ''}>📝 Tekst beskrivelse</option>
+                            <option value="table" ${taskType === 'table' ? 'selected' : ''}>📊 Regnskapstabell</option>
+                        </select>
+                    </div>
+                    
+                    <div class="text-mode" style="display: ${taskType === 'text' ? 'block' : 'none'};">
+                        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="table-mode" style="display: ${taskType === 'table' ? 'block' : 'none'};">
+                        <div class="table-builder">
+                            <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                            <div class="table-rows">
+            `;
             
-            if (gameData.currentScenario.tasks && gameData.currentScenario.tasks.length > 0) {
-                gameData.currentScenario.tasks.forEach((task, index) => {
+            // Add existing table rows if they exist
+            if (taskType === 'table' && task.tableData && task.tableData.length > 0) {
+                task.tableData.forEach(row => {
                     html += `
-                        <div class="scenario-task" data-task="${task.number || (index + 1)}">
-                            <div class="task-header">
-                                <span class="task-number">${task.number || (index + 1)})</span>
-                                <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
-                                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                            </div>
-                            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
-                            <div class="task-rewards">
-                                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
-                                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
-                            </div>
+                        <div class="table-row">
+                            <input type="text" class="account-input" placeholder="Konto" maxlength="4" value="${row.account || ''}">
+                            <input type="text" class="description-input" placeholder="Beskrivelse" value="${row.description || ''}">
+                            <input type="text" class="amount-input" placeholder="Beløp" value="${row.amount || ''}">
+                            <button type="button" class="remove-row-btn" onclick="removeTableRow(this)">×</button>
                         </div>
                     `;
                 });
             }
             
-            tasksDiv.innerHTML = html;
-            console.log('✅ Tasks loaded into UI:', gameData.currentScenario.tasks ? gameData.currentScenario.tasks.length : 0, 'tasks');
-        }
+            html += `
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-rewards">
+                        <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
+                        <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Add the "Legg til oppgave" button
+    html += '<button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>';
+    
+    tasksDiv.innerHTML = html;
+    
+    // Update table previews for any loaded table tasks
+    setTimeout(() => {
+        document.querySelectorAll('.scenario-task').forEach(taskEl => {
+            const typeSelect = taskEl.querySelector('.task-type-select');
+            if (typeSelect && typeSelect.value === 'table') {
+                updateTablePreview(taskEl);
+            }
+        });
+    }, 100);
+    
+    console.log('✅ Tasks loaded into UI:', gameData.currentScenario.tasks ? gameData.currentScenario.tasks.length : 0, 'tasks');
+}
 
         function loadChoicesIntoUI() {
             const choicesDiv = document.getElementById('scenario-choices');
