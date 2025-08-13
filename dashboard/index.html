@@ -680,25 +680,38 @@
             setInterval(autoRefresh, 15 * 60 * 1000); // 15 minutter
         };
 
-        // Google Apps Script API kall - oppdatert URL
-        async function fetchFromSheets(agentId) {
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyHNlHAZ21O1tu90KTiNzpZ8dKWkhTgrQY--bDbaCWhUmddQY9LpBZsiyHbihi3Mher/exec';
-            
-            try {
-                const response = await fetch(`${SCRIPT_URL}?agent=${encodeURIComponent(agentId)}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data;
-                } else {
-                    console.error('Sheet API error:', data.error);
-                    return null;
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                return null;
+// Erstatt fetchFromSheets() funksjonen i HTML-filen med denne:
+
+async function fetchFromSheets(agentId) {
+    const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbx5e8RHV0jyet6cbdMrff8gzy3m6jSAUj_wLvW8N26IFW-Wm36WklQLI-jJanl_12Sr/exec';
+    
+    return new Promise((resolve, reject) => {
+        // JSONP callback function
+        window.jsonpCallback = function(data) {
+            // Cleanup
+            document.head.removeChild(script);
+            delete window.jsonpCallback;
+            resolve(data);
+        };
+        
+        // Create script tag for JSONP
+        const script = document.createElement('script');
+        script.src = `${SCRIPT_URL}?agent=${encodeURIComponent(agentId)}&callback=jsonpCallback`;
+        script.onerror = () => {
+            document.head.removeChild(script);
+            delete window.jsonpCallback;
+            reject(new Error('Failed to load script'));
+        };
+        
+        document.head.appendChild(script);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+            if (window.jsonpCallback) {
+                document.head.removeChild(script);
+                delete window.jsonpCallback;
+                reject(new Error('Request timeout'));
             }
-        }
-    </script>
-</body>
-</html>
+        }, 10000);
+    });
+}
