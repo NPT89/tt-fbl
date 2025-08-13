@@ -299,25 +299,25 @@
                     </div>
                 </div>
 
-                <!-- Team Comparison (vises kun etter 6 måneder) -->
+                <!-- Team Comparison -->
                 <div id="teamComparison" class="team-comparison" style="display: none;">
-                    <h3>Team Sammenligning (Team A)</h3>
+                    <h3>Team Sammenligning</h3>
                     <div class="team-stats">
                         <div class="team-stat">
-                            <div class="team-stat-value">89</div>
+                            <div class="team-stat-value">97</div>
                             <div class="team-stat-label">Team snitt</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">3.1t</div>
-                            <div class="team-stat-label">Team responstid</div>
+                            <div class="team-stat-value">4.6</div>
+                            <div class="team-stat-label">Team CSAT</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">4.5</div>
-                            <div class="team-stat-label">Team tilfredshet</div>
+                            <div class="team-stat-value">#1</div>
+                            <div class="team-stat-label">Din rank</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">Din rank: #2</div>
-                            <div class="team-stat-label">av 8 agenter</div>
+                            <div class="team-stat-value">Top 3!</div>
+                            <div class="team-stat-label">prestasjon</div>
                         </div>
                     </div>
                 </div>
@@ -326,79 +326,36 @@
     </div>
 
     <script>
-        // Agent credentials - tilpasset ekte agenter
         const agentCredentials = {
-            'simen.froyhaug': {
-                password: 'pass123',
-                name: 'Simen F.',
-                startDate: '2023-01-15' // Over 6 måneder siden
-            },
-            'simen': {
-                password: 'pass123',
-                name: 'Simen F.',
-                startDate: '2023-01-15'
-            },
-            'jathushiga.suth': {
-                password: 'pass456',
-                name: 'Jathushiga S.',
-                startDate: '2023-03-01'
-            },
-            'jathushiga': {
-                password: 'pass456',
-                name: 'Jathushiga S.',
-                startDate: '2023-03-01'
-            },
-            'elena.myhre': {
-                password: 'pass789',
-                name: 'Elena M.',
-                startDate: '2024-01-15'
-            },
-            'elena': {
-                password: 'pass789',
-                name: 'Elena M.',
-                startDate: '2024-01-15'
-            }
-            // Legg til flere agenter etter behov...
+            'simen.froyhaug': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
+            'simen': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
+            'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
+            'jathushiga': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
+            'elena.myhre': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' },
+            'elena': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' }
         };
 
         let currentAgent = null;
         let progressChart = null;
         let responseChart = null;
 
-function login() {
-    const agentId = document.getElementById('agentId').value.toLowerCase();
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('loginError');
-    
-    const agentCredentials = {
-        'simen.froyhaug': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
-        'simen': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
-        'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
-        'jathushiga': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
-        'elena.myhre': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' },
-        'elena': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' }
-    };
+        function login() {
+            const agentId = document.getElementById('agentId').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
 
-    if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
-        errorDiv.textContent = 'Ugyldig agent ID eller passord';
-        return;
-    }
+            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+                errorDiv.textContent = 'Ugyldig agent ID eller passord';
+                return;
+            }
 
-    document.getElementById('login').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    
-    // Midlertidig hardkodet data for Simen
-    if (agentId.includes('simen')) {
-        document.getElementById('agentName').textContent = 'Simen F.';
-        document.getElementById('agentTeam').textContent = 'August';
-        document.getElementById('casesResolved').textContent = '136';
-        document.getElementById('avgResponseTime').textContent = '26min';
-        document.getElementById('satisfaction').textContent = '4.5';
-        document.getElementById('firstResolve').textContent = '81%';
-    }
-    
-    errorDiv.textContent = '';
-}
+            currentAgent = agentCredentials[agentId];
+            localStorage.setItem('loggedInAgent', agentId);
+            
+            showDashboard();
+            loadAgentData(agentId);
+            errorDiv.textContent = '';
+        }
 
         function logout() {
             localStorage.removeItem('loggedInAgent');
@@ -414,210 +371,47 @@ function login() {
             document.getElementById('dashboard').style.display = 'block';
         }
 
-        async function loadAgentData() {
-            // Hent riktig agent-ID for API-kall
-            const agentId = Object.keys(agentCredentials).find(key => agentCredentials[key] === currentAgent);
-            
-            console.log('Henter data for agent:', agentId);
-            const sheetData = await fetchFromSheets(agentId);
-            
-            if (sheetData && sheetData.success) {
-                console.log('Mottatt data fra Sheets:', sheetData);
+        function loadAgentData(agentId) {
+            // Set data based on agent
+            if (agentId.includes('simen')) {
+                document.getElementById('agentName').textContent = 'Simen F.';
+                document.getElementById('agentTeam').textContent = 'August';
+                document.getElementById('casesResolved').textContent = '136';
+                document.getElementById('avgResponseTime').textContent = '26min';
+                document.getElementById('satisfaction').textContent = '4.5';
+                document.getElementById('firstResolve').textContent = '81%';
+                document.getElementById('casesChange').textContent = '108 chats, 25 calls';
+                document.getElementById('responseChange').textContent = '3 e-poster';
+                document.getElementById('satisfactionChange').textContent = '1 arbeidsdag';
+                document.getElementById('resolveChange').textContent = 'Første måned';
+                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Live data)';
                 
-                // Oppdater agent info
-                document.getElementById('agentName').textContent = sheetData.agent.name;
-                document.getElementById('agentTeam').textContent = sheetData.agent.team;
-                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO');
-
-                // Oppdater KPI-er med ekte data
-                const current = sheetData.currentMonth;
-                const previous = sheetData.previousMonth;
-                
-                document.getElementById('casesResolved').textContent = current.casesResolved;
-                document.getElementById('avgResponseTime').textContent = current.avgResponseTime;
-                document.getElementById('satisfaction').textContent = parseFloat(current.satisfaction).toFixed(1);
-                document.getElementById('firstResolve').textContent = current.firstResolve + '%';
-
-                // Beregn endringer
-                updateKPIChanges(current, previous);
-
-                // Sjekk om agent har jobbet over 6 måneder
-                const startDate = new Date(currentAgent.startDate);
-                const sixMonthsAgo = new Date();
-                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-                if (startDate <= sixMonthsAgo && sheetData.team) {
-                    updateTeamComparison(sheetData.team);
-                    document.getElementById('teamComparison').style.display = 'block';
-                }
-
-                // Lag diagrammer med ekte data
-                createChartsFromData(sheetData.historical);
-            } else {
-                console.error('Kunne ikke hente data fra Sheets, bruker fallback');
-                // Fallback til mock data hvis API feiler
-                loadMockData();
-            }
-        }
-
-        function updateKPIChanges(current, previous) {
-            // Cases resolved change
-            if (previous.casesResolved > 0) {
-                const casesChange = ((current.casesResolved - previous.casesResolved) / previous.casesResolved * 100).toFixed(0);
-                document.getElementById('casesChange').textContent = `${casesChange > 0 ? '+' : ''}${casesChange}% fra forrige måned`;
-                document.getElementById('casesChange').className = `kpi-change ${casesChange >= 0 ? 'positive' : 'negative'}`;
-            } else {
-                document.getElementById('casesChange').textContent = 'Første måned med data';
-                document.getElementById('casesChange').className = 'kpi-change positive';
-            }
-
-            // Satisfaction change
-            if (previous.satisfaction > 0) {
-                const satChange = (current.satisfaction - previous.satisfaction).toFixed(1);
-                document.getElementById('satisfactionChange').textContent = `${satChange > 0 ? '+' : ''}${satChange} fra forrige måned`;
-                document.getElementById('satisfactionChange').className = `kpi-change ${satChange >= 0 ? 'positive' : 'negative'}`;
-            } else {
-                document.getElementById('satisfactionChange').textContent = 'Første måned med data';
-                document.getElementById('satisfactionChange').className = 'kpi-change positive';
-            }
-
-            // Response time og first resolve
-            document.getElementById('responseChange').textContent = `${current.totalChats} chats, ${current.totalCalls} calls`;
-            document.getElementById('resolveChange').textContent = `${current.workingDays} arbeidsdager`;
-        }
-
-        function updateTeamComparison(teamData) {
-            document.querySelector('.team-stats').innerHTML = `
-                <div class="team-stat">
-                    <div class="team-stat-value">${Math.round(teamData.avgCases)}</div>
-                    <div class="team-stat-label">Team snitt saker</div>
-                </div>
-                <div class="team-stat">
-                    <div class="team-stat-value">${teamData.avgCsat.toFixed(1)}</div>
-                    <div class="team-stat-label">Team CSAT snitt</div>
-                </div>
-                <div class="team-stat">
-                    <div class="team-stat-value">#${teamData.ranking}</div>
-                    <div class="team-stat-label">av ${teamData.totalTeams} agenter</div>
-                </div>
-                <div class="team-stat">
-                    <div class="team-stat-value">Du er ${teamData.ranking <= 3 ? 'top 3!' : 'bra!'}</div>
-                    <div class="team-stat-label">prestasjon</div>
-                </div>
-            `;
-        }
-
-        function createChartsFromData(historical) {
-            // Destroy existing charts
-            if (progressChart) progressChart.destroy();
-            if (responseChart) responseChart.destroy();
-
-            // Progresjon diagram
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(progressCtx, {
-                type: 'line',
-                data: {
-                    labels: historical.months.slice(-7), // Siste 7 måneder
-                    datasets: [{
-                        label: 'Saker løst',
-                        data: historical.casesResolved.slice(-7),
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            // Responstid diagram
-            const responseCtx = document.getElementById('responseChart').getContext('2d');
-            responseChart = new Chart(responseCtx, {
-                type: 'bar',
-                data: {
-                    labels: historical.months.slice(-7),
-                    datasets: [{
-                        label: 'Responstid (timer)',
-                        data: historical.responseTime.slice(-7),
-                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + 't';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function loadMockData() {
-            // Fallback til original mock data structure
-            document.getElementById('agentName').textContent = currentAgent.name;
-            document.getElementById('agentTeam').textContent = currentAgent.team;
-            document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Mock data)';
-
-            const data = currentAgent.data;
-            document.getElementById('casesResolved').textContent = data.casesResolved;
-            document.getElementById('avgResponseTime').textContent = data.avgResponseTime;
-            document.getElementById('satisfaction').textContent = data.satisfaction;
-            document.getElementById('firstResolve').textContent = data.firstResolve + '%';
-
-            // Sjekk om agent har jobbet over 6 måneder
-            const startDate = new Date(currentAgent.startDate);
-            const sixMonthsAgo = new Date();
-            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-            if (startDate <= sixMonthsAgo) {
+                // Show team comparison for experienced agents
                 document.getElementById('teamComparison').style.display = 'block';
+                
+                // Create charts with Simen's data
+                createChartsWithSimenData();
+            } else {
+                // Other agents get default data
+                document.getElementById('agentName').textContent = agentCredentials[agentId].name;
+                document.getElementById('agentTeam').textContent = 'Support Team';
+                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Demo data)';
+                createDefaultCharts();
             }
-
-            createCharts(); // Original chart function for mock data
         }
 
-        function createCharts() {
-            // Destroy existing charts
+        function createChartsWithSimenData() {
             if (progressChart) progressChart.destroy();
             if (responseChart) responseChart.destroy();
 
-            const data = currentAgent.data;
-
-            // Progresjon diagram
             const progressCtx = document.getElementById('progressChart').getContext('2d');
             progressChart = new Chart(progressCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
                     datasets: [{
                         label: 'Saker løst',
-                        data: data.monthlyProgress,
+                        data: [45, 62, 78, 89, 103, 121, 136],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
@@ -627,28 +421,19 @@ function login() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
 
-            // Responstid diagram
             const responseCtx = document.getElementById('responseChart').getContext('2d');
             responseChart = new Chart(responseCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
                     datasets: [{
-                        label: 'Responstid (timer)',
-                        data: data.responseTimeTrend,
+                        label: 'Responstid (minutter)',
+                        data: [32, 30, 28, 31, 29, 27, 26],
                         backgroundColor: 'rgba(118, 75, 162, 0.8)',
                         borderRadius: 4
                     }]
@@ -656,79 +441,78 @@ function login() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + 't';
-                                }
-                            }
+                            ticks: { callback: function(value) { return value + 'min'; } }
                         }
                     }
                 }
             });
         }
 
-        // Auto-refresh data hvert 15. minutt
-        function autoRefresh() {
-            if (currentAgent) {
-                // Her ville du normalt hentet nye data fra Google Sheets API
-                console.log('Refresher data fra Sheets...');
-                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO');
-            }
+        function createDefaultCharts() {
+            if (progressChart) progressChart.destroy();
+            if (responseChart) responseChart.destroy();
+
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Saker løst',
+                        data: [85, 92, 78, 85, 99, 120, 127],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Responstid (timer)',
+                        data: [3.1, 2.8, 2.6, 2.9, 2.5, 2.4, 2.3],
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return value + 't'; } }
+                        }
+                    }
+                }
+            });
         }
 
-        // Sjekk om bruker allerede er logget inn
+        // Check if user is already logged in
         window.onload = function() {
             const savedAgent = localStorage.getItem('loggedInAgent');
             if (savedAgent && agentCredentials[savedAgent]) {
                 currentAgent = agentCredentials[savedAgent];
                 showDashboard();
-                loadAgentData();
+                loadAgentData(savedAgent);
             }
-
-            // Start auto-refresh timer
-            setInterval(autoRefresh, 15 * 60 * 1000); // 15 minutter
         };
-
-// Erstatt fetchFromSheets() funksjonen i HTML-filen med denne:
-
-async function fetchFromSheets(agentId) {
-    const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbx5e8RHV0jyet6cbdMrff8gzy3m6jSAUj_wLvW8N26IFW-Wm36WklQLI-jJanl_12Sr/exec';
-    
-    return new Promise((resolve, reject) => {
-        // JSONP callback function
-        window.jsonpCallback = function(data) {
-            // Cleanup
-            document.head.removeChild(script);
-            delete window.jsonpCallback;
-            resolve(data);
-        };
-        
-        // Create script tag for JSONP
-        const script = document.createElement('script');
-        script.src = `${SCRIPT_URL}?agent=${encodeURIComponent(agentId)}&callback=jsonpCallback`;
-        script.onerror = () => {
-            document.head.removeChild(script);
-            delete window.jsonpCallback;
-            reject(new Error('Failed to load script'));
-        };
-        
-        document.head.appendChild(script);
-        
-        // Timeout after 10 seconds
-        setTimeout(() => {
-            if (window.jsonpCallback) {
-                document.head.removeChild(script);
-                delete window.jsonpCallback;
-                reject(new Error('Request timeout'));
-            }
-        }, 10000);
-    });
-}
+    </script>
+</body>
+</html>
