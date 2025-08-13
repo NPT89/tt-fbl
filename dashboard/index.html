@@ -242,8 +242,10 @@
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666;">
                 <p><strong>Demo kontoer:</strong></p>
-                <p>john-doe / passord123</p>
-                <p>jane-smith / passord456</p>
+                <p>simen.froyhaug / pass123</p>
+                <p>simen / pass123 (kortversjon)</p>
+                <p>jathushiga.suth / pass456</p>
+                <p>elena.myhre / pass789</p>
             </div>
         </div>
 
@@ -324,36 +326,39 @@
     </div>
 
     <script>
-        // Mock agent database - i virkeligheten ville dette komme fra Google Sheets
+        // Agent credentials - tilpasset ekte agenter
         const agentCredentials = {
-            'john-doe': {
-                password: 'passord123',
-                name: 'John Doe',
-                team: 'Support Team A',
-                startDate: '2023-01-15', // Over 6 måneder siden
-                data: {
-                    casesResolved: 127,
-                    avgResponseTime: '2.3t',
-                    satisfaction: 4.7,
-                    firstResolve: 78,
-                    monthlyProgress: [45, 52, 61, 78, 89, 105, 127],
-                    responseTimeTrend: [3.2, 2.8, 2.9, 2.5, 2.1, 2.4, 2.3]
-                }
+            'simen.froyhaug': {
+                password: 'pass123',
+                name: 'Simen F.',
+                startDate: '2023-01-15' // Over 6 måneder siden
             },
-            'jane-smith': {
-                password: 'passord456',
-                name: 'Jane Smith',
-                team: 'Support Team B',
-                startDate: '2024-10-01', // Under 6 måneder siden
-                data: {
-                    casesResolved: 89,
-                    avgResponseTime: '3.1t',
-                    satisfaction: 4.4,
-                    firstResolve: 65,
-                    monthlyProgress: [20, 35, 54, 67, 78, 89],
-                    responseTimeTrend: [4.1, 3.8, 3.5, 3.2, 3.0, 3.1]
-                }
+            'simen': {
+                password: 'pass123',
+                name: 'Simen F.',
+                startDate: '2023-01-15'
+            },
+            'jathushiga.suth': {
+                password: 'pass456',
+                name: 'Jathushiga S.',
+                startDate: '2023-03-01'
+            },
+            'jathushiga': {
+                password: 'pass456',
+                name: 'Jathushiga S.',
+                startDate: '2023-03-01'
+            },
+            'elena.myhre': {
+                password: 'pass789',
+                name: 'Elena M.',
+                startDate: '2024-01-15'
+            },
+            'elena': {
+                password: 'pass789',
+                name: 'Elena M.',
+                startDate: '2024-01-15'
             }
+            // Legg til flere agenter etter behov...
         };
 
         let currentAgent = null;
@@ -393,11 +398,15 @@
         }
 
         async function loadAgentData() {
-            // Hent data fra Google Sheets
+            // Hent riktig agent-ID for API-kall
             const agentId = Object.keys(agentCredentials).find(key => agentCredentials[key] === currentAgent);
+            
+            console.log('Henter data for agent:', agentId);
             const sheetData = await fetchFromSheets(agentId);
             
             if (sheetData && sheetData.success) {
+                console.log('Mottatt data fra Sheets:', sheetData);
+                
                 // Oppdater agent info
                 document.getElementById('agentName').textContent = sheetData.agent.name;
                 document.getElementById('agentTeam').textContent = sheetData.agent.team;
@@ -409,14 +418,18 @@
                 
                 document.getElementById('casesResolved').textContent = current.casesResolved;
                 document.getElementById('avgResponseTime').textContent = current.avgResponseTime;
-                document.getElementById('satisfaction').textContent = current.satisfaction;
+                document.getElementById('satisfaction').textContent = parseFloat(current.satisfaction).toFixed(1);
                 document.getElementById('firstResolve').textContent = current.firstResolve + '%';
 
                 // Beregn endringer
                 updateKPIChanges(current, previous);
 
-                // Sjekk om agent har jobbet over 6 måneder (basert på hvor mye historisk data som finnes)
-                if (sheetData.historical.months.length >= 6) {
+                // Sjekk om agent har jobbet over 6 måneder
+                const startDate = new Date(currentAgent.startDate);
+                const sixMonthsAgo = new Date();
+                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+                if (startDate <= sixMonthsAgo && sheetData.team) {
                     updateTeamComparison(sheetData.team);
                     document.getElementById('teamComparison').style.display = 'block';
                 }
@@ -424,6 +437,7 @@
                 // Lag diagrammer med ekte data
                 createChartsFromData(sheetData.historical);
             } else {
+                console.error('Kunne ikke hente data fra Sheets, bruker fallback');
                 // Fallback til mock data hvis API feiler
                 loadMockData();
             }
@@ -431,18 +445,28 @@
 
         function updateKPIChanges(current, previous) {
             // Cases resolved change
-            const casesChange = ((current.casesResolved - previous.casesResolved) / previous.casesResolved * 100).toFixed(0);
-            document.getElementById('casesChange').textContent = `${casesChange > 0 ? '+' : ''}${casesChange}% fra forrige måned`;
-            document.getElementById('casesChange').className = `kpi-change ${casesChange >= 0 ? 'positive' : 'negative'}`;
+            if (previous.casesResolved > 0) {
+                const casesChange = ((current.casesResolved - previous.casesResolved) / previous.casesResolved * 100).toFixed(0);
+                document.getElementById('casesChange').textContent = `${casesChange > 0 ? '+' : ''}${casesChange}% fra forrige måned`;
+                document.getElementById('casesChange').className = `kpi-change ${casesChange >= 0 ? 'positive' : 'negative'}`;
+            } else {
+                document.getElementById('casesChange').textContent = 'Første måned med data';
+                document.getElementById('casesChange').className = 'kpi-change positive';
+            }
 
             // Satisfaction change
-            const satChange = (current.satisfaction - previous.satisfaction).toFixed(1);
-            document.getElementById('satisfactionChange').textContent = `${satChange > 0 ? '+' : ''}${satChange} fra forrige måned`;
-            document.getElementById('satisfactionChange').className = `kpi-change ${satChange >= 0 ? 'positive' : 'negative'}`;
+            if (previous.satisfaction > 0) {
+                const satChange = (current.satisfaction - previous.satisfaction).toFixed(1);
+                document.getElementById('satisfactionChange').textContent = `${satChange > 0 ? '+' : ''}${satChange} fra forrige måned`;
+                document.getElementById('satisfactionChange').className = `kpi-change ${satChange >= 0 ? 'positive' : 'negative'}`;
+            } else {
+                document.getElementById('satisfactionChange').textContent = 'Første måned med data';
+                document.getElementById('satisfactionChange').className = 'kpi-change positive';
+            }
 
-            // Response time og first resolve - simplified for now
-            document.getElementById('responseChange').textContent = 'Se graf for trend';
-            document.getElementById('resolveChange').textContent = 'Se graf for trend';
+            // Response time og first resolve
+            document.getElementById('responseChange').textContent = `${current.totalChats} chats, ${current.totalCalls} calls`;
+            document.getElementById('resolveChange').textContent = `${current.workingDays} arbeidsdager`;
         }
 
         function updateTeamComparison(teamData) {
@@ -453,11 +477,15 @@
                 </div>
                 <div class="team-stat">
                     <div class="team-stat-value">${teamData.avgCsat.toFixed(1)}</div>
-                    <div class="team-stat-label">Team CSAT</div>
+                    <div class="team-stat-label">Team CSAT snitt</div>
                 </div>
                 <div class="team-stat">
                     <div class="team-stat-value">#${teamData.ranking}</div>
-                    <div class="team-stat-label">av ${teamData.totalTeams} team</div>
+                    <div class="team-stat-label">av ${teamData.totalTeams} agenter</div>
+                </div>
+                <div class="team-stat">
+                    <div class="team-stat-value">Du er ${teamData.ranking <= 3 ? 'top 3!' : 'bra!'}</div>
+                    <div class="team-stat-label">prestasjon</div>
                 </div>
             `;
         }
@@ -652,9 +680,9 @@
             setInterval(autoRefresh, 15 * 60 * 1000); // 15 minutter
         };
 
-        // Google Apps Script API kall
+        // Google Apps Script API kall - oppdatert URL
         async function fetchFromSheets(agentId) {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/DIN_SCRIPT_ID_HER/exec';
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbwtJJPfkZXCayYK41Bb9pg1ZZCRY67ZVTvFkT_Nw7_6rH8w3qfWKDUcLCYlKaHcI3PA/exec';
             
             try {
                 const response = await fetch(`${SCRIPT_URL}?agent=${encodeURIComponent(agentId)}`);
