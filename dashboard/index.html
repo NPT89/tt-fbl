@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            margin: 100px auto;
+        }
+
+        .dashboard-container {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .agent-info h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .agent-info p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .last-updated {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .kpi-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-change {
+            font-size: 0.9em;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .positive { background: #d4edda; color: #155724; }
+        .negative { background: #f8d7da; color: #721c24; }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .team-comparison {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .team-comparison h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .team-stat {
+            text-align: center;
+        }
+
+        .team-stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .team-stat-label {
+            font-size: 0.8em;
+            color: #856404;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="login" class="login-container">
+            <h2 style="margin-bottom: 30px; color: #333;">Agent Dashboard Login</h2>
+            <input type="text" id="agentId" placeholder="Agent ID (f.eks. john-doe)" />
+            <input type="password" id="password" placeholder="Passord" />
+            <button onclick="login()">Logg Inn</button>
+            <div id="loginError" class="error-message"></div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666;">
+                <p><strong>Demo kontoer:</strong></p>
+                <p>john-doe / passord123</p>
+                <p>jane-smith / passord456</p>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <div class="header">
+                <div class="agent-info">
+                    <h1 id="agentName">John Doe</h1>
+                    <p id="agentTeam">Support Team A</p>
+                </div>
+                <div>
+                    <div class="last-updated" id="lastUpdated">Sist oppdatert: i dag 14:30</div>
+                    <button class="logout-btn" onclick="logout()">Logg ut</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-value" id="casesResolved">127</div>
+                        <div class="kpi-label">Saker løst denne måneden</div>
+                        <div class="kpi-change positive" id="casesChange">+15% fra forrige måned</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value" id="avgResponseTime">2.3t</div>
+                        <div class="kpi-label">Gjennomsnittlig responstid</div>
+                        <div class="kpi-change positive" id="responseChange">-18 min fra forrige måned</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value" id="satisfaction">4.7</div>
+                        <div class="kpi-label">Kundetilfredshet (1-5)</div>
+                        <div class="kpi-change positive" id="satisfactionChange">+0.2 fra forrige måned</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value" id="firstResolve">78%</div>
+                        <div class="kpi-label">Første gangs løsning</div>
+                        <div class="kpi-change positive" id="resolveChange">+5% fra forrige måned</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <div class="chart-title">Månedlig progresjon - Saker løst</div>
+                        <canvas id="progressChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Responstid trend</div>
+                        <canvas id="responseChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Team Comparison (vises kun etter 6 måneder) -->
+                <div id="teamComparison" class="team-comparison" style="display: none;">
+                    <h3>Team Sammenligning (Team A)</h3>
+                    <div class="team-stats">
+                        <div class="team-stat">
+                            <div class="team-stat-value">89</div>
+                            <div class="team-stat-label">Team snitt</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">3.1t</div>
+                            <div class="team-stat-label">Team responstid</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">4.5</div>
+                            <div class="team-stat-label">Team tilfredshet</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">Din rank: #2</div>
+                            <div class="team-stat-label">av 8 agenter</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock agent database - i virkeligheten ville dette komme fra Google Sheets
+        const agentCredentials = {
+            'john-doe': {
+                password: 'passord123',
+                name: 'John Doe',
+                team: 'Support Team A',
+                startDate: '2023-01-15', // Over 6 måneder siden
+                data: {
+                    casesResolved: 127,
+                    avgResponseTime: '2.3t',
+                    satisfaction: 4.7,
+                    firstResolve: 78,
+                    monthlyProgress: [45, 52, 61, 78, 89, 105, 127],
+                    responseTimeTrend: [3.2, 2.8, 2.9, 2.5, 2.1, 2.4, 2.3]
+                }
+            },
+            'jane-smith': {
+                password: 'passord456',
+                name: 'Jane Smith',
+                team: 'Support Team B',
+                startDate: '2024-10-01', // Under 6 måneder siden
+                data: {
+                    casesResolved: 89,
+                    avgResponseTime: '3.1t',
+                    satisfaction: 4.4,
+                    firstResolve: 65,
+                    monthlyProgress: [20, 35, 54, 67, 78, 89],
+                    responseTimeTrend: [4.1, 3.8, 3.5, 3.2, 3.0, 3.1]
+                }
+            }
+        };
+
+        let currentAgent = null;
+        let progressChart = null;
+        let responseChart = null;
+
+        function login() {
+            const agentId = document.getElementById('agentId').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+                errorDiv.textContent = 'Ugyldig agent ID eller passord';
+                return;
+            }
+
+            currentAgent = agentCredentials[agentId];
+            localStorage.setItem('loggedInAgent', agentId);
+            
+            showDashboard();
+            loadAgentData();
+            errorDiv.textContent = '';
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInAgent');
+            document.getElementById('login').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('agentId').value = '';
+            document.getElementById('password').value = '';
+            currentAgent = null;
+        }
+
+        function showDashboard() {
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        async function loadAgentData() {
+            // Hent data fra Google Sheets
+            const agentId = Object.keys(agentCredentials).find(key => agentCredentials[key] === currentAgent);
+            const sheetData = await fetchFromSheets(agentId);
+            
+            if (sheetData && sheetData.success) {
+                // Oppdater agent info
+                document.getElementById('agentName').textContent = sheetData.agent.name;
+                document.getElementById('agentTeam').textContent = sheetData.agent.team;
+                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO');
+
+                // Oppdater KPI-er med ekte data
+                const current = sheetData.currentMonth;
+                const previous = sheetData.previousMonth;
+                
+                document.getElementById('casesResolved').textContent = current.casesResolved;
+                document.getElementById('avgResponseTime').textContent = current.avgResponseTime;
+                document.getElementById('satisfaction').textContent = current.satisfaction;
+                document.getElementById('firstResolve').textContent = current.firstResolve + '%';
+
+                // Beregn endringer
+                updateKPIChanges(current, previous);
+
+                // Sjekk om agent har jobbet over 6 måneder (basert på hvor mye historisk data som finnes)
+                if (sheetData.historical.months.length >= 6) {
+                    updateTeamComparison(sheetData.team);
+                    document.getElementById('teamComparison').style.display = 'block';
+                }
+
+                // Lag diagrammer med ekte data
+                createChartsFromData(sheetData.historical);
+            } else {
+                // Fallback til mock data hvis API feiler
+                loadMockData();
+            }
+        }
+
+        function updateKPIChanges(current, previous) {
+            // Cases resolved change
+            const casesChange = ((current.casesResolved - previous.casesResolved) / previous.casesResolved * 100).toFixed(0);
+            document.getElementById('casesChange').textContent = `${casesChange > 0 ? '+' : ''}${casesChange}% fra forrige måned`;
+            document.getElementById('casesChange').className = `kpi-change ${casesChange >= 0 ? 'positive' : 'negative'}`;
+
+            // Satisfaction change
+            const satChange = (current.satisfaction - previous.satisfaction).toFixed(1);
+            document.getElementById('satisfactionChange').textContent = `${satChange > 0 ? '+' : ''}${satChange} fra forrige måned`;
+            document.getElementById('satisfactionChange').className = `kpi-change ${satChange >= 0 ? 'positive' : 'negative'}`;
+
+            // Response time og first resolve - simplified for now
+            document.getElementById('responseChange').textContent = 'Se graf for trend';
+            document.getElementById('resolveChange').textContent = 'Se graf for trend';
+        }
+
+        function updateTeamComparison(teamData) {
+            document.querySelector('.team-stats').innerHTML = `
+                <div class="team-stat">
+                    <div class="team-stat-value">${Math.round(teamData.avgCases)}</div>
+                    <div class="team-stat-label">Team snitt saker</div>
+                </div>
+                <div class="team-stat">
+                    <div class="team-stat-value">${teamData.avgCsat.toFixed(1)}</div>
+                    <div class="team-stat-label">Team CSAT</div>
+                </div>
+                <div class="team-stat">
+                    <div class="team-stat-value">#${teamData.ranking}</div>
+                    <div class="team-stat-label">av ${teamData.totalTeams} team</div>
+                </div>
+            `;
+        }
+
+        function createChartsFromData(historical) {
+            // Destroy existing charts
+            if (progressChart) progressChart.destroy();
+            if (responseChart) responseChart.destroy();
+
+            // Progresjon diagram
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: historical.months.slice(-7), // Siste 7 måneder
+                    datasets: [{
+                        label: 'Saker løst',
+                        data: historical.casesResolved.slice(-7),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Responstid diagram
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: historical.months.slice(-7),
+                    datasets: [{
+                        label: 'Responstid (timer)',
+                        data: historical.responseTime.slice(-7),
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 't';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadMockData() {
+            // Fallback til original mock data structure
+            document.getElementById('agentName').textContent = currentAgent.name;
+            document.getElementById('agentTeam').textContent = currentAgent.team;
+            document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Mock data)';
+
+            const data = currentAgent.data;
+            document.getElementById('casesResolved').textContent = data.casesResolved;
+            document.getElementById('avgResponseTime').textContent = data.avgResponseTime;
+            document.getElementById('satisfaction').textContent = data.satisfaction;
+            document.getElementById('firstResolve').textContent = data.firstResolve + '%';
+
+            // Sjekk om agent har jobbet over 6 måneder
+            const startDate = new Date(currentAgent.startDate);
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            if (startDate <= sixMonthsAgo) {
+                document.getElementById('teamComparison').style.display = 'block';
+            }
+
+            createCharts(); // Original chart function for mock data
+        }
+
+        function createCharts() {
+            // Destroy existing charts
+            if (progressChart) progressChart.destroy();
+            if (responseChart) responseChart.destroy();
+
+            const data = currentAgent.data;
+
+            // Progresjon diagram
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Saker løst',
+                        data: data.monthlyProgress,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Responstid diagram
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Responstid (timer)',
+                        data: data.responseTimeTrend,
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 't';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Auto-refresh data hvert 15. minutt
+        function autoRefresh() {
+            if (currentAgent) {
+                // Her ville du normalt hentet nye data fra Google Sheets API
+                console.log('Refresher data fra Sheets...');
+                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO');
+            }
+        }
+
+        // Sjekk om bruker allerede er logget inn
+        window.onload = function() {
+            const savedAgent = localStorage.getItem('loggedInAgent');
+            if (savedAgent && agentCredentials[savedAgent]) {
+                currentAgent = agentCredentials[savedAgent];
+                showDashboard();
+                loadAgentData();
+            }
+
+            // Start auto-refresh timer
+            setInterval(autoRefresh, 15 * 60 * 1000); // 15 minutter
+        };
+
+        // Google Apps Script API kall
+        async function fetchFromSheets(agentId) {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/DIN_SCRIPT_ID_HER/exec';
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?agent=${encodeURIComponent(agentId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data;
+                } else {
+                    console.error('Sheet API error:', data.error);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
