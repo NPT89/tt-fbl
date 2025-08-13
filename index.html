@@ -906,6 +906,8 @@
                         delete window[callbackName];
                         reject(new Error('Failed to load script'));
                     };
+
+                    script.crossOrigin = 'anonymous';
                     
                     const params = new URLSearchParams({
                         callback: callbackName,
