@@ -365,23 +365,40 @@
         let progressChart = null;
         let responseChart = null;
 
-        function login() {
-            const agentId = document.getElementById('agentId').value.toLowerCase();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
+function login() {
+    const agentId = document.getElementById('agentId').value.toLowerCase();
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    const agentCredentials = {
+        'simen.froyhaug': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
+        'simen': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
+        'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
+        'jathushiga': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
+        'elena.myhre': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' },
+        'elena': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' }
+    };
 
-            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
-                errorDiv.textContent = 'Ugyldig agent ID eller passord';
-                return;
-            }
+    if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+        errorDiv.textContent = 'Ugyldig agent ID eller passord';
+        return;
+    }
 
-            currentAgent = agentCredentials[agentId];
-            localStorage.setItem('loggedInAgent', agentId);
-            
-            showDashboard();
-            loadAgentData();
-            errorDiv.textContent = '';
-        }
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    
+    // Midlertidig hardkodet data for Simen
+    if (agentId.includes('simen')) {
+        document.getElementById('agentName').textContent = 'Simen F.';
+        document.getElementById('agentTeam').textContent = 'August';
+        document.getElementById('casesResolved').textContent = '136';
+        document.getElementById('avgResponseTime').textContent = '26min';
+        document.getElementById('satisfaction').textContent = '4.5';
+        document.getElementById('firstResolve').textContent = '81%';
+    }
+    
+    errorDiv.textContent = '';
+}
 
         function logout() {
             localStorage.removeItem('loggedInAgent');
