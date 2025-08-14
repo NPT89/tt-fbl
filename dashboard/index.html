@@ -506,7 +506,7 @@
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
             
-            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
+            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
             
@@ -728,44 +728,40 @@
             container.appendChild(svg);
         }
 
-        // FIKSET: Enklere og mer robust JSONP
+        // FIKSET: Bruk samme pattern som ditt fungerende prosjekt
         async function fetchFromSheets(agentId) {
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyrIEdER5I2lMj8521kohoAGDATM4FtOjPDSzCXBeRZLBskMeu1P5IZD4NCTDF3Yn11/exec';
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec/exec';
             
-            console.log('🔄 Starter JSONP kall');
+            console.log('🔄 Bruker samme pattern som fungerende prosjekt');
             
             return new Promise((resolve, reject) => {
-                const callbackName = 'jsonp_' + Date.now();
+                const callbackName = 'loadPlayersCallback_' + Date.now();
+                const script = document.createElement('script');
                 
-                // Global callback function
-                window[callbackName] = function(data) {
-                    console.log('✅ JSONP Success:', data);
+                window[callbackName] = function(response) {
                     document.head.removeChild(script);
                     delete window[callbackName];
-                    resolve(data);
+                    
+                    console.log('✅ Response mottatt:', response);
+                    resolve(response);
                 };
-                
-                // Create script
-                const script = document.createElement('script');
-                script.src = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}`;
                 
                 script.onerror = function() {
-                    console.log('❌ JSONP Failed');
                     document.head.removeChild(script);
                     delete window[callbackName];
-                    reject(new Error('JSONP failed'));
+                    console.log('❌ Script feilet');
+                    reject(new Error('Script load failed'));
                 };
                 
-                console.log('📡 JSONP URL:', script.src);
+                // EKSAKT samme pattern som fungerende prosjekt
+                script.src = SCRIPT_URL + '?callback=' + callbackName + '&agent=' + encodeURIComponent(agentId);
                 document.head.appendChild(script);
                 
-                // Timeout after 15 seconds
                 setTimeout(() => {
-                    if (window[callbackName]) {
-                        console.log('⏰ JSONP Timeout');
+                    if (document.head.contains(script)) {
                         document.head.removeChild(script);
                         delete window[callbackName];
-                        reject(new Error('JSONP timeout'));
+                        reject(new Error('Timeout'));
                     }
                 }, 15000);
             });
