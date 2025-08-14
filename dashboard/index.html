@@ -506,7 +506,7 @@
             const apiLink = document.getElementById('apiLink');
             
             // FIKSET: Riktig URL uten ekstra /exec
-            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbzLynx0JY1yvcja6tcdPEEJUrLSg6webF6qSIanDY-xkWQFIlTFCbAaMDh1TI_H5g01/exec?agent=${encodeURIComponent(agentId)}`;
+            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbz8aryuo-xhwcaaMRC7YGJ9W0JZpOggUe2qKTe0v0aiFytCdvXdbJxZZvFh-jLoWxo/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
             
@@ -629,7 +629,7 @@
         // FIKSET: Ny fetch-metode som alternativ til JSONP
         async function fetchFromSheetsAlternative(agentId) {
             // FIKSET: Riktig URL uten ekstra /exec
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzLynx0JY1yvcja6tcdPEEJUrLSg6webF6qSIanDY-xkWQFIlTFCbAaMDh1TI_H5g01/exec';
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbz8aryuo-xhwcaaMRC7YGJ9W0JZpOggUe2qKTe0v0aiFytCdvXdbJxZZvFh-jLoWxo/exec/exec';
             
             try {
                 const response = await fetch(SCRIPT_URL + '?agent=' + encodeURIComponent(agentId), {
@@ -652,7 +652,7 @@
         // FIKSET: Forbedret JSONP implementasjon
         async function fetchFromSheetsJSONP(agentId) {
             // FIKSET: Riktig URL uten ekstra /exec
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzLynx0JY1yvcja6tcdPEEJUrLSg6webF6qSIanDY-xkWQFIlTFCbAaMDh1TI_H5g01/exec';
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbz8aryuo-xhwcaaMRC7YGJ9W0JZpOggUe2qKTe0v0aiFytCdvXdbJxZZvFh-jLoWxo/exec';
             
             return new Promise((resolve, reject) => {
                 const callbackName = 'agentDataCallback_' + Date.now();
