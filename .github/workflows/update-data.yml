@@ -18,7 +18,7 @@ jobs:
           echo "🚀 Henter data via Netlify proxy..."
           
           # Definer proxy URL (erstatt med din Netlify URL)
-          PROXY_URL="https://bucolic-syrniki-f91556.netlify.app"
+          PROXY_URL="https://chimerical-meerkat-68dc28.netlify.app"
           
           # Hent data for alle agenter
           agents=("simen.froyhaug" "jathushiga.suth" "elena.myhre")
