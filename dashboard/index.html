@@ -473,21 +473,26 @@
             
             if (agentId.includes('simen')) {
                 try {
-                    console.log('Attempting to load live data for:', agentId);
-                    setDataStatus('loading', 'Trying to load live data...');
+                    console.log('🔄 Forsøker å hente live data for:', agentId);
+                    setDataStatus('loading', 'Henter live data...');
                     
-                    setTimeout(() => {
-                        console.log('Auto-load failed (expected due to auth), showing manual import');
-                        showManualDataOption(agentId);
-                        updateDashboardWithFallbackData(agentId);
-                        setDataStatus('error', 'Auto-load failed - use manual import or fallback data shown');
-                    }, 2000);
+                    // FIKSET: Forsøk faktisk å hente data i stedet for å gi opp
+                    const sheetData = await fetchFromSheets(agentId);
+                    
+                    if (sheetData && sheetData.success) {
+                        console.log('✅ Live data hentet!', sheetData);
+                        updateDashboardWithLiveData(sheetData);
+                        setDataStatus('live', 'Live Data - ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO'));
+                        console.log('✅ Dashboard oppdatert med live data');
+                    } else {
+                        throw new Error('Invalid data format: ' + JSON.stringify(sheetData));
+                    }
                     
                 } catch (error) {
-                    console.error('Error during live data attempt:', error);
+                    console.error('❌ Feil ved henting av live data:', error);
                     showManualDataOption(agentId);
                     updateDashboardWithFallbackData(agentId);
-                    setDataStatus('error', 'Auto-load failed - use manual import or fallback data shown');
+                    setDataStatus('error', 'Live data feilet - bruker fallback. Error: ' + error.message);
                 }
             } else {
                 updateDashboardWithDemoData(agentId);
@@ -501,7 +506,7 @@
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
             
-            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbyrIEdER5I2lMj8521kohoAGDATM4FtOjPDSzCXBeRZLBskMeu1P5IZD4NCTDF3Yn11/exec?agent=${encodeURIComponent(agentId)}`;
+            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
             
@@ -708,9 +713,6 @@
             });
             
             container.innerHTML = '';
-            container.appendChild(svg);
-        }
-
         // Auto-login for testing
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -722,6 +724,75 @@
                 login();
             }
         };
+
+        // FIKSET: Forbedret JSONP implementation med bedre error handling
+        async function fetchFromSheets(agentId) {
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyrIEdER5I2lMj8521kohoAGDATM4FtOjPDSzCXBeRZLBskMeu1P5IZD4NCTDF3Yn11/exec';
+            
+            console.log('🔄 Starter JSONP kall til:', SCRIPT_URL);
+            
+            return new Promise((resolve, reject) => {
+                const callbackName = 'agentCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                let script = null;
+                let timeoutId = null;
+                let resolved = false;
+                
+                // Cleanup function
+                const cleanup = () => {
+                    if (script && script.parentNode) {
+                        console.log('🧹 Cleaning up script element');
+                        script.parentNode.removeChild(script);
+                    }
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                    }
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+                };
+                
+                // Set up callback
+                window[callbackName] = function(data) {
+                    if (resolved) return;
+                    resolved = true;
+                    
+                    console.log('✅ JSONP callback mottatt:', data);
+                    cleanup();
+                    resolve(data);
+                };
+                
+                // Set up timeout
+                timeoutId = setTimeout(() => {
+                    if (resolved) return;
+                    resolved = true;
+                    
+                    console.log('⏰ JSONP timeout etter 10 sekunder');
+                    cleanup();
+                    reject(new Error('Request timeout after 10 seconds'));
+                }, 10000);
+                
+                // Create and load script
+                script = document.createElement('script');
+                const url = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}&_=${Date.now()}`;
+                script.src = url;
+                
+                script.onload = () => {
+                    console.log('📜 Script loaded successfully');
+                };
+                
+                script.onerror = (error) => {
+                    if (resolved) return;
+                    resolved = true;
+                    
+                    console.log('❌ Script load error:', error);
+                    cleanup();
+                    reject(new Error('Script load failed: ' + (error.message || 'Unknown error')));
+                };
+                
+                console.log('📡 Loading JSONP script:', url);
+                document.head.appendChild(script);
+            });
+        }
     </script>
 </body>
 </html>
