@@ -1,0 +1,9 @@
+{
+  "name": "agent-dashboard-proxy",
+  "version": "1.0.0",
+  "description": "Proxy for agent dashboard data",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build needed'"
+  }
+}
