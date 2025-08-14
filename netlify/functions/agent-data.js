@@ -26,10 +26,11 @@ exports.handler = async (event, context) => {
     console.log('🔄 Proxy request for agent:', agentId);
 
     // Din Google Apps Script URL
-    const googleScriptUrl = 'https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec';
-    
-    // Prøv å hente data
-    const response = await fetch(`${googleScriptUrl}?agent=${encodeURIComponent(agentId)}`, {
+ // Nytt public Google Sheet
+const PUBLIC_SHEET_ID = 'DITT_NYE_SHEET_ID_HER';
+const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${1Ivolxn5wJsUUzVEAb9Ww25tfF5ip1-2mhzSHJRePNz0}/values/AgentData`;
+
+const response = await fetch(sheetsUrl);
       method: 'GET',
       headers: {
         'User-Agent': 'Netlify-Proxy/1.0'
