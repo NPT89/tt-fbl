@@ -339,7 +339,7 @@
                 <div id="manualDataSection" class="manual-data-section" style="display: none;">
                     <h3>🔧 Manual Data Import</h3>
                     <p>Automatic data loading failed. You can manually paste the API response here:</p>
-                    <p><strong>1.</strong> Open <a href="https://script.google.com/a/macros/visma.com/s/AKfycbwVKuDgveJNVCoil4efh556lm71P31raYwGa1Z5IRpGEOTBsPj3relyYUZ4PsYqgvL5/exec?agent=simen.froyhaug" target="_blank">this API link</a></p>
+                    <p><strong>1.</strong> Open <a href="https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=simen.froyhaug" target="_blank">this API link</a></p>
                     <p><strong>2.</strong> Copy the entire JSON response and paste it below:</p>
                     <textarea id="manualDataInput" placeholder='{"success":true,"agent":{"name":"..."},...}'></textarea>
                     <button onclick="loadManualData()">Load Manual Data</button>
@@ -466,7 +466,7 @@
         function showManualDataOption(agentId) {
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
-            apiLink.href = `https://script.google.com/a/macros/visma.com/s/AKfycbwVKuDgveJNVCoil4efh556lm71P31raYwGa1Z5IRpGEOTBsPj3relyYUZ4PsYqgvL5/exec?agent=${encodeURIComponent(agentId)}`;
+            apiLink.href = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
             manualSection.style.display = 'block';
         }
 
