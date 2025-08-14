@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // FIKSET: Chart.js event error handler
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes("can't access property \"target\"")) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -457,7 +466,7 @@
         function showManualDataOption(agentId) {
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
-            apiLink.href = `https://script.google.com/a/macros/visma.com/s/AKfycbxOTkGr6HCODxGXoku4hKhe7WrSSeeb60VGywiXH4eV0mz1LWf7wO7zxua5ZG__tFBl/exec?agent=${encodeURIComponent(agentId)}`;
+            apiLink.href = `https://script.google.com/a/macros/visma.com/s/AKfycbwVKuDgveJNVCoil4efh556lm71P31raYwGa1Z5IRpGEOTBsPj3relyYUZ4PsYqgvL5/exec?agent=${encodeURIComponent(agentId)}`;
             manualSection.style.display = 'block';
         }
 
