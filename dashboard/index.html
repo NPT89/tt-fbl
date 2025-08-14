@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
-    <!-- FIKSET: Ingen Chart.js - bruker CSS charts i stedet -->
     <style>
         * {
             margin: 0;
@@ -135,7 +134,6 @@
             color: #333;
         }
 
-        /* CSS CHARTS - Erstatter Chart.js */
         .css-chart {
             width: 100%;
             height: 200px;
@@ -289,6 +287,7 @@
         .status-demo { background: #fff3cd; color: #856404; }
         .status-error { background: #f8d7da; color: #721c24; }
         .status-manual { background: #d1ecf1; color: #0c5460; }
+        .status-loading { background: #e2e3e5; color: #495057; }
 
         .manual-data-section {
             background: #e7f3ff;
@@ -378,7 +377,7 @@
                 <div id="manualDataSection" class="manual-data-section" style="display: none;">
                     <h3>🔧 Manual Data Import</h3>
                     <p>Automatic data loading failed. You can manually paste the API response here:</p>
-                    <p><strong>1.</strong> Open <a href="#" target="_blank">this API link</a> (will be updated with correct agent)</p>
+                    <p><strong>1.</strong> Open <a href="#" id="apiLink" target="_blank">this API link</a></p>
                     <p><strong>2.</strong> Copy the entire JSON response and paste it below:</p>
                     <textarea id="manualDataInput" placeholder='{"success":true,"agent":{"name":"..."},...}'></textarea>
                     <button onclick="loadManualData()">Load Manual Data</button>
@@ -476,8 +475,8 @@
                     console.log('🔄 Forsøker å hente live data for:', agentId);
                     setDataStatus('loading', 'Henter live data...');
                     
-                    // FIKSET: Forsøk faktisk å hente data i stedet for å gi opp
-                    const sheetData = await fetchFromSheets(agentId);
+                    // First try with fetch method
+                    const sheetData = await fetchFromSheetsAlternative(agentId);
                     
                     if (sheetData && sheetData.success) {
                         console.log('✅ Live data hentet!', sheetData);
@@ -504,8 +503,9 @@
 
         function showManualDataOption(agentId) {
             const manualSection = document.getElementById('manualDataSection');
-            const apiLink = manualSection.querySelector('a');
+            const apiLink = document.getElementById('apiLink');
             
+            // FIKSET: Riktig URL uten ekstra /exec
             const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
@@ -555,27 +555,41 @@
         }
 
         function updateDashboardWithLiveData(sheetData) {
-            document.getElementById('agentName').textContent = sheetData.agent.name;
-            document.getElementById('agentTeam').textContent = sheetData.agent.team;
-            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
-            document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime;
-            document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction).toFixed(1);
-            document.getElementById('firstResolve').textContent = sheetData.currentMonth.firstResolve + '%';
+            console.log('🔄 Oppdaterer dashboard med live data:', sheetData);
             
-            document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats} chats, ${sheetData.currentMonth.totalCalls} calls`;
-            document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails} e-poster`;
-            document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays} arbeidsdager`;
+            // Update agent info
+            document.getElementById('agentName').textContent = sheetData.agent.name || 'Unknown Agent';
+            document.getElementById('agentTeam').textContent = sheetData.agent.team || 'Unknown Team';
+            
+            // Update KPIs
+            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved || 0;
+            document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime || '0min';
+            document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction || 0).toFixed(1);
+            document.getElementById('firstResolve').textContent = (sheetData.currentMonth.firstResolve || 0) + '%';
+            
+            // Update additional info in the change fields
+            document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats || 0} chats, ${sheetData.currentMonth.totalCalls || 0} calls`;
+            document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails || 0} e-poster`;
+            document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays || 0} arbeidsdager`;
             document.getElementById('resolveChange').textContent = 'Live data';
             
+            // Update team comparison if available
             if (sheetData.team) {
-                document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases;
-                document.getElementById('teamAvgCsat').textContent = sheetData.team.avgCsat.toFixed(1);
-                document.getElementById('agentRank').textContent = '#' + sheetData.team.ranking;
-                document.getElementById('teamSize').textContent = sheetData.team.totalTeams + ' agenter';
+                document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases || 0;
+                document.getElementById('teamAvgCsat').textContent = parseFloat(sheetData.team.avgCsat || 0).toFixed(1);
+                document.getElementById('agentRank').textContent = '#' + (sheetData.team.ranking || 1);
+                document.getElementById('teamSize').textContent = (sheetData.team.totalTeams || 1) + ' agenter';
                 document.getElementById('teamComparison').style.display = 'block';
             }
             
-            createCSSChartsWithLiveData(sheetData.historical);
+            // Create charts with historical data
+            if (sheetData.historical) {
+                createCSSChartsWithLiveData(sheetData.historical);
+            } else {
+                createCSSChartsWithDefaultData();
+            }
+            
+            console.log('✅ Dashboard oppdatert suksessfullt');
         }
 
         function updateDashboardWithFallbackData(agentId) {
@@ -612,10 +626,90 @@
             document.getElementById('dashboard').style.display = 'block';
         }
 
-        // CSS CHART FUNCTIONS - Erstatter Chart.js
+        // FIKSET: Ny fetch-metode som alternativ til JSONP
+        async function fetchFromSheetsAlternative(agentId) {
+            // FIKSET: Riktig URL uten ekstra /exec
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec';
+            
+            try {
+                const response = await fetch(SCRIPT_URL + '?agent=' + encodeURIComponent(agentId), {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.log('❌ Fetch failed, falling back to JSONP:', error);
+                return await fetchFromSheetsJSONP(agentId);
+            }
+        }
+
+        // FIKSET: Forbedret JSONP implementasjon
+        async function fetchFromSheetsJSONP(agentId) {
+            // FIKSET: Riktig URL uten ekstra /exec
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec';
+            
+            return new Promise((resolve, reject) => {
+                const callbackName = 'agentDataCallback_' + Date.now();
+                const script = document.createElement('script');
+                
+                // FIKSET: Bedre error handling
+                window[callbackName] = function(response) {
+                    try {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        console.log('✅ JSONP Response mottatt:', response);
+                        resolve(response);
+                    } catch (e) {
+                        console.error('❌ Error in JSONP callback:', e);
+                        reject(e);
+                    }
+                };
+                
+                script.onerror = function() {
+                    try {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                    } catch (e) {
+                        // Ignore cleanup errors
+                    }
+                    console.log('❌ JSONP Script failed to load');
+                    reject(new Error('Script load failed'));
+                };
+                
+                script.src = SCRIPT_URL + '?callback=' + callbackName + '&agent=' + encodeURIComponent(agentId);
+                document.head.appendChild(script);
+                
+                // Timeout after 15 seconds
+                setTimeout(() => {
+                    try {
+                        if (document.head.contains(script)) {
+                            document.head.removeChild(script);
+                        }
+                        if (window[callbackName]) {
+                            delete window[callbackName];
+                        }
+                    } catch (e) {
+                        // Ignore cleanup errors
+                    }
+                    reject(new Error('Request timeout'));
+                }, 15000);
+            });
+        }
+
+        // CSS CHART FUNCTIONS
         function createCSSChartsWithLiveData(historicalData) {
-            createLineChart('progressChart', historicalData.months, historicalData.casesResolved, 'saker');
-            createBarChart('responseChart', historicalData.months, historicalData.responseTime, 't');
+            if (historicalData && historicalData.months && historicalData.casesResolved) {
+                createLineChart('progressChart', historicalData.months, historicalData.casesResolved, 'saker');
+                createBarChart('responseChart', historicalData.months, historicalData.responseTime, 't');
+            } else {
+                createCSSChartsWithDefaultData();
+            }
         }
 
         function createCSSChartsWithSimenData() {
@@ -638,6 +732,8 @@
 
         function createBarChart(containerId, labels, data, unit) {
             const container = document.getElementById(containerId);
+            if (!container || !data || !Array.isArray(data)) return;
+            
             const maxValue = Math.max(...data);
             
             container.innerHTML = '';
@@ -654,9 +750,11 @@
 
         function createLineChart(containerId, labels, data, unit) {
             const container = document.getElementById(containerId);
+            if (!container || !data || !Array.isArray(data)) return;
+            
             const maxValue = Math.max(...data);
             const minValue = Math.min(...data);
-            const range = maxValue - minValue;
+            const range = maxValue - minValue || 1; // Avoid division by zero
             
             const svgNS = "http://www.w3.org/2000/svg";
             const svg = document.createElementNS(svgNS, "svg");
@@ -713,59 +811,24 @@
             });
             
             container.innerHTML = '';
-        // Auto-login for testing
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const autoLogin = urlParams.get('auto');
-            
-            if (autoLogin === 'simen') {
-                document.getElementById('agentId').value = 'simen.froyhaug';
-                document.getElementById('password').value = 'pass123';
-                login();
-            }
-        };
-
             container.appendChild(svg);
         }
 
-        // FIKSET: Bruk samme pattern som ditt fungerende prosjekt
-        async function fetchFromSheets(agentId) {
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxMVFNqD-TMUL1GMc0o1-PkZPc0DusBrt-K-o6HlE_lqmwaSrHO5jDqwvWz4OrPTdcW/exec';
-            
-            console.log('🔄 Bruker samme pattern som fungerende prosjekt');
-            
-            return new Promise((resolve, reject) => {
-                const callbackName = 'loadPlayersCallback_' + Date.now();
-                const script = document.createElement('script');
+        // FIKSET: Auto-login med bedre error handling
+        window.addEventListener('load', function() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const autoLogin = urlParams.get('auto');
                 
-                window[callbackName] = function(response) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    
-                    console.log('✅ Response mottatt:', response);
-                    resolve(response);
-                };
-                
-                script.onerror = function() {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    console.log('❌ Script feilet');
-                    reject(new Error('Script load failed'));
-                };
-                
-                // EKSAKT samme pattern som fungerende prosjekt
-                script.src = SCRIPT_URL + '?callback=' + callbackName + '&agent=' + encodeURIComponent(agentId);
-                document.head.appendChild(script);
-                
-                setTimeout(() => {
-                    if (document.head.contains(script)) {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('Timeout'));
-                    }
-                }, 15000);
-            });
-        }
+                if (autoLogin === 'simen') {
+                    document.getElementById('agentId').value = 'simen.froyhaug';
+                    document.getElementById('password').value = 'pass123';
+                    login();
+                }
+            } catch (error) {
+                console.error('Error in auto-login:', error);
+            }
+        });
     </script>
 </body>
 </html>
