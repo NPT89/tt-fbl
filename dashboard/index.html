@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
-    <!-- FIKSET: Bruk Chart.js 2.9.4 (mer stabil versjon) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <!-- FIKSET: Ingen Chart.js - bruker CSS charts i stedet -->
     <style>
         * {
             margin: 0;
@@ -136,6 +135,69 @@
             color: #333;
         }
 
+        /* CSS CHARTS - Erstatter Chart.js */
+        .css-chart {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+        }
+
+        .chart-bar {
+            flex: 1;
+            margin: 0 2px;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            min-height: 10px;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .chart-bar::before {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #666;
+        }
+
+        .line-chart {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .line-chart svg {
+            width: 100%;
+            height: 100%;
+        }
+
         .team-comparison {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -223,25 +285,10 @@
             margin: 5px 0;
         }
 
-        .status-live {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-demo {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-manual {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
+        .status-live { background: #d4edda; color: #155724; }
+        .status-demo { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-manual { background: #d1ecf1; color: #0c5460; }
 
         .manual-data-section {
             background: #e7f3ff;
@@ -327,7 +374,7 @@
             </div>
 
             <div class="content">
-                <!-- Manual Data Input (shown when automatic fails) -->
+                <!-- Manual Data Input -->
                 <div id="manualDataSection" class="manual-data-section" style="display: none;">
                     <h3>🔧 Manual Data Import</h3>
                     <p>Automatic data loading failed. You can manually paste the API response here:</p>
@@ -365,11 +412,11 @@
                 <div class="charts-section">
                     <div class="chart-container">
                         <div class="chart-title">Månedlig progresjon - Saker løst</div>
-                        <canvas id="progressChart" width="400" height="200"></canvas>
+                        <div id="progressChart" class="line-chart"></div>
                     </div>
                     <div class="chart-container">
                         <div class="chart-title">Responstid trend</div>
-                        <canvas id="responseChart" width="300" height="200"></canvas>
+                        <div id="responseChart" class="css-chart"></div>
                     </div>
                 </div>
 
@@ -410,8 +457,6 @@
         };
 
         let currentAgent = null;
-        let progressChart = null;
-        let responseChart = null;
 
         async function login() {
             const agentId = document.getElementById('agentId').value.toLowerCase();
@@ -426,28 +471,25 @@
             currentAgent = agentCredentials[agentId];
             showDashboard();
             
-            // Try to load live data for Simen
             if (agentId.includes('simen')) {
                 try {
                     console.log('Attempting to load live data for:', agentId);
                     setDataStatus('loading', 'Trying to load live data...');
                     
-                    // Since JSONP fails due to authentication, we'll show manual import option
                     setTimeout(() => {
-                        console.log('❌ Auto-load failed (expected due to auth), showing manual import');
+                        console.log('Auto-load failed (expected due to auth), showing manual import');
                         showManualDataOption(agentId);
                         updateDashboardWithFallbackData(agentId);
                         setDataStatus('error', 'Auto-load failed - use manual import or fallback data shown');
                     }, 2000);
                     
                 } catch (error) {
-                    console.error('❌ Error during live data attempt:', error);
+                    console.error('Error during live data attempt:', error);
                     showManualDataOption(agentId);
                     updateDashboardWithFallbackData(agentId);
                     setDataStatus('error', 'Auto-load failed - use manual import or fallback data shown');
                 }
             } else {
-                // Other agents get demo data
                 updateDashboardWithDemoData(agentId);
                 setDataStatus('demo', 'Demo Data');
             }
@@ -459,7 +501,6 @@
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
             
-            // FIKSET: Oppdater både href og tekst med riktig agent
             const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
@@ -498,21 +539,11 @@
             statusEl.className = `status-indicator status-${type}`;
             
             switch(type) {
-                case 'live':
-                    statusEl.textContent = 'LIVE DATA';
-                    break;
-                case 'demo':
-                    statusEl.textContent = 'DEMO DATA';
-                    break;
-                case 'error':
-                    statusEl.textContent = 'FALLBACK DATA';
-                    break;
-                case 'loading':
-                    statusEl.textContent = 'LOADING...';
-                    break;
-                case 'manual':
-                    statusEl.textContent = 'MANUAL DATA';
-                    break;
+                case 'live': statusEl.textContent = 'LIVE DATA'; break;
+                case 'demo': statusEl.textContent = 'DEMO DATA'; break;
+                case 'error': statusEl.textContent = 'FALLBACK DATA'; break;
+                case 'loading': statusEl.textContent = 'LOADING...'; break;
+                case 'manual': statusEl.textContent = 'MANUAL DATA'; break;
             }
             
             updatedEl.textContent = message;
@@ -526,13 +557,11 @@
             document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction).toFixed(1);
             document.getElementById('firstResolve').textContent = sheetData.currentMonth.firstResolve + '%';
             
-            // Update change indicators with live data
             document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats} chats, ${sheetData.currentMonth.totalCalls} calls`;
             document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails} e-poster`;
             document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays} arbeidsdager`;
             document.getElementById('resolveChange').textContent = 'Live data';
             
-            // Update team comparison
             if (sheetData.team) {
                 document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases;
                 document.getElementById('teamAvgCsat').textContent = sheetData.team.avgCsat.toFixed(1);
@@ -541,7 +570,7 @@
                 document.getElementById('teamComparison').style.display = 'block';
             }
             
-            createChartsWithLiveData(sheetData.historical);
+            createCSSChartsWithLiveData(sheetData.historical);
         }
 
         function updateDashboardWithFallbackData(agentId) {
@@ -555,13 +584,13 @@
             document.getElementById('responseChange').textContent = '5 e-poster';
             document.getElementById('satisfactionChange').textContent = '12 arbeidsdager';
             document.getElementById('resolveChange').textContent = 'Fallback data';
-            createChartsWithSimenData();
+            createCSSChartsWithSimenData();
         }
 
         function updateDashboardWithDemoData(agentId) {
             document.getElementById('agentName').textContent = agentCredentials[agentId].name;
             document.getElementById('agentTeam').textContent = 'Support Team';
-            createDefaultCharts();
+            createCSSChartsWithDefaultData();
         }
 
         function logout() {
@@ -578,183 +607,108 @@
             document.getElementById('dashboard').style.display = 'block';
         }
 
-        function createChartsWithLiveData(historicalData) {
-            // FIKSET: Chart.js 2.9.4 syntax
-            if (progressChart) progressChart.destroy();
-            if (responseChart) responseChart.destroy();
+        // CSS CHART FUNCTIONS - Erstatter Chart.js
+        function createCSSChartsWithLiveData(historicalData) {
+            createLineChart('progressChart', historicalData.months, historicalData.casesResolved, 'saker');
+            createBarChart('responseChart', historicalData.months, historicalData.responseTime, 't');
+        }
 
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(progressCtx, {
-                type: 'line',
-                data: {
-                    labels: historicalData.months,
-                    datasets: [{
-                        label: 'Saker løst',
-                        data: historicalData.casesResolved,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        lineTension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    legend: { display: false },
-                    scales: { 
-                        yAxes: [{ ticks: { beginAtZero: true } }]
-                    }
-                }
-            });
+        function createCSSChartsWithSimenData() {
+            const months = ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'];
+            const cases = [45, 62, 78, 89, 103, 121, 294];
+            const response = [32, 30, 28, 31, 29, 27, 59];
+            
+            createLineChart('progressChart', months, cases, 'saker');
+            createBarChart('responseChart', months, response, 'min');
+        }
 
-            const responseCtx = document.getElementById('responseChart').getContext('2d');
-            responseChart = new Chart(responseCtx, {
-                type: 'bar',
-                data: {
-                    labels: historicalData.months,
-                    datasets: [{
-                        label: 'Responstid (timer)',
-                        data: historicalData.responseTime,
-                        backgroundColor: 'rgba(118, 75, 162, 0.8)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    legend: { display: false },
-                    scales: {
-                        yAxes: [{
-                            ticks: { 
-                                beginAtZero: true,
-                                callback: function(value) { return value + 't'; }
-                            }
-                        }]
-                    }
-                }
+        function createCSSChartsWithDefaultData() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'];
+            const cases = [85, 92, 78, 85, 99, 120, 127];
+            const response = [3.1, 2.8, 2.6, 2.9, 2.5, 2.4, 2.3];
+            
+            createLineChart('progressChart', months, cases, 'saker');
+            createBarChart('responseChart', months, response, 't');
+        }
+
+        function createBarChart(containerId, labels, data, unit) {
+            const container = document.getElementById(containerId);
+            const maxValue = Math.max(...data);
+            
+            container.innerHTML = '';
+            
+            data.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = `${(value / maxValue) * 100}%`;
+                bar.setAttribute('data-value', value + unit);
+                bar.setAttribute('data-label', labels[index]);
+                container.appendChild(bar);
             });
         }
 
-        function createChartsWithSimenData() {
-            // FIKSET: Destroy eksisterende charts sikkert
-            try {
-                if (progressChart) {
-                    progressChart.destroy();
-                    progressChart = null;
-                }
-                if (responseChart) {
-                    responseChart.destroy();
-                    responseChart = null;
-                }
-            } catch (e) {
-                console.log('Chart destroy error (ignored):', e.message);
-            }
-
-            try {
-                const progressCtx = document.getElementById('progressChart').getContext('2d');
-                progressChart = new Chart(progressCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
-                        datasets: [{
-                            label: 'Saker løst',
-                            data: [45, 62, 78, 89, 103, 121, 294],
-                            borderColor: '#667eea',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } },
-                        events: ['click'],
-                        interaction: { intersect: false, mode: 'index' }
-                    }
-                });
-
-                const responseCtx = document.getElementById('responseChart').getContext('2d');
-                responseChart = new Chart(responseCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
-                        datasets: [{
-                            label: 'Responstid (minutter)',
-                            data: [32, 30, 28, 31, 29, 27, 59],
-                            backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { callback: function(value) { return value + 'min'; } }
-                            }
-                        },
-                        events: ['click'],
-                        interaction: { intersect: false, mode: 'index' }
-                    }
-                });
-            } catch (error) {
-                console.error('Error creating Simen charts:', error);
-            }
-        }
-
-        function createDefaultCharts() {
-            if (progressChart) progressChart.destroy();
-            if (responseChart) responseChart.destroy();
-
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(progressCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Saker løst',
-                        data: [85, 92, 78, 85, 99, 120, 127],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
+        function createLineChart(containerId, labels, data, unit) {
+            const container = document.getElementById(containerId);
+            const maxValue = Math.max(...data);
+            const minValue = Math.min(...data);
+            const range = maxValue - minValue;
+            
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("viewBox", "0 0 400 200");
+            
+            // Create path for line
+            let pathData = "";
+            data.forEach((value, index) => {
+                const x = (index / (data.length - 1)) * 360 + 20;
+                const y = 180 - ((value - minValue) / range) * 140;
+                pathData += (index === 0 ? "M" : "L") + x + "," + y;
             });
-
-            const responseCtx = document.getElementById('responseChart').getContext('2d');
-            responseChart = new Chart(responseCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Responstid (timer)',
-                        data: [3.1, 2.8, 2.6, 2.9, 2.5, 2.4, 2.3],
-                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: function(value) { return value + 't'; } }
-                        }
-                    }
-                }
+            
+            // Add line
+            const path = document.createElementNS(svgNS, "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("stroke", "#667eea");
+            path.setAttribute("stroke-width", "3");
+            path.setAttribute("fill", "none");
+            svg.appendChild(path);
+            
+            // Add points and labels
+            data.forEach((value, index) => {
+                const x = (index / (data.length - 1)) * 360 + 20;
+                const y = 180 - ((value - minValue) / range) * 140;
+                
+                // Point
+                const circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", "4");
+                circle.setAttribute("fill", "#667eea");
+                svg.appendChild(circle);
+                
+                // Value label
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", y - 10);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("font-size", "12");
+                text.setAttribute("fill", "#333");
+                text.textContent = value + unit;
+                svg.appendChild(text);
+                
+                // Month label
+                const monthText = document.createElementNS(svgNS, "text");
+                monthText.setAttribute("x", x);
+                monthText.setAttribute("y", 195);
+                monthText.setAttribute("text-anchor", "middle");
+                monthText.setAttribute("font-size", "11");
+                monthText.setAttribute("fill", "#666");
+                monthText.textContent = labels[index];
+                svg.appendChild(monthText);
             });
+            
+            container.innerHTML = '';
+            container.appendChild(svg);
         }
 
         // Auto-login for testing
