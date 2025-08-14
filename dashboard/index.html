@@ -534,7 +534,10 @@ window.onload = async function() {
 };
 
         // Google Apps Script API kall - JSONP versjon
+// I dashboard HTML-filen, finn og erstatt fetchFromSheets() funksjonen med:
+
 async function fetchFromSheets(agentId) {
+    // OPPDATER DENNE URL-EN med din nye deployment URL:
     const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxYczlb9GAkTPmU4YIHjqwn-GK3Y7GnAnyTTIB4SWQi4Y_5oYlPtkhhm-4xKwcVOWk4/exec';
     
     return new Promise((resolve, reject) => {
@@ -555,6 +558,15 @@ async function fetchFromSheets(agentId) {
         };
         
         document.head.appendChild(script);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+            if (window.jsonpCallback) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Request timeout'));
+            }
+        }, 10000);
     });
 }
     </script>
