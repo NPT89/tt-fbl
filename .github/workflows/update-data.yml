@@ -1,8 +1,8 @@
-name: Update Dashboard Data
+name: Update Dashboard Data via Proxy
 on:
   schedule:
     - cron: '0 8,12,16 * * 1-5'  # 08:00, 12:00, 16:00 på hverdager (UTC)
-  workflow_dispatch:  # Manual trigger fra GitHub UI
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   update-data:
@@ -13,110 +13,76 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Fetch Simen data
+      - name: Fetch data via Proxy
         run: |
-          echo "🔄 Henter data for Simen..."
+          echo "🚀 Henter data via Netlify proxy..."
           
-          # Debug: Se hva vi faktisk får
-          echo "📡 Testing URL..."
-          curl -v "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=simen.froyhaug" \
-            -o raw-response.html
+          # Definer proxy URL (erstatt med din Netlify URL)
+          PROXY_URL="https://bucolic-syrniki-f91556.netlify.app"
           
-          echo "📄 Raw response:"
-          head -20 raw-response.html
+          # Hent data for alle agenter
+          agents=("simen.froyhaug" "jathushiga.suth" "elena.myhre")
           
-          # Prøv å hente uten auth-redirect
-          echo "🔄 Prøver alternativ metode..."
-          curl -L --user-agent "GitHub-Actions-Bot" \
-            "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=simen.froyhaug" \
-            -o simen-data.json || echo "❌ Curl failed"
-          
-          # Fallback: Lag dummy data
-          echo "🔧 Lager fallback data..."
-          cat > simen-data.json << 'EOF'
-          {
-            "success": true,
-            "agent": {"name": "Simen F.", "team": "GitHub Actions Test"},
-            "currentMonth": {
-              "casesResolved": 999,
-              "avgResponseTime": "GitHub Actions",
-              "satisfaction": 5.0,
-              "firstResolve": 100,
-              "workingDays": 1,
-              "totalChats": 999,
-              "totalCalls": 999,
-              "totalEmails": 999
-            },
-            "previousMonth": {"casesResolved": 0, "avgResponseTime": "0min", "satisfaction": 0, "firstResolve": 0},
-            "team": {"avgCases": 999, "avgCsat": 5.0, "ranking": 1, "totalTeams": 1},
-            "historical": {
-              "months": ["Feb","Mar","Apr","Mai","Jun","Jul","Aug"],
-              "casesResolved": [100,200,300,400,500,600,999],
-              "responseTime": [1.0,1.1,1.2,1.3,1.4,1.5,1.6]
-            },
-            "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
-          }
-          EOF
-          
-          echo "✅ Fallback data laget for testing"
-      
-      - name: Fetch other agents (optional)
-        run: |
-          echo "🔄 Henter data for andre agenter..."
-          
-          # Jathushiga
-          curl -f "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=jathushiga.suth" \
-            -o jathushiga-data.json || echo "⚠️ Kunne ikke hente data for Jathushiga"
-          
-          # Elena
-          curl -f "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=elena.myhre" \
-            -o elena-data.json || echo "⚠️ Kunne ikke hente data for Elena"
+          for agent in "${agents[@]}"; do
+            echo "📊 Henter data for: $agent"
+            
+            curl -f "$PROXY_URL/api/agent-data?agent=$agent" \
+              -H "Accept: application/json" \
+              -o "${agent}.json" || echo "⚠️ Feil ved henting av $agent"
+            
+            # Validér JSON
+            if jq . "${agent}.json" > /dev/null 2>&1; then
+              echo "✅ Gyldig JSON for $agent"
+              # Vis første linje for debugging
+              echo "📄 Data preview: $(jq -r '.agent.name // "Unknown"' "${agent}.json")"
+            else
+              echo "❌ Ugyldig JSON for $agent"
+              rm -f "${agent}.json"
+            fi
+          done
       
       - name: Create master data file
         run: |
           echo "📊 Lager master data fil..."
           
-          # Lag en kombinert fil med timestamp
+          # Start master fil
           cat > all-agents.json << EOF
           {
             "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+            "source": "Netlify Proxy",
             "agents": {
           EOF
           
-          # Legg til Simen data
-          if [ -f simen-data.json ]; then
-            echo '    "simen.froyhaug": ' >> all-agents.json
-            cat simen-data.json >> all-agents.json
-          fi
+          # Legg til alle agent-filer
+          first=true
+          for file in *.json; do
+            if [[ "$file" != "all-agents.json" && -f "$file" ]]; then
+              if [[ "$first" == "false" ]]; then
+                echo "," >> all-agents.json
+              fi
+              agent_name=$(basename "$file" .json)
+              echo "    \"$agent_name\": " >> all-agents.json
+              cat "$file" >> all-agents.json
+              first=false
+            fi
+          done
           
-          # Legg til andre agenter hvis de finnes
-          if [ -f jathushiga-data.json ]; then
-            echo '    ,' >> all-agents.json
-            echo '    "jathushiga.suth": ' >> all-agents.json
-            cat jathushiga-data.json >> all-agents.json
-          fi
-          
-          if [ -f elena-data.json ]; then
-            echo '    ,' >> all-agents.json
-            echo '    "elena.myhre": ' >> all-agents.json
-            cat elena-data.json >> all-agents.json
-          fi
-          
-          # Avslutt JSON
+          # Avslutt master fil
           cat >> all-agents.json << EOF
             }
           }
           EOF
           
           echo "✅ Master data fil opprettet"
+          echo "📊 Total agents: $(jq '.agents | keys | length' all-agents.json)"
       
-      - name: Commit and push if changed
+      - name: Commit and push changes
         run: |
           # Konfigurer git
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action Bot"
+          git config --local user.name "GitHub Actions Proxy Bot"
           
-          # Legg til filer
+          # Legg til alle JSON-filer
           git add *.json
           
           # Sjekk om det er endringer
@@ -124,16 +90,19 @@ jobs:
             echo "📝 Ingen endringer i data"
           else
             echo "🔄 Endringer funnet, committer..."
-            git commit -m "🤖 Auto-update dashboard data - $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git commit -m "🤖 Auto-update via proxy - $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
             echo "✅ Data oppdatert og pushet til GitHub"
           fi
       
       - name: Summary
         run: |
-          echo "📈 GitHub Actions Summary:"
+          echo "📈 Proxy Update Summary:"
           echo "- Workflow kjørt: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          echo "- Simen data: $([ -f simen-data.json ] && echo '✅' || echo '❌')"
-          echo "- Jathushiga data: $([ -f jathushiga-data.json ] && echo '✅' || echo '❌')"
-          echo "- Elena data: $([ -f elena-data.json ] && echo '✅' || echo '❌')"
-          echo "🚀 Dashboard kan nå hente fra: https://raw.githubusercontent.com/npt89/tt-fbl/main/simen-data.json"
+          echo "- Proxy URL: https://YOUR-SITE-NAME.netlify.app"
+          echo "- Agent files created:"
+          ls -la *.json || echo "  No JSON files found"
+          echo ""
+          echo "🌐 Dashboard URLs:"
+          echo "- https://npt89.github.io/tt-fbl/dashboard/auto.html"
+          echo "- Data: https://raw.githubusercontent.com/npt89/tt-fbl/main/simen.froyhaug.json"
