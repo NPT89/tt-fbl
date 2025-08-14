@@ -1,0 +1,106 @@
+name: Update Dashboard Data
+on:
+  schedule:
+    - cron: '0 8,12,16 * * 1-5'  # 08:00, 12:00, 16:00 på hverdager (UTC)
+  workflow_dispatch:  # Manual trigger fra GitHub UI
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fetch Simen data
+        run: |
+          echo "🔄 Henter data for Simen..."
+          curl -f "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=simen.froyhaug" \
+            -o simen-data.json
+          
+          # Sjekk at JSON er gyldig
+          if jq . simen-data.json > /dev/null 2>&1; then
+            echo "✅ Gyldig JSON for Simen"
+          else
+            echo "❌ Ugyldig JSON for Simen"
+            exit 1
+          fi
+      
+      - name: Fetch other agents (optional)
+        run: |
+          echo "🔄 Henter data for andre agenter..."
+          
+          # Jathushiga
+          curl -f "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=jathushiga.suth" \
+            -o jathushiga-data.json || echo "⚠️ Kunne ikke hente data for Jathushiga"
+          
+          # Elena
+          curl -f "https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=elena.myhre" \
+            -o elena-data.json || echo "⚠️ Kunne ikke hente data for Elena"
+      
+      - name: Create master data file
+        run: |
+          echo "📊 Lager master data fil..."
+          
+          # Lag en kombinert fil med timestamp
+          cat > all-agents.json << EOF
+          {
+            "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+            "agents": {
+          EOF
+          
+          # Legg til Simen data
+          if [ -f simen-data.json ]; then
+            echo '    "simen.froyhaug": ' >> all-agents.json
+            cat simen-data.json >> all-agents.json
+          fi
+          
+          # Legg til andre agenter hvis de finnes
+          if [ -f jathushiga-data.json ]; then
+            echo '    ,' >> all-agents.json
+            echo '    "jathushiga.suth": ' >> all-agents.json
+            cat jathushiga-data.json >> all-agents.json
+          fi
+          
+          if [ -f elena-data.json ]; then
+            echo '    ,' >> all-agents.json
+            echo '    "elena.myhre": ' >> all-agents.json
+            cat elena-data.json >> all-agents.json
+          fi
+          
+          # Avslutt JSON
+          cat >> all-agents.json << EOF
+            }
+          }
+          EOF
+          
+          echo "✅ Master data fil opprettet"
+      
+      - name: Commit and push if changed
+        run: |
+          # Konfigurer git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          
+          # Legg til filer
+          git add *.json
+          
+          # Sjekk om det er endringer
+          if git diff --staged --quiet; then
+            echo "📝 Ingen endringer i data"
+          else
+            echo "🔄 Endringer funnet, committer..."
+            git commit -m "🤖 Auto-update dashboard data - $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "✅ Data oppdatert og pushet til GitHub"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "📈 GitHub Actions Summary:"
+          echo "- Workflow kjørt: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "- Simen data: $([ -f simen-data.json ] && echo '✅' || echo '❌')"
+          echo "- Jathushiga data: $([ -f jathushiga-data.json ] && echo '✅' || echo '❌')"
+          echo "- Elena data: $([ -f elena-data.json ] && echo '✅' || echo '❌')"
+          echo "🚀 Dashboard kan nå hente fra: https://raw.githubusercontent.com/npt89/tt-fbl/main/simen-data.json"
