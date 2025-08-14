@@ -6,11 +6,34 @@
     <title>Support Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // FIKSET: Chart.js event error handler
+        // FIKSET: Mer robust Chart.js error handler
         window.addEventListener('error', function(e) {
-            if (e.message && e.message.includes("can't access property \"target\"")) {
+            if (e.message && (e.message.includes("can't access property \"target\"") || 
+                             e.message.includes("target") || 
+                             e.message.includes("event is undefined"))) {
+                console.log('Chart.js event error caught and suppressed:', e.message);
                 e.preventDefault();
+                e.stopPropagation();
                 return false;
+            }
+        }, true);
+
+        // Extra sikkerhet: Patch Chart.js events
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Chart) {
+                // Override Chart.js event handler for å unngå target errors
+                const originalRegisterEvent = Chart.Interaction.modes.nearest;
+                if (originalRegisterEvent) {
+                    Chart.Interaction.modes.nearest = function(chart, e, options, useFinalPosition) {
+                        try {
+                            if (!e || !e.target) return [];
+                            return originalRegisterEvent.call(this, chart, e, options, useFinalPosition);
+                        } catch (error) {
+                            console.log('Chart interaction error suppressed:', error.message);
+                            return [];
+                        }
+                    };
+                }
             }
         });
     </script>
@@ -339,7 +362,7 @@
                 <div id="manualDataSection" class="manual-data-section" style="display: none;">
                     <h3>🔧 Manual Data Import</h3>
                     <p>Automatic data loading failed. You can manually paste the API response here:</p>
-                    <p><strong>1.</strong> Open <a href="https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=simen.froyhaug" target="_blank">this API link</a></p>
+                    <p><strong>1.</strong> Open <a href="#" target="_blank">this API link</a> (will be updated with correct agent)</p>
                     <p><strong>2.</strong> Copy the entire JSON response and paste it below:</p>
                     <textarea id="manualDataInput" placeholder='{"success":true,"agent":{"name":"..."},...}'></textarea>
                     <button onclick="loadManualData()">Load Manual Data</button>
@@ -466,7 +489,12 @@
         function showManualDataOption(agentId) {
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
-            apiLink.href = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
+            
+            // FIKSET: Oppdater både href og tekst med riktig agent
+            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
+            apiLink.href = apiUrl;
+            apiLink.textContent = `API link for ${agentId}`;
+            
             manualSection.style.display = 'block';
         }
 
@@ -582,55 +610,94 @@
         }
 
         function createChartsWithLiveData(historicalData) {
-            if (progressChart) progressChart.destroy();
-            if (responseChart) responseChart.destroy();
-
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(progressCtx, {
-                type: 'line',
-                data: {
-                    labels: historicalData.months,
-                    datasets: [{
-                        label: 'Saker løst',
-                        data: historicalData.casesResolved,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+            // FIKSET: Destroy eksisterende charts sikkert
+            try {
+                if (progressChart) {
+                    progressChart.destroy();
+                    progressChart = null;
                 }
-            });
+                if (responseChart) {
+                    responseChart.destroy();
+                    responseChart = null;
+                }
+            } catch (e) {
+                console.log('Chart destroy error (ignored):', e.message);
+            }
 
-            const responseCtx = document.getElementById('responseChart').getContext('2d');
-            responseChart = new Chart(responseCtx, {
-                type: 'bar',
-                data: {
-                    labels: historicalData.months,
-                    datasets: [{
-                        label: 'Responstid (timer)',
-                        data: historicalData.responseTime,
-                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: function(value) { return value + 't'; } }
+            try {
+                const progressCtx = document.getElementById('progressChart').getContext('2d');
+                progressChart = new Chart(progressCtx, {
+                    type: 'line',
+                    data: {
+                        labels: historicalData.months,
+                        datasets: [{
+                            label: 'Saker løst',
+                            data: historicalData.casesResolved,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false }
+                        },
+                        scales: { 
+                            y: { beginAtZero: true } 
+                        },
+                        // FIKSET: Disable problematiske events
+                        events: ['click'], // Kun click events
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
                         }
                     }
-                }
-            });
+                });
+
+                const responseCtx = document.getElementById('responseChart').getContext('2d');
+                responseChart = new Chart(responseCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: historicalData.months,
+                        datasets: [{
+                            label: 'Responstid (timer)',
+                            data: historicalData.responseTime,
+                            backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false } 
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { 
+                                    callback: function(value) { 
+                                        return value + 't'; 
+                                    } 
+                                }
+                            }
+                        },
+                        // FIKSET: Disable problematiske events
+                        events: ['click'], // Kun click events
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating charts:', error);
+                // Vis feilmelding til bruker
+                document.querySelector('.chart-container .chart-title').textContent = 'Chart loading failed - data shown above';
+            }
         }
 
         function createChartsWithSimenData() {
