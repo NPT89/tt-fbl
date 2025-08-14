@@ -506,7 +506,7 @@
             const manualSection = document.getElementById('manualDataSection');
             const apiLink = manualSection.querySelector('a');
             
-            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbyrIEdER5I2lMj8521kohoAGDATM4FtOjPDSzCXBeRZLBskMeu1P5IZD4NCTDF3Yn11/exec?agent=${encodeURIComponent(agentId)}`;
+            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbwVbuhzPOwUQSYiw6yqqDXeP1gdCtvQvbz308gMhBBW7gLxReTbUR-u9bMZ0GssHuwk/exec?agent=${encodeURIComponent(agentId)}`;
             apiLink.href = apiUrl;
             apiLink.textContent = `API link for ${agentId}`;
             
@@ -728,72 +728,46 @@
             container.appendChild(svg);
         }
 
-        // FIKSET: Forbedret JSONP implementation med bedre error handling
+        // FIKSET: Enklere og mer robust JSONP
         async function fetchFromSheets(agentId) {
             const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbyrIEdER5I2lMj8521kohoAGDATM4FtOjPDSzCXBeRZLBskMeu1P5IZD4NCTDF3Yn11/exec';
             
-            console.log('🔄 Starter JSONP kall til:', SCRIPT_URL);
+            console.log('🔄 Starter JSONP kall');
             
             return new Promise((resolve, reject) => {
-                const callbackName = 'agentCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                let script = null;
-                let timeoutId = null;
-                let resolved = false;
+                const callbackName = 'jsonp_' + Date.now();
                 
-                // Cleanup function
-                const cleanup = () => {
-                    if (script && script.parentNode) {
-                        console.log('🧹 Cleaning up script element');
-                        script.parentNode.removeChild(script);
-                    }
-                    if (window[callbackName]) {
-                        delete window[callbackName];
-                    }
-                    if (timeoutId) {
-                        clearTimeout(timeoutId);
-                    }
-                };
-                
-                // Set up callback
+                // Global callback function
                 window[callbackName] = function(data) {
-                    if (resolved) return;
-                    resolved = true;
-                    
-                    console.log('✅ JSONP callback mottatt:', data);
-                    cleanup();
+                    console.log('✅ JSONP Success:', data);
+                    document.head.removeChild(script);
+                    delete window[callbackName];
                     resolve(data);
                 };
                 
-                // Set up timeout
-                timeoutId = setTimeout(() => {
-                    if (resolved) return;
-                    resolved = true;
-                    
-                    console.log('⏰ JSONP timeout etter 10 sekunder');
-                    cleanup();
-                    reject(new Error('Request timeout after 10 seconds'));
-                }, 10000);
+                // Create script
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}`;
                 
-                // Create and load script
-                script = document.createElement('script');
-                const url = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}&_=${Date.now()}`;
-                script.src = url;
-                
-                script.onload = () => {
-                    console.log('📜 Script loaded successfully');
+                script.onerror = function() {
+                    console.log('❌ JSONP Failed');
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('JSONP failed'));
                 };
                 
-                script.onerror = (error) => {
-                    if (resolved) return;
-                    resolved = true;
-                    
-                    console.log('❌ Script load error:', error);
-                    cleanup();
-                    reject(new Error('Script load failed: ' + (error.message || 'Unknown error')));
-                };
-                
-                console.log('📡 Loading JSONP script:', url);
+                console.log('📡 JSONP URL:', script.src);
                 document.head.appendChild(script);
+                
+                // Timeout after 15 seconds
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        console.log('⏰ JSONP Timeout');
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('JSONP timeout'));
+                    }
+                }, 15000);
             });
         }
     </script>
