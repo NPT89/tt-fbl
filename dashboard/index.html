@@ -113,6 +113,7 @@
 
         .positive { background: #d4edda; color: #155724; }
         .negative { background: #f8d7da; color: #721c24; }
+        .neutral { background: #e2e3e5; color: #495057; }
 
         .charts-section {
             display: grid;
@@ -288,39 +289,7 @@
         .status-error { background: #f8d7da; color: #721c24; }
         .status-manual { background: #d1ecf1; color: #0c5460; }
         .status-loading { background: #e2e3e5; color: #495057; }
-
-        .manual-data-section {
-            background: #e7f3ff;
-            border: 2px solid #b3d9ff;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .manual-data-section h3 {
-            color: #004085;
-            margin-bottom: 15px;
-        }
-
-        .manual-data-section p {
-            color: #004085;
-            margin-bottom: 15px;
-        }
-
-        .manual-data-section textarea {
-            width: 100%;
-            height: 100px;
-            border: 2px solid #b3d9ff;
-            border-radius: 8px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .manual-data-section button {
-            margin-top: 10px;
-        }
+        .status-github { background: #f3e5f5; color: #6f42c1; }
 
         @media (max-width: 768px) {
             .charts-section {
@@ -373,16 +342,6 @@
             </div>
 
             <div class="content">
-                <!-- Manual Data Input -->
-                <div id="manualDataSection" class="manual-data-section" style="display: none;">
-                    <h3>🔧 Manual Data Import</h3>
-                    <p>Automatic data loading failed. You can manually paste the API response here:</p>
-                    <p><strong>1.</strong> Open <a href="#" id="apiLink" target="_blank">this API link</a></p>
-                    <p><strong>2.</strong> Copy the entire JSON response and paste it below:</p>
-                    <textarea id="manualDataInput" placeholder='{"success":true,"agent":{"name":"..."},...}'></textarea>
-                    <button onclick="loadManualData()">Load Manual Data</button>
-                </div>
-
                 <!-- KPI Cards -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
@@ -436,8 +395,8 @@
                             <div class="team-stat-label">Din rank</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value" id="teamSize">Top 3!</div>
-                            <div class="team-stat-label">prestasjon</div>
+                            <div class="team-stat-value" id="teamSize">3 agenter</div>
+                            <div class="team-stat-label">i teamet</div>
                         </div>
                     </div>
                 </div>
@@ -447,93 +406,65 @@
 
     <script>
         const agentCredentials = {
-            'simen.froyhaug': { password: 'pass123', name: 'Simen Frøyhaug', startDate: '2023-01-15' },
-            'simen': { password: 'pass123', name: 'Simen Frøyhaug', startDate: '2023-01-15' },
-            'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
-            'jathushiga': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
-            'elena.myhre': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' },
-            'elena': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' }
+            'simen.froyhaug': { password: 'pass123', name: 'Simen Frøyhaug', dataFile: 'simen-data.json' },
+            'simen': { password: 'pass123', name: 'Simen Frøyhaug', dataFile: 'simen-data.json' },
+            'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', dataFile: 'jathushiga-data.json' },
+            'jathushiga': { password: 'pass456', name: 'Jathushiga S.', dataFile: 'jathushiga-data.json' },
+            'elena.myhre': { password: 'pass789', name: 'Elena M.', dataFile: 'elena-data.json' },
+            'elena': { password: 'pass789', name: 'Elena M.', dataFile: 'elena-data.json' }
         };
 
         let currentAgent = null;
 
         async function login() {
-            const agentId = document.getElementById('agentId').value.toLowerCase();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
+            try {
+                const agentId = document.getElementById('agentId').value.toLowerCase();
+                const password = document.getElementById('password').value;
+                const errorDiv = document.getElementById('loginError');
 
-            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
-                errorDiv.textContent = 'Ugyldig agent ID eller passord';
-                return;
-            }
+                if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+                    errorDiv.textContent = 'Ugyldig agent ID eller passord';
+                    return;
+                }
 
-            currentAgent = agentCredentials[agentId];
-            showDashboard();
-            
-            if (agentId.includes('simen')) {
+                currentAgent = agentCredentials[agentId];
+                showDashboard();
+                
+                // Prøv å hente live data fra GitHub
                 try {
-                    console.log('🔄 Forsøker å hente live data for:', agentId);
-                    setDataStatus('loading', 'Henter live data...');
+                    console.log('🔄 Henter live data fra GitHub...');
+                    setDataStatus('loading', 'Henter automatisk data fra GitHub...');
                     
-                    // First try with fetch method
-                    const sheetData = await fetchFromSheetsAlternative(agentId);
+                    const dataFile = currentAgent.dataFile;
+                    const githubUrl = `https://raw.githubusercontent.com/npt89/tt-fbl/main/${dataFile}`;
+                    
+                    console.log('📡 Fetching from:', githubUrl);
+                    const response = await fetch(githubUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`GitHub fetch failed: ${response.status}`);
+                    }
+                    
+                    const sheetData = await response.json();
                     
                     if (sheetData && sheetData.success) {
-                        console.log('✅ Live data hentet!', sheetData);
+                        console.log('✅ GitHub data hentet!', sheetData);
                         updateDashboardWithLiveData(sheetData);
-                        setDataStatus('live', 'Live Data - ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO'));
-                        console.log('✅ Dashboard oppdatert med live data');
+                        setDataStatus('github', 'Automatisk GitHub Data - ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO'));
                     } else {
-                        throw new Error('Invalid data format: ' + JSON.stringify(sheetData));
+                        throw new Error('Invalid data format from GitHub');
                     }
                     
                 } catch (error) {
-                    console.error('❌ Feil ved henting av live data:', error);
-                    showManualDataOption(agentId);
-                    updateDashboardWithFallbackData(agentId);
-                    setDataStatus('error', 'Live data feilet - bruker fallback. Error: ' + error.message);
-                }
-            } else {
-                updateDashboardWithDemoData(agentId);
-                setDataStatus('demo', 'Demo Data');
-            }
-            
-            errorDiv.textContent = '';
-        }
-
-        function showManualDataOption(agentId) {
-            const manualSection = document.getElementById('manualDataSection');
-            const apiLink = document.getElementById('apiLink');
-            
-            // FIKSET: Riktig URL uten ekstra /exec
-            const apiUrl = `https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec?agent=${encodeURIComponent(agentId)}`;
-            apiLink.href = apiUrl;
-            apiLink.textContent = `API link for ${agentId}`;
-            
-            manualSection.style.display = 'block';
-        }
-
-        function loadManualData() {
-            try {
-                const jsonText = document.getElementById('manualDataInput').value.trim();
-                if (!jsonText) {
-                    alert('Please paste the JSON data first');
-                    return;
+                    console.warn('⚠️ GitHub data ikke tilgjengelig:', error.message);
+                    updateDashboardWithDemoData(agentId);
+                    setDataStatus('demo', 'Demo Data - GitHub Actions ikke satt opp ennå');
                 }
                 
-                const sheetData = JSON.parse(jsonText);
-                
-                if (sheetData && sheetData.success) {
-                    updateDashboardWithLiveData(sheetData);
-                    setDataStatus('manual', 'Manual Data Loaded - ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO'));
-                    document.getElementById('manualDataSection').style.display = 'none';
-                    console.log('✅ Manual data loaded successfully');
-                } else {
-                    throw new Error('Invalid data format');
-                }
+                errorDiv.textContent = '';
             } catch (error) {
-                alert('Invalid JSON data. Please check the format and try again.\nError: ' + error.message);
-                console.error('Error parsing manual data:', error);
+                console.error('Login error:', error);
+                document.getElementById('loginError').textContent = 'Login failed: ' + error.message;
             }
         }
 
@@ -544,6 +475,7 @@
             statusEl.className = `status-indicator status-${type}`;
             
             switch(type) {
+                case 'github': statusEl.textContent = '🤖 AUTO DATA'; break;
                 case 'live': statusEl.textContent = 'LIVE DATA'; break;
                 case 'demo': statusEl.textContent = 'DEMO DATA'; break;
                 case 'error': statusEl.textContent = 'FALLBACK DATA'; break;
@@ -555,55 +487,46 @@
         }
 
         function updateDashboardWithLiveData(sheetData) {
-            console.log('🔄 Oppdaterer dashboard med live data:', sheetData);
-            
-            // Update agent info
-            document.getElementById('agentName').textContent = sheetData.agent.name || 'Unknown Agent';
-            document.getElementById('agentTeam').textContent = sheetData.agent.team || 'Unknown Team';
-            
-            // Update KPIs
-            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved || 0;
-            document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime || '0min';
-            document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction || 0).toFixed(1);
-            document.getElementById('firstResolve').textContent = (sheetData.currentMonth.firstResolve || 0) + '%';
-            
-            // Update additional info in the change fields
-            document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats || 0} chats, ${sheetData.currentMonth.totalCalls || 0} calls`;
-            document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails || 0} e-poster`;
-            document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays || 0} arbeidsdager`;
-            document.getElementById('resolveChange').textContent = 'Live data';
-            
-            // Update team comparison if available
-            if (sheetData.team) {
-                document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases || 0;
-                document.getElementById('teamAvgCsat').textContent = parseFloat(sheetData.team.avgCsat || 0).toFixed(1);
-                document.getElementById('agentRank').textContent = '#' + (sheetData.team.ranking || 1);
-                document.getElementById('teamSize').textContent = (sheetData.team.totalTeams || 1) + ' agenter';
-                document.getElementById('teamComparison').style.display = 'block';
+            try {
+                console.log('🔄 Updating dashboard with live data:', sheetData);
+                
+                // Update agent info
+                document.getElementById('agentName').textContent = sheetData.agent.name || 'Unknown Agent';
+                document.getElementById('agentTeam').textContent = sheetData.agent.team || 'Unknown Team';
+                
+                // Update KPIs
+                document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved || 0;
+                document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime || '0min';
+                document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction || 0).toFixed(1);
+                document.getElementById('firstResolve').textContent = (sheetData.currentMonth.firstResolve || 0) + '%';
+                
+                // Update additional info
+                document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats || 0} chats, ${sheetData.currentMonth.totalCalls || 0} calls`;
+                document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails || 0} e-poster, ${sheetData.currentMonth.workingDays || 0} dager`;
+                document.getElementById('satisfactionChange').textContent = `Automatisk fra GitHub`;
+                document.getElementById('resolveChange').textContent = 'Beregnet fra CSAT';
+                
+                // Update team comparison
+                if (sheetData.team) {
+                    document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases || 0;
+                    document.getElementById('teamAvgCsat').textContent = parseFloat(sheetData.team.avgCsat || 0).toFixed(1);
+                    document.getElementById('agentRank').textContent = '#' + (sheetData.team.ranking || 1);
+                    document.getElementById('teamSize').textContent = (sheetData.team.totalTeams || 1) + ' agenter';
+                    document.getElementById('teamComparison').style.display = 'block';
+                }
+                
+                // Create charts
+                if (sheetData.historical && sheetData.historical.months && sheetData.historical.casesResolved) {
+                    createLineChart('progressChart', sheetData.historical.months, sheetData.historical.casesResolved, ' saker');
+                    createBarChart('responseChart', sheetData.historical.months, sheetData.historical.responseTime, 't');
+                } else {
+                    createCSSChartsWithDefaultData();
+                }
+                
+                console.log('✅ Dashboard updated successfully');
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
             }
-            
-            // Create charts with historical data
-            if (sheetData.historical) {
-                createCSSChartsWithLiveData(sheetData.historical);
-            } else {
-                createCSSChartsWithDefaultData();
-            }
-            
-            console.log('✅ Dashboard oppdatert suksessfullt');
-        }
-
-        function updateDashboardWithFallbackData(agentId) {
-            document.getElementById('agentName').textContent = 'Simen Frøyhaug';
-            document.getElementById('agentTeam').textContent = 'August (Fallback)';
-            document.getElementById('casesResolved').textContent = '294';
-            document.getElementById('avgResponseTime').textContent = '59min';
-            document.getElementById('satisfaction').textContent = '3.4';
-            document.getElementById('firstResolve').textContent = '71%';
-            document.getElementById('casesChange').textContent = '183 chats, 106 calls';
-            document.getElementById('responseChange').textContent = '5 e-poster';
-            document.getElementById('satisfactionChange').textContent = '12 arbeidsdager';
-            document.getElementById('resolveChange').textContent = 'Fallback data';
-            createCSSChartsWithSimenData();
         }
 
         function updateDashboardWithDemoData(agentId) {
@@ -617,7 +540,6 @@
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('agentId').value = '';
             document.getElementById('password').value = '';
-            document.getElementById('manualDataSection').style.display = 'none';
             currentAgent = null;
         }
 
@@ -626,99 +548,89 @@
             document.getElementById('dashboard').style.display = 'block';
         }
 
-        // FIKSET: Ny fetch-metode som alternativ til JSONP
-        async function fetchFromSheetsAlternative(agentId) {
-            // FIKSET: Riktig URL uten ekstra /exec
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec';
-            
+        function createBarChart(containerId, labels, data, unit) {
             try {
-                const response = await fetch(SCRIPT_URL + '?agent=' + encodeURIComponent(agentId), {
-                    method: 'GET',
-                    mode: 'cors'
+                const container = document.getElementById(containerId);
+                if (!container || !data || !Array.isArray(data)) return;
+                
+                const maxValue = Math.max(...data);
+                container.innerHTML = '';
+                
+                data.forEach((value, index) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.style.height = `${(value / maxValue) * 100}%`;
+                    bar.setAttribute('data-value', value + unit);
+                    bar.setAttribute('data-label', labels[index]);
+                    container.appendChild(bar);
+                });
+            } catch (error) {
+                console.error('Error creating bar chart:', error);
+            }
+        }
+
+        function createLineChart(containerId, labels, data, unit) {
+            try {
+                const container = document.getElementById(containerId);
+                if (!container || !data || !Array.isArray(data)) return;
+                
+                const maxValue = Math.max(...data);
+                const minValue = Math.min(...data);
+                const range = maxValue - minValue || 1;
+                
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = document.createElementNS(svgNS, "svg");
+                svg.setAttribute("viewBox", "0 0 400 200");
+                
+                let pathData = "";
+                data.forEach((value, index) => {
+                    const x = (index / (data.length - 1)) * 360 + 20;
+                    const y = 180 - ((value - minValue) / range) * 140;
+                    pathData += (index === 0 ? "M" : "L") + x + "," + y;
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("stroke", "#667eea");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("fill", "none");
+                svg.appendChild(path);
                 
-                const data = await response.json();
-                return data;
+                data.forEach((value, index) => {
+                    const x = (index / (data.length - 1)) * 360 + 20;
+                    const y = 180 - ((value - minValue) / range) * 140;
+                    
+                    const circle = document.createElementNS(svgNS, "circle");
+                    circle.setAttribute("cx", x);
+                    circle.setAttribute("cy", y);
+                    circle.setAttribute("r", "4");
+                    circle.setAttribute("fill", "#667eea");
+                    svg.appendChild(circle);
+                    
+                    const text = document.createElementNS(svgNS, "text");
+                    text.setAttribute("x", x);
+                    text.setAttribute("y", y - 10);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("font-size", "12");
+                    text.setAttribute("fill", "#333");
+                    text.textContent = value + unit;
+                    svg.appendChild(text);
+                    
+                    const monthText = document.createElementNS(svgNS, "text");
+                    monthText.setAttribute("x", x);
+                    monthText.setAttribute("y", 195);
+                    monthText.setAttribute("text-anchor", "middle");
+                    monthText.setAttribute("font-size", "11");
+                    monthText.setAttribute("fill", "#666");
+                    monthText.textContent = labels[index];
+                    svg.appendChild(monthText);
+                });
+                
+                container.innerHTML = '';
+                container.appendChild(svg);
             } catch (error) {
-                console.log('❌ Fetch failed, falling back to JSONP:', error);
-                return await fetchFromSheetsJSONP(agentId);
+                console.error('Error creating line chart:', error);
             }
-        }
-
-        // FIKSET: Forbedret JSONP implementasjon
-        async function fetchFromSheetsJSONP(agentId) {
-            // FIKSET: Riktig URL uten ekstra /exec
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbx7wyHg95UFA60boIVUcORr9EWhFKWIPo8-fz_T8zvLEn2j9HhvdbXXBUD9-kVUyU4w/exec';
-            
-            return new Promise((resolve, reject) => {
-                const callbackName = 'agentDataCallback_' + Date.now();
-                const script = document.createElement('script');
-                
-                // FIKSET: Bedre error handling
-                window[callbackName] = function(response) {
-                    try {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        console.log('✅ JSONP Response mottatt:', response);
-                        resolve(response);
-                    } catch (e) {
-                        console.error('❌ Error in JSONP callback:', e);
-                        reject(e);
-                    }
-                };
-                
-                script.onerror = function() {
-                    try {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                    } catch (e) {
-                        // Ignore cleanup errors
-                    }
-                    console.log('❌ JSONP Script failed to load');
-                    reject(new Error('Script load failed'));
-                };
-                
-                script.src = SCRIPT_URL + '?callback=' + callbackName + '&agent=' + encodeURIComponent(agentId);
-                document.head.appendChild(script);
-                
-                // Timeout after 15 seconds
-                setTimeout(() => {
-                    try {
-                        if (document.head.contains(script)) {
-                            document.head.removeChild(script);
-                        }
-                        if (window[callbackName]) {
-                            delete window[callbackName];
-                        }
-                    } catch (e) {
-                        // Ignore cleanup errors
-                    }
-                    reject(new Error('Request timeout'));
-                }, 15000);
-            });
-        }
-
-        // CSS CHART FUNCTIONS
-        function createCSSChartsWithLiveData(historicalData) {
-            if (historicalData && historicalData.months && historicalData.casesResolved) {
-                createLineChart('progressChart', historicalData.months, historicalData.casesResolved, 'saker');
-                createBarChart('responseChart', historicalData.months, historicalData.responseTime, 't');
-            } else {
-                createCSSChartsWithDefaultData();
-            }
-        }
-
-        function createCSSChartsWithSimenData() {
-            const months = ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'];
-            const cases = [45, 62, 78, 89, 103, 121, 294];
-            const response = [32, 30, 28, 31, 29, 27, 59];
-            
-            createLineChart('progressChart', months, cases, 'saker');
-            createBarChart('responseChart', months, response, 'min');
         }
 
         function createCSSChartsWithDefaultData() {
@@ -726,108 +638,14 @@
             const cases = [85, 92, 78, 85, 99, 120, 127];
             const response = [3.1, 2.8, 2.6, 2.9, 2.5, 2.4, 2.3];
             
-            createLineChart('progressChart', months, cases, 'saker');
+            createLineChart('progressChart', months, cases, ' saker');
             createBarChart('responseChart', months, response, 't');
         }
 
-        function createBarChart(containerId, labels, data, unit) {
-            const container = document.getElementById(containerId);
-            if (!container || !data || !Array.isArray(data)) return;
-            
-            const maxValue = Math.max(...data);
-            
-            container.innerHTML = '';
-            
-            data.forEach((value, index) => {
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                bar.style.height = `${(value / maxValue) * 100}%`;
-                bar.setAttribute('data-value', value + unit);
-                bar.setAttribute('data-label', labels[index]);
-                container.appendChild(bar);
-            });
-        }
-
-        function createLineChart(containerId, labels, data, unit) {
-            const container = document.getElementById(containerId);
-            if (!container || !data || !Array.isArray(data)) return;
-            
-            const maxValue = Math.max(...data);
-            const minValue = Math.min(...data);
-            const range = maxValue - minValue || 1; // Avoid division by zero
-            
-            const svgNS = "http://www.w3.org/2000/svg";
-            const svg = document.createElementNS(svgNS, "svg");
-            svg.setAttribute("viewBox", "0 0 400 200");
-            
-            // Create path for line
-            let pathData = "";
-            data.forEach((value, index) => {
-                const x = (index / (data.length - 1)) * 360 + 20;
-                const y = 180 - ((value - minValue) / range) * 140;
-                pathData += (index === 0 ? "M" : "L") + x + "," + y;
-            });
-            
-            // Add line
-            const path = document.createElementNS(svgNS, "path");
-            path.setAttribute("d", pathData);
-            path.setAttribute("stroke", "#667eea");
-            path.setAttribute("stroke-width", "3");
-            path.setAttribute("fill", "none");
-            svg.appendChild(path);
-            
-            // Add points and labels
-            data.forEach((value, index) => {
-                const x = (index / (data.length - 1)) * 360 + 20;
-                const y = 180 - ((value - minValue) / range) * 140;
-                
-                // Point
-                const circle = document.createElementNS(svgNS, "circle");
-                circle.setAttribute("cx", x);
-                circle.setAttribute("cy", y);
-                circle.setAttribute("r", "4");
-                circle.setAttribute("fill", "#667eea");
-                svg.appendChild(circle);
-                
-                // Value label
-                const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", x);
-                text.setAttribute("y", y - 10);
-                text.setAttribute("text-anchor", "middle");
-                text.setAttribute("font-size", "12");
-                text.setAttribute("fill", "#333");
-                text.textContent = value + unit;
-                svg.appendChild(text);
-                
-                // Month label
-                const monthText = document.createElementNS(svgNS, "text");
-                monthText.setAttribute("x", x);
-                monthText.setAttribute("y", 195);
-                monthText.setAttribute("text-anchor", "middle");
-                monthText.setAttribute("font-size", "11");
-                monthText.setAttribute("fill", "#666");
-                monthText.textContent = labels[index];
-                svg.appendChild(monthText);
-            });
-            
-            container.innerHTML = '';
-            container.appendChild(svg);
-        }
-
-        // FIKSET: Auto-login med bedre error handling
-        window.addEventListener('load', function() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const autoLogin = urlParams.get('auto');
-                
-                if (autoLogin === 'simen') {
-                    document.getElementById('agentId').value = 'simen.froyhaug';
-                    document.getElementById('password').value = 'pass123';
-                    login();
-                }
-            } catch (error) {
-                console.error('Error in auto-login:', error);
-            }
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Automated Dashboard loaded');
+            console.log('📡 Ready to fetch from GitHub Actions');
         });
     </script>
 </body>
