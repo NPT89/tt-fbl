@@ -418,23 +418,6 @@ async function login() {
             document.getElementById('dashboard').style.display = 'block';
         }
 
-        function loadAgentData(agentId) {
-    // LEGG TIL dette for å hente live data:
-if (agentId.includes('simen')) {
-    try {
-        const sheetData = await fetchFromSheets(agentId);
-        if (sheetData && sheetData.success) {
-            // Oppdater med ekte data fra Google Sheets
-            document.getElementById('agentName').textContent = sheetData.agent.name;
-            document.getElementById('agentTeam').textContent = sheetData.agent.team;
-            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
-            // osv med resten av dataene...
-        }
-    } catch (error) {
-        console.error('Feil ved henting av data:', error);
-        // Fallback til hardkodet data
-    }
-}
         function createChartsWithSimenData() {
             if (progressChart) progressChart.destroy();
             if (responseChart) responseChart.destroy();
