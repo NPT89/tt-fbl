@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <!-- FIKSET: Chart.js som ES5 modul -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -213,6 +214,29 @@
             font-weight: 500;
         }
 
+        .status-indicator {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-live {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-demo {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .charts-section {
                 grid-template-columns: 1fr;
@@ -235,7 +259,7 @@
         <!-- Login Screen -->
         <div id="login" class="login-container">
             <h2 style="margin-bottom: 30px; color: #333;">Agent Dashboard Login</h2>
-            <input type="text" id="agentId" placeholder="Agent ID (f.eks. john-doe)" />
+            <input type="text" id="agentId" placeholder="Agent ID (f.eks. simen.froyhaug)" />
             <input type="password" id="password" placeholder="Passord" />
             <button onclick="login()">Logg Inn</button>
             <div id="loginError" class="error-message"></div>
@@ -258,6 +282,7 @@
                 </div>
                 <div>
                     <div class="last-updated" id="lastUpdated">Sist oppdatert: i dag 14:30</div>
+                    <div id="dataStatus" class="status-indicator status-demo">Demo Data</div>
                     <button class="logout-btn" onclick="logout()">Logg ut</button>
                 </div>
             </div>
@@ -304,19 +329,19 @@
                     <h3>Team Sammenligning</h3>
                     <div class="team-stats">
                         <div class="team-stat">
-                            <div class="team-stat-value">97</div>
+                            <div class="team-stat-value" id="teamAvgCases">97</div>
                             <div class="team-stat-label">Team snitt</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">4.6</div>
+                            <div class="team-stat-value" id="teamAvgCsat">4.6</div>
                             <div class="team-stat-label">Team CSAT</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">#1</div>
+                            <div class="team-stat-value" id="agentRank">#1</div>
                             <div class="team-stat-label">Din rank</div>
                         </div>
                         <div class="team-stat">
-                            <div class="team-stat-value">Top 3!</div>
+                            <div class="team-stat-value" id="teamSize">Top 3!</div>
                             <div class="team-stat-label">prestasjon</div>
                         </div>
                     </div>
@@ -327,8 +352,8 @@
 
     <script>
         const agentCredentials = {
-            'simen.froyhaug': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
-            'simen': { password: 'pass123', name: 'Simen F.', startDate: '2023-01-15' },
+            'simen.froyhaug': { password: 'pass123', name: 'Simen Frøyhaug', startDate: '2023-01-15' },
+            'simen': { password: 'pass123', name: 'Simen Frøyhaug', startDate: '2023-01-15' },
             'jathushiga.suth': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
             'jathushiga': { password: 'pass456', name: 'Jathushiga S.', startDate: '2023-03-01' },
             'elena.myhre': { password: 'pass789', name: 'Elena M.', startDate: '2024-01-15' },
@@ -339,73 +364,127 @@
         let progressChart = null;
         let responseChart = null;
 
-async function login() {
-    const agentId = document.getElementById('agentId').value.toLowerCase();
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('loginError');
+        async function login() {
+            const agentId = document.getElementById('agentId').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
 
-    if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
-        errorDiv.textContent = 'Ugyldig agent ID eller passord';
-        return;
-    }
-
-    currentAgent = agentCredentials[agentId];
-    localStorage.setItem('loggedInAgent', agentId);
-    
-    showDashboard();
-    
-    // Hent live data fra Google Sheets
-    if (agentId.includes('simen')) {
-        try {
-            console.log('Henter live data for:', agentId);
-            const sheetData = await fetchFromSheets(agentId);
-            
-            if (sheetData && sheetData.success) {
-                // Oppdater med ekte data fra Google Sheets
-                document.getElementById('agentName').textContent = sheetData.agent.name;
-                document.getElementById('agentTeam').textContent = sheetData.agent.team;
-                document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
-                document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime;
-                document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction).toFixed(1);
-                document.getElementById('firstResolve').textContent = sheetData.currentMonth.firstResolve + '%';
-                document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats} chats, ${sheetData.currentMonth.totalCalls} calls`;
-                document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails} e-poster`;
-                document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays} arbeidsdager`;
-                document.getElementById('resolveChange').textContent = 'Live data';
-                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO') + ' (LIVE DATA!)';
-                
-                document.getElementById('teamComparison').style.display = 'block';
-                createChartsWithSimenData();
-                
-                console.log('✅ Live data loaded successfully');
-            } else {
-                throw new Error('Invalid data format');
+            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+                errorDiv.textContent = 'Ugyldig agent ID eller passord';
+                return;
             }
-        } catch (error) {
-            console.error('❌ Feil ved henting av live data:', error);
-            // Fallback til hardkodet data
-            document.getElementById('agentName').textContent = 'Simen F.';
+
+            currentAgent = agentCredentials[agentId];
+            showDashboard();
+            
+            // FIKSET: Bedre error handling og timeout
+            if (agentId.includes('simen')) {
+                try {
+                    console.log('Henter live data for:', agentId);
+                    setDataStatus('loading', 'Henter live data...');
+                    
+                    // Prøv å hente live data med timeout
+                    const sheetData = await Promise.race([
+                        fetchFromSheets(agentId),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Timeout')), 15000)
+                        )
+                    ]);
+                    
+                    if (sheetData && sheetData.success) {
+                        // Oppdater med ekte data fra Google Sheets
+                        updateDashboardWithLiveData(sheetData);
+                        setDataStatus('live', 'Live Data - ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO'));
+                        console.log('✅ Live data loaded successfully');
+                    } else {
+                        throw new Error('Invalid data format: ' + JSON.stringify(sheetData));
+                    }
+                } catch (error) {
+                    console.error('❌ Feil ved henting av live data:', error);
+                    // Fallback til hardkodet data
+                    updateDashboardWithFallbackData(agentId);
+                    setDataStatus('error', 'Live data feilet - bruker fallback data');
+                }
+            } else {
+                // Andre agenter får demo data
+                updateDashboardWithDemoData(agentId);
+                setDataStatus('demo', 'Demo Data');
+            }
+            
+            errorDiv.textContent = '';
+        }
+
+        function setDataStatus(type, message) {
+            const statusEl = document.getElementById('dataStatus');
+            const updatedEl = document.getElementById('lastUpdated');
+            
+            statusEl.className = `status-indicator status-${type}`;
+            
+            switch(type) {
+                case 'live':
+                    statusEl.textContent = 'LIVE DATA';
+                    break;
+                case 'demo':
+                    statusEl.textContent = 'DEMO DATA';
+                    break;
+                case 'error':
+                    statusEl.textContent = 'FALLBACK DATA';
+                    break;
+                case 'loading':
+                    statusEl.textContent = 'LASTER...';
+                    break;
+            }
+            
+            updatedEl.textContent = message;
+        }
+
+        function updateDashboardWithLiveData(sheetData) {
+            document.getElementById('agentName').textContent = sheetData.agent.name;
+            document.getElementById('agentTeam').textContent = sheetData.agent.team;
+            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
+            document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime;
+            document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction).toFixed(1);
+            document.getElementById('firstResolve').textContent = sheetData.currentMonth.firstResolve + '%';
+            
+            // Oppdater change-indicators med live data
+            document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats} chats, ${sheetData.currentMonth.totalCalls} calls`;
+            document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails} e-poster`;
+            document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays} arbeidsdager`;
+            document.getElementById('resolveChange').textContent = 'Live data';
+            
+            // Oppdater team comparison
+            if (sheetData.team) {
+                document.getElementById('teamAvgCases').textContent = sheetData.team.avgCases;
+                document.getElementById('teamAvgCsat').textContent = sheetData.team.avgCsat.toFixed(1);
+                document.getElementById('agentRank').textContent = '#' + sheetData.team.ranking;
+                document.getElementById('teamSize').textContent = sheetData.team.totalTeams + ' agenter';
+                document.getElementById('teamComparison').style.display = 'block';
+            }
+            
+            createChartsWithLiveData(sheetData.historical);
+        }
+
+        function updateDashboardWithFallbackData(agentId) {
+            document.getElementById('agentName').textContent = 'Simen Frøyhaug';
             document.getElementById('agentTeam').textContent = 'August (Fallback)';
-            document.getElementById('casesResolved').textContent = '136';
+            document.getElementById('casesResolved').textContent = '137';
             document.getElementById('avgResponseTime').textContent = '26min';
             document.getElementById('satisfaction').textContent = '4.5';
             document.getElementById('firstResolve').textContent = '81%';
-            document.getElementById('lastUpdated').textContent = 'Fallback data - Live data failed';
+            document.getElementById('casesChange').textContent = '109 chats, 25 calls';
+            document.getElementById('responseChange').textContent = '3 e-poster';
+            document.getElementById('satisfactionChange').textContent = '8 arbeidsdager';
+            document.getElementById('resolveChange').textContent = 'Fallback data';
             createChartsWithSimenData();
         }
-    } else {
-        // Andre agenter får demo data
-        document.getElementById('agentName').textContent = agentCredentials[agentId].name;
-        document.getElementById('agentTeam').textContent = 'Support Team';
-        document.getElementById('lastUpdated').textContent = 'Demo data';
-        createDefaultCharts();
-    }
-    
-    errorDiv.textContent = '';
-}
+
+        function updateDashboardWithDemoData(agentId) {
+            document.getElementById('agentName').textContent = agentCredentials[agentId].name;
+            document.getElementById('agentTeam').textContent = 'Support Team';
+            createDefaultCharts();
+        }
 
         function logout() {
-            localStorage.removeItem('loggedInAgent');
             document.getElementById('login').style.display = 'block';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('agentId').value = '';
@@ -416,6 +495,58 @@ async function login() {
         function showDashboard() {
             document.getElementById('login').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
+        }
+
+        function createChartsWithLiveData(historicalData) {
+            if (progressChart) progressChart.destroy();
+            if (responseChart) responseChart.destroy();
+
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: historicalData.months,
+                    datasets: [{
+                        label: 'Saker løst',
+                        data: historicalData.casesResolved,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: historicalData.months,
+                    datasets: [{
+                        label: 'Responstid (timer)',
+                        data: historicalData.responseTime,
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return value + 't'; } }
+                        }
+                    }
+                }
+            });
         }
 
         function createChartsWithSimenData() {
@@ -429,7 +560,7 @@ async function login() {
                     labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
                     datasets: [{
                         label: 'Saker løst',
-                        data: [45, 62, 78, 89, 103, 121, 136],
+                        data: [45, 62, 78, 89, 103, 121, 137],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
@@ -522,53 +653,68 @@ async function login() {
             });
         }
 
-        // Check if user is already logged in
-window.onload = async function() {
-    const savedAgent = localStorage.getItem('loggedInAgent');
-    if (savedAgent && agentCredentials[savedAgent]) {
-        currentAgent = agentCredentials[savedAgent];
-        // Simuler login for å få live data
-        document.getElementById('agentId').value = savedAgent;
-        await login();
-    }
-};
+        // FIKSET: Bedre JSONP implementation med timeout og error handling
+        async function fetchFromSheets(agentId) {
+            // OPPDATER DENNE URL-EN med din nye deployment URL:
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxYczlb9GAkTPmU4YIHjqwn-GK3Y7GnAnyTTIB4SWQi4Y_5oYlPtkhhm-4xKwcVOWk4/exec';
+            
+            return new Promise((resolve, reject) => {
+                const callbackName = 'agentCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                let script = null;
+                let timeoutId = null;
+                
+                // Cleanup function
+                const cleanup = () => {
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                    }
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+                };
+                
+                // Set up callback
+                window[callbackName] = function(data) {
+                    cleanup();
+                    console.log('JSONP Response received:', data);
+                    resolve(data);
+                };
+                
+                // Set up timeout
+                timeoutId = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Request timeout after 15 seconds'));
+                }, 15000);
+                
+                // Create and load script
+                script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}&_=${Date.now()}`;
+                
+                script.onerror = (error) => {
+                    cleanup();
+                    reject(new Error('Script load failed: ' + error.message));
+                };
+                
+                console.log('Loading script:', script.src);
+                document.head.appendChild(script);
+            });
+        }
 
-        // Google Apps Script API kall - JSONP versjon
-// I dashboard HTML-filen, finn og erstatt fetchFromSheets() funksjonen med:
-
-async function fetchFromSheets(agentId) {
-    // OPPDATER DENNE URL-EN med din nye deployment URL:
-    const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxYczlb9GAkTPmU4YIHjqwn-GK3Y7GnAnyTTIB4SWQi4Y_5oYlPtkhhm-4xKwcVOWk4/exec';
-    
-    return new Promise((resolve, reject) => {
-        const callbackName = 'agentCallback_' + Date.now();
-        
-        window[callbackName] = function(data) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            resolve(data);
-        };
-        
-        const script = document.createElement('script');
-        script.src = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}`;
-        script.onerror = () => {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error('Failed to load script'));
-        };
-        
-        document.head.appendChild(script);
-        
-        // Timeout after 10 seconds
-        setTimeout(() => {
-            if (window.jsonpCallback) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('Request timeout'));
+        // Check if user is already logged in on page load
+        window.onload = function() {
+            // Auto-login for testing - remove in production
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoLogin = urlParams.get('auto');
+            
+            if (autoLogin === 'simen') {
+                document.getElementById('agentId').value = 'simen.froyhaug';
+                document.getElementById('password').value = 'pass123';
+                login();
             }
-        }, 10000);
-    });
-}
+        };
     </script>
 </body>
 </html>
