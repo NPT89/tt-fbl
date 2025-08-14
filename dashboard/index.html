@@ -4,39 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-        // FIKSET: Mer robust Chart.js error handler
-        window.addEventListener('error', function(e) {
-            if (e.message && (e.message.includes("can't access property \"target\"") || 
-                             e.message.includes("target") || 
-                             e.message.includes("event is undefined"))) {
-                console.log('Chart.js event error caught and suppressed:', e.message);
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
-
-        // Extra sikkerhet: Patch Chart.js events
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.Chart) {
-                // Override Chart.js event handler for å unngå target errors
-                const originalRegisterEvent = Chart.Interaction.modes.nearest;
-                if (originalRegisterEvent) {
-                    Chart.Interaction.modes.nearest = function(chart, e, options, useFinalPosition) {
-                        try {
-                            if (!e || !e.target) return [];
-                            return originalRegisterEvent.call(this, chart, e, options, useFinalPosition);
-                        } catch (error) {
-                            console.log('Chart interaction error suppressed:', error.message);
-                            return [];
-                        }
-                    };
-                }
-            }
-        });
-    </script>
+    <!-- FIKSET: Bruk Chart.js 2.9.4 (mer stabil versjon) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -610,6 +579,62 @@
         }
 
         function createChartsWithLiveData(historicalData) {
+            // FIKSET: Chart.js 2.9.4 syntax
+            if (progressChart) progressChart.destroy();
+            if (responseChart) responseChart.destroy();
+
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: historicalData.months,
+                    datasets: [{
+                        label: 'Saker løst',
+                        data: historicalData.casesResolved,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        lineTension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    scales: { 
+                        yAxes: [{ ticks: { beginAtZero: true } }]
+                    }
+                }
+            });
+
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: historicalData.months,
+                    datasets: [{
+                        label: 'Responstid (timer)',
+                        data: historicalData.responseTime,
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    scales: {
+                        yAxes: [{
+                            ticks: { 
+                                beginAtZero: true,
+                                callback: function(value) { return value + 't'; }
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        function createChartsWithSimenData() {
             // FIKSET: Destroy eksisterende charts sikkert
             try {
                 if (progressChart) {
@@ -629,10 +654,10 @@
                 progressChart = new Chart(progressCtx, {
                     type: 'line',
                     data: {
-                        labels: historicalData.months,
+                        labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
                         datasets: [{
                             label: 'Saker løst',
-                            data: historicalData.casesResolved,
+                            data: [45, 62, 78, 89, 103, 121, 294],
                             borderColor: '#667eea',
                             backgroundColor: 'rgba(102, 126, 234, 0.1)',
                             tension: 0.4,
@@ -642,18 +667,10 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false }
-                        },
-                        scales: { 
-                            y: { beginAtZero: true } 
-                        },
-                        // FIKSET: Disable problematiske events
-                        events: ['click'], // Kun click events
-                        interaction: {
-                            intersect: false,
-                            mode: 'index'
-                        }
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } },
+                        events: ['click'],
+                        interaction: { intersect: false, mode: 'index' }
                     }
                 });
 
@@ -661,10 +678,10 @@
                 responseChart = new Chart(responseCtx, {
                     type: 'bar',
                     data: {
-                        labels: historicalData.months,
+                        labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
                         datasets: [{
-                            label: 'Responstid (timer)',
-                            data: historicalData.responseTime,
+                            label: 'Responstid (minutter)',
+                            data: [32, 30, 28, 31, 29, 27, 59],
                             backgroundColor: 'rgba(118, 75, 162, 0.8)',
                             borderRadius: 4
                         }]
@@ -672,84 +689,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false } 
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { 
-                                    callback: function(value) { 
-                                        return value + 't'; 
-                                    } 
-                                }
+                                ticks: { callback: function(value) { return value + 'min'; } }
                             }
                         },
-                        // FIKSET: Disable problematiske events
-                        events: ['click'], // Kun click events
-                        interaction: {
-                            intersect: false,
-                            mode: 'index'
-                        }
+                        events: ['click'],
+                        interaction: { intersect: false, mode: 'index' }
                     }
                 });
             } catch (error) {
-                console.error('Error creating charts:', error);
-                // Vis feilmelding til bruker
-                document.querySelector('.chart-container .chart-title').textContent = 'Chart loading failed - data shown above';
+                console.error('Error creating Simen charts:', error);
             }
-        }
-
-        function createChartsWithSimenData() {
-            if (progressChart) progressChart.destroy();
-            if (responseChart) responseChart.destroy();
-
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(progressCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
-                    datasets: [{
-                        label: 'Saker løst',
-                        data: [45, 62, 78, 89, 103, 121, 294],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-
-            const responseCtx = document.getElementById('responseChart').getContext('2d');
-            responseChart = new Chart(responseCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug'],
-                    datasets: [{
-                        label: 'Responstid (minutter)',
-                        data: [32, 30, 28, 31, 29, 27, 59],
-                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: function(value) { return value + 'min'; } }
-                        }
-                    }
-                }
-            });
         }
 
         function createDefaultCharts() {
