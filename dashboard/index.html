@@ -339,23 +339,70 @@
         let progressChart = null;
         let responseChart = null;
 
-        function login() {
-            const agentId = document.getElementById('agentId').value.toLowerCase();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
+async function login() {
+    const agentId = document.getElementById('agentId').value.toLowerCase();
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('loginError');
 
-            if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
-                errorDiv.textContent = 'Ugyldig agent ID eller passord';
-                return;
-            }
+    if (!agentCredentials[agentId] || agentCredentials[agentId].password !== password) {
+        errorDiv.textContent = 'Ugyldig agent ID eller passord';
+        return;
+    }
 
-            currentAgent = agentCredentials[agentId];
-            localStorage.setItem('loggedInAgent', agentId);
+    currentAgent = agentCredentials[agentId];
+    localStorage.setItem('loggedInAgent', agentId);
+    
+    showDashboard();
+    
+    // Hent live data fra Google Sheets
+    if (agentId.includes('simen')) {
+        try {
+            console.log('Henter live data for:', agentId);
+            const sheetData = await fetchFromSheets(agentId);
             
-            showDashboard();
-            loadAgentData(agentId);
-            errorDiv.textContent = '';
+            if (sheetData && sheetData.success) {
+                // Oppdater med ekte data fra Google Sheets
+                document.getElementById('agentName').textContent = sheetData.agent.name;
+                document.getElementById('agentTeam').textContent = sheetData.agent.team;
+                document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
+                document.getElementById('avgResponseTime').textContent = sheetData.currentMonth.avgResponseTime;
+                document.getElementById('satisfaction').textContent = parseFloat(sheetData.currentMonth.satisfaction).toFixed(1);
+                document.getElementById('firstResolve').textContent = sheetData.currentMonth.firstResolve + '%';
+                document.getElementById('casesChange').textContent = `${sheetData.currentMonth.totalChats} chats, ${sheetData.currentMonth.totalCalls} calls`;
+                document.getElementById('responseChange').textContent = `${sheetData.currentMonth.totalEmails} e-poster`;
+                document.getElementById('satisfactionChange').textContent = `${sheetData.currentMonth.workingDays} arbeidsdager`;
+                document.getElementById('resolveChange').textContent = 'Live data';
+                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date(sheetData.lastUpdated).toLocaleString('no-NO') + ' (LIVE DATA!)';
+                
+                document.getElementById('teamComparison').style.display = 'block';
+                createChartsWithSimenData();
+                
+                console.log('✅ Live data loaded successfully');
+            } else {
+                throw new Error('Invalid data format');
+            }
+        } catch (error) {
+            console.error('❌ Feil ved henting av live data:', error);
+            // Fallback til hardkodet data
+            document.getElementById('agentName').textContent = 'Simen F.';
+            document.getElementById('agentTeam').textContent = 'August (Fallback)';
+            document.getElementById('casesResolved').textContent = '136';
+            document.getElementById('avgResponseTime').textContent = '26min';
+            document.getElementById('satisfaction').textContent = '4.5';
+            document.getElementById('firstResolve').textContent = '81%';
+            document.getElementById('lastUpdated').textContent = 'Fallback data - Live data failed';
+            createChartsWithSimenData();
         }
+    } else {
+        // Andre agenter får demo data
+        document.getElementById('agentName').textContent = agentCredentials[agentId].name;
+        document.getElementById('agentTeam').textContent = 'Support Team';
+        document.getElementById('lastUpdated').textContent = 'Demo data';
+        createDefaultCharts();
+    }
+    
+    errorDiv.textContent = '';
+}
 
         function logout() {
             localStorage.removeItem('loggedInAgent');
@@ -372,34 +419,22 @@
         }
 
         function loadAgentData(agentId) {
-            // Set data based on agent
-            if (agentId.includes('simen')) {
-                document.getElementById('agentName').textContent = 'Simen F.';
-                document.getElementById('agentTeam').textContent = 'August';
-                document.getElementById('casesResolved').textContent = '136';
-                document.getElementById('avgResponseTime').textContent = '26min';
-                document.getElementById('satisfaction').textContent = '4.5';
-                document.getElementById('firstResolve').textContent = '81%';
-                document.getElementById('casesChange').textContent = '108 chats, 25 calls';
-                document.getElementById('responseChange').textContent = '3 e-poster';
-                document.getElementById('satisfactionChange').textContent = '1 arbeidsdag';
-                document.getElementById('resolveChange').textContent = 'Første måned';
-                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Live data)';
-                
-                // Show team comparison for experienced agents
-                document.getElementById('teamComparison').style.display = 'block';
-                
-                // Create charts with Simen's data
-                createChartsWithSimenData();
-            } else {
-                // Other agents get default data
-                document.getElementById('agentName').textContent = agentCredentials[agentId].name;
-                document.getElementById('agentTeam').textContent = 'Support Team';
-                document.getElementById('lastUpdated').textContent = 'Sist oppdatert: ' + new Date().toLocaleString('no-NO') + ' (Demo data)';
-                createDefaultCharts();
-            }
+    // LEGG TIL dette for å hente live data:
+if (agentId.includes('simen')) {
+    try {
+        const sheetData = await fetchFromSheets(agentId);
+        if (sheetData && sheetData.success) {
+            // Oppdater med ekte data fra Google Sheets
+            document.getElementById('agentName').textContent = sheetData.agent.name;
+            document.getElementById('agentTeam').textContent = sheetData.agent.team;
+            document.getElementById('casesResolved').textContent = sheetData.currentMonth.casesResolved;
+            // osv med resten av dataene...
         }
-
+    } catch (error) {
+        console.error('Feil ved henting av data:', error);
+        // Fallback til hardkodet data
+    }
+}
         function createChartsWithSimenData() {
             if (progressChart) progressChart.destroy();
             if (responseChart) responseChart.destroy();
@@ -505,14 +540,40 @@
         }
 
         // Check if user is already logged in
-        window.onload = function() {
-            const savedAgent = localStorage.getItem('loggedInAgent');
-            if (savedAgent && agentCredentials[savedAgent]) {
-                currentAgent = agentCredentials[savedAgent];
-                showDashboard();
-                loadAgentData(savedAgent);
-            }
+window.onload = async function() {
+    const savedAgent = localStorage.getItem('loggedInAgent');
+    if (savedAgent && agentCredentials[savedAgent]) {
+        currentAgent = agentCredentials[savedAgent];
+        // Simuler login for å få live data
+        document.getElementById('agentId').value = savedAgent;
+        await login();
+    }
+};
+
+        // Google Apps Script API kall - JSONP versjon
+async function fetchFromSheets(agentId) {
+    const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzGdq2C8ylXp3GQfLYfn22CpI7ueQZRUP7AcODUmTuLRfluwzXvuGbaALSOFpQcykdsAw/exec';
+    
+    return new Promise((resolve, reject) => {
+        const callbackName = 'agentCallback_' + Date.now();
+        
+        window[callbackName] = function(data) {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            resolve(data);
         };
+        
+        const script = document.createElement('script');
+        script.src = `${SCRIPT_URL}?callback=${callbackName}&agent=${encodeURIComponent(agentId)}`;
+        script.onerror = () => {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Failed to load script'));
+        };
+        
+        document.head.appendChild(script);
+    });
+}
     </script>
 </body>
 </html>
