@@ -656,7 +656,7 @@
         // FIKSET: Bedre JSONP implementation med timeout og error handling
         async function fetchFromSheets(agentId) {
             // OPPDATER DENNE URL-EN med din nye deployment URL:
-            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbxYczlb9GAkTPmU4YIHjqwn-GK3Y7GnAnyTTIB4SWQi4Y_5oYlPtkhhm-4xKwcVOWk4/exec';
+            const SCRIPT_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbwVKuDgveJNVCoil4efh556lm71P31raYwGa1Z5IRpGEOTBsPj3relyYUZ4PsYqgvL5/exec';
             
             return new Promise((resolve, reject) => {
                 const callbackName = 'agentCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
