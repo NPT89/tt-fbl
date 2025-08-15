@@ -1,3 +1,4 @@
+# Triggered manually at 11:24
 name: Update Dashboard Data via Proxy
 on:
   schedule:
