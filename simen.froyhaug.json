@@ -1,1 +1,8 @@
-{"success":true,"agent":"simen.froyhaug","apiResponse":{"error":{"code":403,"message":"Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.","status":"PERMISSION_DENIED"}},"message":"Google Sheets API test"}
+{
+  "success": true,
+  "agent": {"name": "Test Agent", "team": "CSV Test"},
+  "currentMonth": {"casesResolved": 100, "avgResponseTime": "30min", "satisfaction": 4.0, "firstResolve": 80, "workingDays": 15, "totalChats": 60, "totalCalls": 30, "totalEmails": 10},
+  "team": {"avgCases": 90, "avgCsat": 4.2, "ranking": 1, "totalTeams": 3},
+  "historical": {"months": ["Feb","Mar","Apr","Mai","Jun","Jul","Aug"], "casesResolved": [45,62,78,89,103,121,100], "responseTime": [2.8,2.6,2.4,2.7,2.5,2.3,2.1]},
+  "lastUpdated": "2025-08-14T15:00:00.000Z"
+}
