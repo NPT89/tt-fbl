@@ -7,16 +7,16 @@ exports.handler = async (event, context) => {
   try {
     const agentId = event.queryStringParameters?.agent || 'test';
     
-    // Test Google Sheets CSV henting
+    // Prøv Google Sheets API (offentlig - ingen API key nødvendig for public sheets)
     const SHEET_ID = '1Ivolxn5wJsUUzVEAb9Ww25tfF5ip1-2mhzSHJRePNz0';
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/AgentData`;
     
-    console.log('Fetching CSV from:', csvUrl);
+    console.log('Fetching from API:', apiUrl);
     
-    const response = await fetch(csvUrl);
-    const csvText = await response.text();
+    const response = await fetch(apiUrl);
+    const jsonData = await response.json();
     
-    console.log('CSV received, length:', csvText.length);
+    console.log('API response:', jsonData);
     
     return {
       statusCode: 200,
@@ -24,9 +24,8 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         agent: agentId,
-        csvLength: csvText.length,
-        csvPreview: csvText.substring(0, 200),
-        message: 'Google Sheets CSV test'
+        apiResponse: jsonData,
+        message: 'Google Sheets API test'
       })
     };
     
