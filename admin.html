@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Tripletex Business School</title>
+    <title>Suppa Business League</title>
     <style>
         * {
             margin: 0;
@@ -15,73 +15,492 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0066CC 0%, #00A651 100%);
             min-height: 100vh;
-            padding: 2rem;
             color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
         }
 
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
         }
 
-        .panel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #0066CC;
+        }
+
+        .nav-links {
+            display: flex;
             gap: 2rem;
+            flex-wrap: wrap;
         }
 
-        .panel {
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #0066CC;
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .dashboard {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 2rem;
+            margin-bottom: 2rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
-        .panel h2 {
-            margin-bottom: 1.5rem;
-            color: #0066CC;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 0.5rem;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .form-group {
-            margin-bottom: 1rem;
+        .stat-card {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
             font-weight: bold;
-            color: #555;
+            color: #0066CC;
+            margin-bottom: 0.5rem;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e0e0e0;
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .leaderboard h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(145deg, #f9f9f9, #ffffff);
             border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #0066CC;
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #0066CC;
+            min-width: 40px;
+        }
+
+        .rank.gold { color: #FFD700; }
+        .rank.silver { color: #C0C0C0; }
+        .rank.bronze { color: #CD7F32; }
+
+        .player-info {
+            flex-grow: 1;
+            margin-left: 1rem;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+        }
+
+        .player-company {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .business-value {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+
+        .breakdown {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            padding: 1rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .breakdown.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                padding: 0 1rem;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+                padding: 1rem;
+            }
+        }
+
+        .breakdown-section {
+            margin-bottom: 1rem;
+            border-left: 3px solid #0066CC;
+            padding-left: 1rem;
+        }
+
+        .breakdown-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .breakdown-title {
+            font-weight: bold;
+            color: #0066CC;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-item.positive {
+            color: #28a745;
+        }
+
+        .breakdown-item.negative {
+            color: #dc3545;
+        }
+
+        .breakdown-item.neutral {
+            color: #6c757d;
+        }
+
+        .breakdown-total {
+            background: #0066CC;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .scenario-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .scenario-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+.scenario-deadline {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Accounting table styling */
+        .accounting-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .accounting-table th,
+        .accounting-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .accounting-table th {
+            background: #f8f9ff;
+            font-weight: bold;
+            color: #0066CC;
+            border-bottom: 2px solid #0066CC;
+        }
+
+        .accounting-table .amount {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* NEW TASK STYLING */
+        .scenario-tasks {
+            margin: 1.5rem 0;
+        }
+
+        .task-display {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(145deg, #f8f9ff, #ffffff);
+            border-radius: 12px;
+            border-left: 4px solid #0066CC;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .task-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-number {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #0066CC;
+            min-width: 35px;
+            background: rgba(0, 102, 204, 0.1);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .task-description {
+            color: #666;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .task-rewards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .task-reward {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            font-weight: bold;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .task-penalty {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            font-weight: bold;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .scenario-choices {
+            margin: 1.5rem 0;
+        }
+
+        .choice-display {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(145deg, #f9f9f9, #ffffff);
+            border-radius: 8px;
+            border-left: 4px solid #0066CC;
+        }
+
+        .choice-letter {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #0066CC;
+            min-width: 30px;
+        }
+
+        .choice-content {
+            flex-grow: 1;
+        }
+
+        .choice-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .choice-cost {
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .choice-potential {
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .choice-odds {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .scenario-note {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .scenario-note p {
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-note p:last-child {
+            margin-bottom: 0;
+        }
+
+        .scenario-results {
+            margin-top: 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .result-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #0066CC;
+        }
+
+        .result-player {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #0066CC;
+        }
+
+        .result-choice, .result-dice, .result-outcome {
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .result-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .result-value.positive {
+            color: #28a745;
+        }
+
+        .result-value.negative {
+            color: #dc3545;
         }
 
         .btn {
@@ -94,8 +513,6 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 500;
-            width: 100%;
-            margin-top: 1rem;
         }
 
         .btn:hover {
@@ -103,772 +520,583 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            width: auto;
-            margin: 0.25rem;
-        }
-
-        .current-data {
-            background: #f9f9f9;
+        .notification {
+            background: #cce7ff;
+            border: 1px solid #99d6ff;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
-            border-left: 4px solid #0066CC;
+            animation: slideIn 0.5s ease-out;
         }
 
-        .player-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: #f0f0f0;
-            border-radius: 6px;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .player-row input {
-            width: 120px;
-            margin: 0 0.5rem;
-            padding: 0.25rem;
-        }
-
-        .export-area {
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: monospace;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
-            min-height: 200px;
-            overflow-y: auto;
-        }
-
-        .scenario-choice {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .choice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .choice-title-input {
-            flex-grow: 1;
-            font-weight: bold;
-            color: #0066CC;
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-            margin-right: 1rem;
-        }
-
-        .choice-title-input:focus {
-            outline: none;
-            border-color: #0066CC;
-            background: white;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-.tab {
-    padding: 0.75rem 1.5rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #ffffff;  /* <- Hvit tekst */
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.tab.active {
-    color: #ffffff;  /* <- Hvit også når aktiv */
-    border-bottom-color: #ffffff;  /* <- Hvit underline */
-    background: rgba(255, 255, 255, 0.1);  /* <- Subtil bakgrunn */
-}
-
-        .tab-content {
+        .hidden {
             display: none;
         }
 
-        .tab-content.active {
-            display: block;
+        /* NEW - Connection status indicator */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            min-width: 180px;
+            text-align: center;
         }
 
-        .choice-preview {
-            background: #e3f2fd;
-            border: 1px solid #bbdefb;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-
-        .dice-result {
-            background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            border-left: 4px solid #0066CC;
-        }
-
-        /* NEW TASK STYLING */
-        .scenario-task {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-.task-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    gap: 0.5rem;
-}
-
-.drag-handle {
-    cursor: move;
-    color: #666;
-    font-size: 1rem;
-    user-select: none;
-    padding: 0.25rem;
-    border-radius: 3px;
-    transition: background 0.2s ease;
-}
-
-.drag-handle:hover {
-    background: #e0e0e0;
-    color: #0066CC;
-}
-
-.scenario-task {
-    transition: all 0.2s ease;
-}
-
-.scenario-task.dragging {
-    opacity: 0.6;
-    transform: scale(1.02);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
-
-.scenario-task.drag-over {
-    border-top: 3px solid #0066CC;
-}
-
-        .task-number {
-            font-weight: bold;
-            color: #0066CC;
-            font-size: 1.1rem;
-            min-width: 30px;
-        }
-
-        .task-title-input {
-            flex-grow: 1;
-            font-weight: bold;
-            color: #333;
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-        }
-
-        .task-title-input:focus {
-            outline: none;
-            border-color: #0066CC;
-            background: white;
-        }
-
-        .task-description {
-            width: 100%;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        .task-description:focus {
-            outline: none;
-            border-color: #0066CC;
-        }
-
-        .task-rewards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-        }
-
-        .task-reward {
+        .connection-status.connected {
             color: #28a745;
-            font-weight: bold;
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
         }
 
-        .task-penalty {
+        .connection-status.loading {
+            color: #ffc107;
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .connection-status.error {
             color: #dc3545;
-            font-weight: bold;
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
         }
 
-        .task-reward, .task-penalty {
-            padding: 0.25rem 0.5rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            font-size: 0.9rem;
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .nav {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .task-display {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .task-number {
+                align-self: flex-start;
+            }
+
+            .task-rewards {
+                grid-template-columns: 1fr;
+            }
+
+            .connection-status {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 1rem;
+            }
         }
 
-        .task-reward:focus, .task-penalty:focus {
-            outline: none;
-            border-color: #0066CC;
-        }
+/* Styling for lister i task descriptions */
+.task-description ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
 
-        /* Table builder styling */
-.table-builder {
-    background: #f8f9ff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1rem;
+.task-description li {
+    margin-bottom: 0.25rem;
+}
+
+/* Styling for bold tekst i descriptions */
+.task-description strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Scrollbar styling for better appearance */
+.task-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-description::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Ensure task display has consistent spacing */
+.task-display {
+    padding: 1.5rem;
     margin-bottom: 1rem;
+    background: linear-gradient(145deg, #f8f9ff, #ffffff);
+    border-radius: 12px;
+    border-left: 4px solid #0066CC;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
 
-.table-row {
-    display: grid;
-    grid-template-columns: 80px 1fr 120px 40px;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    align-items: center;
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .task-description {
+        font-size: 0.9rem;
+        max-height: 100px;
+        padding: 0.6rem;
+    }
+        }
+        .task-description,
+        .task-content {
+            background: #f8f9ff !important;
+            color: #2c3e50 !important;
+            border: 1px solid #e3f2fd !important;
+            border-radius: 6px !important;
+            padding: 0.75rem !important;
+            white-space: pre-line !important;
+            line-height: 1.5 !important;
+        }
+
+.scenario-card {
+    padding: 3rem !important;
+    line-height: 1.6 !important;
 }
 
-.table-row input {
-    padding: 0.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 0.9rem;
+.scenario-card h2 {
+    margin-bottom: 2rem !important;
 }
 
-.table-row input:focus {
-    outline: none;
-    border-color: #0066CC;
+.scenario-card p {
+    white-space: pre-line !important;
+    margin-bottom: 1rem !important;
 }
-
-.table-row .account-input {
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-}
-
-.table-row .amount-input {
-    text-align: right;
-    font-family: 'Courier New', monospace;
-}
-
-.remove-row-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-size: 0.8rem;
-}
-
-.remove-row-btn:hover {
-    background: #c82333;
-}
-
-.table-preview {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.preview-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.preview-table th,
-.preview-table td {
-    padding: 0.5rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.preview-table th {
-    background: #f8f9ff;
-    font-weight: bold;
-    color: #0066CC;
-}
-
-.preview-table .amount {
-    text-align: right;
-    font-family: 'Courier New', monospace;
-}
-
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏆 Admin Panel - Suppa Business League</h1>
-            <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
-        </div>
+    <!-- Connection status indicator -->
+    <div id="connection-status" class="connection-status loading">
+        🔄 Kobler til database...
+    </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
-            <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
-            <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
-            <button class="tab" onclick="showTab('penalties')">Straffer</button>
-        </div>
-
-        <!-- Leaderboard Tab -->
-        <div id="leaderboard" class="tab-content active">
-            <div class="panel-grid">
-                <div class="panel">
-                    <h2>📊 Oppdater Leaderboard</h2>
-                    
-                    <div class="current-data">
-                        <strong>Nåværende rangering:</strong>
-                        <div id="current-leaderboard"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Legg til ny spiller:</label>
-                        <input type="text" id="new-player-name" placeholder="Navn">
-                        <input type="text" id="new-player-company" placeholder="Selskap">
-                        <input type="number" id="new-player-value" placeholder="500000" value="500000">
-                        <button class="btn btn-small" onclick="addPlayer()">Legg til</button>
-                    </div>
-                    
-                    <div id="player-list"></div>
-                    
-                    <button class="btn" onclick="updateLeaderboard()">Oppdater Leaderboard</button>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">🏆 Suppa Business League</div>
+                <div class="nav-links">
+                    <a class="nav-link active" data-section="dashboard">Dashboard</a>
+                    <a class="nav-link" data-section="scenario">Scenario</a>
+                    <a class="nav-link" data-section="help">Hjelp</a>
                 </div>
-
-                <div class="panel">
-                    <h2>⚡ Hurtig Business Value Endring</h2>
-                    
-                    <div class="form-group">
-                        <label>Velg spiller:</label>
-                        <select id="quick-player-select">
-                            <option value="">Velg spiller...</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Endring i Business Value:</label>
-                        <input type="number" id="quick-value-change" placeholder="+25000 eller -15000">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Grunn (valgfri):</label>
-                        <input type="text" id="quick-change-reason" placeholder="Scenario A suksess">
-                    </div>
-                    
-                    <button class="btn" onclick="applyQuickChange()">Utfør Endring</button>
-                </div>
-            </div>
+            </nav>
         </div>
+    </header>
 
-        <!-- Scenarios Tab -->
-        <div id="scenarios" class="tab-content">
-            <div class="panel-grid">
-                <div class="panel">
-                    <h2>🎲 Aktivt Scenario</h2>
+    <main class="main-content">
+        <div class="container">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section">
+                <div class="dashboard">
+                    <h1>Velkommen til Suppa Business League! 🚀</h1>
+                    <p><strong>Uke <span id="current-week">1</span> av 3</strong> - <span id="current-phase">Oppstartsfase</span></p>
                     
-                    <div class="form-group">
-                        <label>Scenariotittel:</label>
-                        <input type="text" id="scenario-title" placeholder="Måned 1: Kapasitetsutfordring">
-                    </div>
+                    <div id="notifications" class="notifications"></div>
                     
-                    <div class="form-group">
-                        <label>Scenario Bakgrunn:</label>
-                        <textarea id="scenario-background" rows="2" placeholder="Din bedrift vokser raskt, men du støter på nye utfordringer..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Obligatoriske Oppgaver:</label>
-                        <div id="scenario-tasks">
-<div class="scenario-task" data-task="1">
-    <div class="task-header">
-    <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
-    <span class="task-number">1)</span>
-    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-</div>
-    
-    <!-- NY: Type selector -->
-    <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Type oppgave:</label>
-        <select class="task-type-select" onchange="toggleTaskType(this)">
-            <option value="text">📝 Tekst beskrivelse</option>
-            <option value="table">📊 Regnskapstabell</option>
-        </select>
-    </div>
-    
-    <!-- Tekst modus (default) -->
-    <div class="text-mode">
-        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-    </div>
-    
-    <!-- Tabell modus (skjult initially) -->
-    <div class="table-mode" style="display: none;">
-        <div class="table-builder">
-            <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
-            <div class="table-rows">
-                <!-- Tabell rader genereres dynamisk -->
-            </div>
-        </div>
-    </div>
-    
-    <div class="task-rewards">
-        <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-        <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-    </div>
-</div>
-                            
-                            <div class="scenario-task" data-task="2">
-                                <div class="task-header">
-                                    <span class="task-number">2)</span>
-                                    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-                                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                                </div>
-                                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-                                <div class="task-rewards">
-<input type="text" class="task-reward" placeholder="Gevinst: +25,000 NOK">
-<input type="text" class="task-penalty" placeholder="Straff: -15,000 NOK">
-                                </div>
-                            </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-players">4</div>
+                            <div class="stat-label">Deltakere</div>
                         </div>
-                        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Deadline:</label>
-                        <input type="datetime-local" id="scenario-deadline">
-                    </div>
-                    
-                   <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
-<button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
-                </div>
-
-                <div class="panel">
-                    <h2>📝 Scenario Valg</h2>
-                    <div id="scenario-choices">
-                        <div class="scenario-choice" data-choice="A">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="A) Aggressiv ekspansjon" placeholder="A) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Høy investering + stor risiko" value="Kostnad: Høy investering + stor risiko" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Maksimal vekst eller store tap" value="Potensial: Maksimal vekst eller store tap" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 70% for stor gevinst, 30% for store tap" value="Odds: 70% for stor gevinst, 30% for store tap">
+                        <div class="stat-card">
+                            <div class="stat-value" id="current-leader">Ingen leder</div>
+                            <div class="stat-label">Nåværende Leder</div>
                         </div>
-                        <div class="scenario-choice" data-choice="B">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="B) Konservativ vekst" placeholder="B) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Moderat investering" value="Kostnad: Moderat investering" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Stabil og trygg utvikling" value="Potensial: Stabil og trygg utvikling" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 80% for trygg gevinst, 20% for mindre tap" value="Odds: 80% for trygg gevinst, 20% for mindre tap">
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-value">500,000</div>
+                            <div class="stat-label">Gjennomsnitt (NOK)</div>
                         </div>
-                        <div class="scenario-choice" data-choice="C">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="C) Balansert strategi" placeholder="C) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Variabel investering" value="Kostnad: Variabel investering" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: God balanse risiko/belønning" value="Potensial: God balanse risiko/belønning" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 60% for god gevinst, 40% for moderat tap" value="Odds: 60% for god gevinst, 40% for moderat tap">
-                        </div>
-                        <div class="scenario-choice" data-choice="D">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="D) Effektivitetsfokus" placeholder="D) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Optimalisering av eksisterende" value="Kostnad: Optimalisering av eksisterende" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Jevn og forutsigbar vekst" value="Potensial: Jevn og forutsigbar vekst" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 70% for jevn gevinst, 30% for kontrollert tap" value="Odds: 70% for jevn gevinst, 30% for kontrollert tap">
+                        <div class="stat-card">
+                            <div class="stat-value" id="scenario-status">Venter</div>
+                            <div class="stat-label">Scenario Status</div>
                         </div>
                     </div>
-                    <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
-                    
-                    <div class="choice-preview">
-                        <h3>📋 Forhåndsvisning av valg:</h3>
-                        <div id="choices-preview"></div>
-                        <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
+                </div>
+
+                <div class="leaderboard" id="leaderboard-container">
+                    <h2>🏆 Leaderboard</h2>
+                    <div id="leaderboard-content">
+                        <p>Leaderboard lastes...</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Combined Choices & Dice Tab -->
-        <div id="choices" class="tab-content">
-            <div class="panel">
-                <h2>👁️ Spillervalg & Terningkast</h2>
-                
-                <div class="form-group">
-                    <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec">
-                    <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
-                    <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
+            <!-- Scenario Section -->
+            <section id="scenario" class="section hidden">
+                <div class="scenario-section">
+                    <div id="scenario-content">
+                        <div class="scenario-card">
+                            <h2>Ingen aktivt scenario</h2>
+                            <p>Neste scenario kommer snart! Hold deg oppdatert på Dashboard.</p>
+                        </div>
+                    </div>
                 </div>
-                
-                <div id="choices-content">
-                    <p style="text-align: center; color: #666; font-style: italic;">Klikk "Hent Valg" for å se spillernes valg</p>
-                </div>
+            </section>
 
-                <div class="form-group" id="dice-section" style="display: none; margin-top: 2rem; border-top: 2px solid #f0f0f0; padding-top: 2rem;">
-                    <h3>🎲 Terningkast</h3>
-                    <p style="margin-bottom: 1rem; color: #666;">Kast terning for spillerne som har valgt:</p>
-                    <button class="btn" onclick="rollDiceWithChoices()">🎲 Kast Terning for Alle</button>
-                </div>
-                
-                <div id="dice-results-smart"></div>
-                
-                <div class="form-group" id="apply-results-section" style="display: none; margin-top: 1rem;">
-                    <button class="btn" onclick="applyDiceResults()">✅ Bruk Resultater (Oppdater Business Values)</button>
-                    <button class="btn btn-small" onclick="exportResultsForPlayers()">📤 Eksporter Resultater til Spillere</button>
-                </div>
-            </div>
-        </div>
-
-<!-- Penalties Tab -->
-<div id="penalties" class="tab-content">
-    <div class="panel-grid">
-        <!-- FØRSTE PANEL - STRAFF -->
-        <div class="panel">
-            <h2>⚠️ Legg til Straff</h2>
-            
-            <div class="form-group">
-                <label>Spiller:</label>
-                <select id="penalty-player">
-                    <option value="">Velg spiller...</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Type straff:</label>
-                <select id="penalty-type">
-                    <option value="">Velg type...</option>
-                    <option value="setup">Setup-feil (-50,000 NOK)</option>
-                    <option value="mva">MVA-feil (-25,000 NOK)</option>
-                    <option value="sale">Manglende salg (-10,000 NOK)</option>
-                    <option value="account">Feil kontokode (-5,000 NOK)</option>
-                    <option value="custom">Egendefinert</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Beløp (hvis egendefinert):</label>
-                <input type="number" id="penalty-amount" placeholder="-15000">
-            </div>
-            
-            <div class="form-group">
-                <label>Kommentar:</label>
-                <input type="text" id="penalty-comment" placeholder="Årsak til straff">
-            </div>
-            
-            <button class="btn" onclick="addPenalty()">Legg til Straff</button>
-        </div>
-
-        <!-- ANDRE PANEL - KORREKSJON -->
-        <div class="panel">
-            <h2>↩️ Korriger Straff</h2>
-            
-            <div class="form-group">
-                <label>Spiller:</label>
-                <select id="correction-player">
-                    <option value="">Velg spiller...</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Type korreksjon:</label>
-                <select id="correction-type">
-                    <option value="">Velg korreksjon...</option>
-                    <option value="reverse-setup">Korriger Setup-feil (+50,000 NOK)</option>
-                    <option value="reverse-mva">Korriger MVA-feil (+25,000 NOK)</option>
-                    <option value="reverse-sale">Korriger Manglende salg (+10,000 NOK)</option>
-                    <option value="reverse-account">Korriger Feil kontokode (+5,000 NOK)</option>
-                    <option value="custom">Egendefinert korreksjon</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Beløp (hvis egendefinert):</label>
-                <input type="number" id="correction-amount" placeholder="+25000">
-            </div>
-            
-            <div class="form-group">
-                <label>Årsak for korreksjon:</label>
-                <input type="text" id="correction-reason" placeholder="Feil tildelt straff">
-            </div>
-            
-            <button class="btn" onclick="addCorrection()" style="background: #28a745;">Korriger Straff</button>
-        </div>
+<!-- Help Section -->
+<section id="help" class="section hidden">
+    <div class="dashboard">
+        <h2>🎮 Hvordan spille</h2>
+        
+        <h3>📋 Regler</h3>
+        <p><strong>Mål:</strong> Få høyest Business Value etter 3 uker</p>
+        <p><strong>Start:</strong> 500,000 NOK på bankkonto</p>
+        <p><strong>Strategi:</strong> Velg smarte risiko/reward scenarioer</p>
+        
+        <h3>🎲 Scenarioer</h3>
+        <p>Hver uke får du et scenario med 3-4 valg. Høyere risiko = høyere potensial!</p>
+        <p>Business-logikk avgjør utfall basert på strategiske beslutninger.</p>
+        
+        <h3>⚠️ Straffer</h3>
+        <p>Feil i Tripletex reduserer Business Value. Nøyaktighet lønner seg!</p>
+        
+        <h3>🏆 Vinnere</h3>
+        <p>Høyest Business Value etter 3 uker vinner!</p>
+        <p>Det teller både scenario-gevinster og regnskaps-nøyaktighet.</p>
+        
+        <h3>👁️ Transparency</h3>
+        <p><strong>Klikk på hvem som helst</strong> i leaderboard for å se deres detaljerte breakdown!</p>
+        <p>Alt er åpent og transparent - lær av hverandres strategier og resultater.</p>
+        
+        <h3>🤝 Support</h3>
+        <p><strong>Spørsmål eller problemer?</strong> Kontakt game master!</p>
+        <p>Rapporter bugs eller tekniske problemer umiddelbart.</p>
     </div>
-</div>
+</section>
+        </div>
+    </main>
+
     <script>
-        const adminPassword = prompt("Admin passord:");
-if (adminPassword !== "PlaceholderAdmin2025") {
-    document.body.innerHTML = "<h1>Ingen tilgang</h1>";
-    throw new Error("Unauthorized");
-}
-        // Game data with real companies
-let gameData = {
-    players: [], // TOM - ingen default spillere
-    currentScenario: {}, // NULL - ingen default scenario
-    penalties: [],
-    playerBreakdowns: {}
-};
+        // GOOGLE SHEETS CONFIGURATION - UPDATED URL
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec';
 
-        // NEW TASK FUNCTIONS
-function addTask() {
-    const tasksDiv = document.getElementById('scenario-tasks');
-    const taskCount = tasksDiv.querySelectorAll('.scenario-task').length;
-    const taskNumber = taskCount + 1;
-    
-    const taskDiv = document.createElement('div');
-    taskDiv.className = 'scenario-task';
-    taskDiv.setAttribute('data-task', taskNumber);
-    taskDiv.innerHTML = `
-        <div class="task-header">
-            <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
-            <span class="task-number">${taskNumber})</span>
-            <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 1rem;">
-            <label>Type oppgave:</label>
-            <select class="task-type-select" onchange="toggleTaskType(this)">
-                <option value="text">📝 Tekst beskrivelse</option>
-                <option value="table">📊 Regnskapstabell</option>
-            </select>
-        </div>
-        
-        <div class="text-mode">
-            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-        </div>
-        
-        <div class="table-mode" style="display: none;">
-            <div class="table-builder">
-                <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
-                <div class="table-rows"></div>
-            </div>
-        </div>
-        
-        <div class="task-rewards">
-            <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-            <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-        </div>
-    `;
-    
-    // Simply append to the container
-    tasksDiv.appendChild(taskDiv);
-    
-    updateTaskNumbers();
-    
-    // Make new task draggable
-    setTimeout(() => {
-        makeDraggable();
-    }, 100);
-}
-
-        function removeTask(button) {
-            const taskDiv = button.closest('.scenario-task');
-            taskDiv.remove();
-            updateTaskNumbers();
-        }
-
-        function updateTaskNumbers() {
-            const tasks = document.querySelectorAll('.scenario-task');
-            tasks.forEach((task, index) => {
-                const taskNumber = index + 1;
-                task.setAttribute('data-task', taskNumber);
-                task.querySelector('.task-number').textContent = taskNumber + ')';
-            });
-        }
-
- function collectTasksData() {
-    const tasks = [];
-    const taskElements = document.querySelectorAll('.scenario-task');
-    
-    taskElements.forEach((taskEl, index) => {
-        const title = taskEl.querySelector('.task-title-input').value.trim();
-        const typeSelect = taskEl.querySelector('.task-type-select');
-        const type = typeSelect ? typeSelect.value : 'text';
-        const reward = taskEl.querySelector('.task-reward').value.trim();
-        const penalty = taskEl.querySelector('.task-penalty').value.trim();
-        
-        if (title) {
-            const taskData = {
-                number: index + 1,
-                title: title,
-                type: type,
-                reward: reward,
-                penalty: penalty
-            };
+        // STEG 4: Make choices clickable and send to Google Sheets
+        function makeChoicesClickable() {
+            const choiceElements = document.querySelectorAll('.choice-display');
             
-            if (type === 'table') {
-                // Collect table data
-                const tableRows = taskEl.querySelectorAll('.table-row');
-                const tableData = [];
+            choiceElements.forEach((choiceEl) => {
+                // Skip if already clickable
+                if (choiceEl.hasAttribute('data-clickable')) return;
+                choiceEl.setAttribute('data-clickable', 'true');
                 
-                tableRows.forEach(row => {
-                    const account = row.querySelector('.account-input').value.trim();
-                    const description = row.querySelector('.description-input').value.trim();
-                    const amount = row.querySelector('.amount-input').value.trim();
-                    
-                    if (account || description || amount) {
-                        tableData.push({
-                            account: account,
-                            description: description,
-                            amount: amount
-                        });
+                // Get choice letter from the choice-letter element or extract from title
+                let choiceLetter = '';
+                const choiceLetterEl = choiceEl.querySelector('.choice-letter');
+                if (choiceLetterEl) {
+                    choiceLetter = choiceLetterEl.textContent.replace(')', '');
+                } else {
+                    // Extract from choice title (A), B), etc.)
+                    const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                    const letterMatch = choiceTitle.match(/^([A-Z])\)/);
+                    choiceLetter = letterMatch ? letterMatch[1] : 'A';
+                }
+                
+                // Add click styling
+                choiceEl.style.cursor = 'pointer';
+                choiceEl.style.transition = 'all 0.3s ease';
+                
+                // Add hover effects
+                choiceEl.addEventListener('mouseenter', () => {
+                    choiceEl.style.transform = 'translateX(5px)';
+                    choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                });
+                
+                choiceEl.addEventListener('mouseleave', () => {
+                    choiceEl.style.transform = 'translateX(0)';
+                    choiceEl.style.boxShadow = 'none';
+                });
+                
+                // Add click handler
+                choiceEl.addEventListener('click', async () => {
+                    const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
+                    if (playerName && playerName.trim()) {
+                        const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
+                        const confirmed = confirm(`${playerName}, bekrefter du valg ${choiceLetter}: ${choiceTitle}?`);
+                        
+                        if (confirmed) {
+                            await sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName.trim());
+                        }
                     }
                 });
                 
-                taskData.tableData = tableData;
-            } else {
-                // Collect text description
-                taskData.description = taskEl.querySelector('.task-description').value.trim();
-            }
-            
-            tasks.push(taskData);
+                // Add visual indication that choices are clickable
+                const choiceContent = choiceEl.querySelector('.choice-content');
+                if (choiceContent && !choiceContent.querySelector('.click-hint')) {
+                    const clickHint = document.createElement('div');
+                    clickHint.innerHTML = '👆 Klikk for å velge';
+                    clickHint.className = 'click-hint';
+                    clickHint.style.cssText = 'font-size: 0.8rem; color: #0066CC; margin-top: 0.5rem; opacity: 0.7;';
+                    choiceContent.appendChild(clickHint);
+                }
+            });
         }
-    });
-    
-    return tasks;
-}
 
-        // NEW GOOGLE SHEETS INTEGRATION FOR SCENARIOS
-        function loadScenarioFromSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                console.log('No valid Google Sheets URL saved - using default scenario');
-                return;
+        // Function to send choice to Google Sheets
+        async function sendChoiceToSheets(choiceEl, choiceLetter, choiceTitle, playerName) {
+            const originalBg = choiceEl.style.backgroundColor;
+            choiceEl.style.backgroundColor = '#fff3cd';
+            choiceEl.style.borderColor = '#ffc107';
+            
+            // Add loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.innerHTML = '⏳ Sender valg...';
+            loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
+            choiceEl.appendChild(loadingEl);
+            
+            const choiceData = {
+                player: playerName,
+                choice: choiceLetter,
+                choiceTitle: choiceTitle,
+                scenarioTitle: gameState.currentScenario ? gameState.currentScenario.title : 'Unknown Scenario',
+                week: 'Current',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // Use JSONP to send choice to Google Sheets (same method as admin)
+                await new Promise((resolve, reject) => {
+                    const callbackName = 'choiceCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        if (response && response.status === 'success') {
+                            resolve(true);
+                        } else {
+                            reject(new Error(response ? response.message : 'Unknown error'));
+                        }
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('Failed to load script'));
+                    };
+
+                    script.crossOrigin = 'anonymous';
+                    
+                    const params = new URLSearchParams({
+                        callback: callbackName,
+                        player: choiceData.player,
+                        choice: choiceData.choice,
+                        choiceTitle: choiceData.choiceTitle,
+                        scenarioTitle: choiceData.scenarioTitle,
+                        week: choiceData.week,
+                        timestamp: choiceData.timestamp
+                    });
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
+                    document.head.appendChild(script);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        if (document.head.contains(script)) {
+                            document.head.removeChild(script);
+                            delete window[callbackName];
+                            reject(new Error('Request timeout'));
+                        }
+                    }, 10000);
+                });
+                
+                // Success
+                choiceEl.removeChild(loadingEl);
+                choiceEl.style.backgroundColor = '#d4edda';
+                choiceEl.style.borderColor = '#28a745';
+                
+                alert(`✅ Valg registrert: ${choiceLetter}) ${choiceTitle}\n\nDitt valg er sendt til admin og lagret i systemet!`);
+                
+                const successEl = document.createElement('div');
+                successEl.innerHTML = '✅ Valg registrert!';
+                successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
+                choiceEl.appendChild(successEl);
+                
+                // Disable further clicks
+                choiceEl.style.pointerEvents = 'none';
+                choiceEl.style.opacity = '0.8';
+                
+                addNotification(`✅ ${playerName} valgte ${choiceLetter}: ${choiceTitle}`);
+                
+            } catch (error) {
+                console.error('Error sending choice:', error);
+                
+                if (choiceEl.contains(loadingEl)) {
+                    choiceEl.removeChild(loadingEl);
+                }
+                
+                choiceEl.style.backgroundColor = '#f8d7da';
+                choiceEl.style.borderColor = '#dc3545';
+                
+                alert('❌ Feil ved sending av valg: ' + error.message + '\n\nPrøv igjen eller kontakt admin.');
+                
+                // Reset styling after 3 seconds
+                setTimeout(() => {
+                    choiceEl.style.backgroundColor = originalBg;
+                    choiceEl.style.borderColor = '';
+                }, 3000);
             }
+        }
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.className = `connection-status ${status}`;
+            
+            const icons = {
+                loading: '🔄',
+                connected: '✅',
+                error: '❌'
+            };
+            
+            statusEl.innerHTML = `${icons[status]} ${message}`;
+            
+            // Auto-hide after 5 seconds if connected
+            if (status === 'connected') {
+                setTimeout(() => {
+                    statusEl.style.opacity = '0.7';
+                    statusEl.style.transform = 'scale(0.9)';
+                }, 5000);
+            }
+        }
+
+        // DEBUG: Test the fixed Google Apps Script
+        window.debugFixedScript = function() {
+            console.log('🔧 DEBUG: Testing fixed Google Apps Script...');
+            
+            // Test getCurrentScenario specifically
+            const callbackName = 'debugFixedCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🔍 Fixed Script Response:');
+                console.log('  Type:', typeof response);
+                console.log('  Keys:', Object.keys(response));
+                console.log('  Status:', response.status);
+                console.log('  Message:', response.message);
+                console.log('  Data:', response.data);
+                console.log('  Full Response:', response);
+                
+                if (response.data) {
+                    console.log('🎯 Scenario Data Found:');
+                    console.log('  ID:', response.data.id);
+                    console.log('  Title:', response.data.title);
+                    console.log('  Tasks:', response.data.tasks);
+                    console.log('  Choices:', response.data.choices);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ DEBUG: Fixed script test failed');
+            };
+            
+            // Test the exact same URL
+            const testUrl = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            console.log('🔗 Testing URL:', testUrl);
+            
+            script.src = testUrl;
+            document.head.appendChild(script);
+        };
+
+        // DEBUG: Test different actions to see what exists
+        window.testGoogleAppsScriptActions = function() {
+            const actions = ['getPlayers', 'getCurrentScenario', 'getScenarios', 'ping'];
+            
+            actions.forEach((action, index) => {
+                setTimeout(() => {
+                    console.log(`🧪 Testing action: ${action}`);
+                    
+                    const callbackName = `testAction_${action}_${Date.now()}`;
+                    const script = document.createElement('script');
+                    
+                    window[callbackName] = function(response) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        
+                        console.log(`✅ Action "${action}" result:`, response);
+                    };
+                    
+                    script.onerror = function() {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        console.log(`❌ Action "${action}" failed`);
+                    };
+                    
+                    script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=' + action;
+                    document.head.appendChild(script);
+                }, index * 2000); // 2 second delay between tests
+            });
+        };
+
+        // DEBUG: Manual test function for scenario loading
+        window.debugScenarioLoading = function() {
+            console.log('🔧 DEBUG: Manual scenario loading test...');
+            
+            const callbackName = 'debugCallback_' + Date.now();
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                console.log('🔍 DEBUG Response type:', typeof response);
+                console.log('🔍 DEBUG Response keys:', Object.keys(response));
+                console.log('🔍 DEBUG Full response:', response);
+                
+                if (response.data) {
+                    console.log('🔍 DEBUG Response.data type:', typeof response.data);
+                    console.log('🔍 DEBUG Response.data:', response.data);
+                }
+            };
+            
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                console.log('❌ DEBUG: Script loading failed');
+            };
+            
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
+            document.head.appendChild(script);
+        };
+
+        // STEG 3: Load scenario from Google Sheets - FIXED
+        function loadScenarioFromSheets() {
+            console.log('🔄 Loading scenario from Google Sheets...');
             
             const callbackName = 'loadScenarioCallback_' + Date.now();
             const script = document.createElement('script');
@@ -877,11 +1105,20 @@ function addTask() {
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
+                console.log('🎲 Scenario response:', response);
+                
+                // Check if we got the wrong response (choices instead of scenario)
+                if (response && response.status === 'success' && response.message === 'Choice recorded successfully') {
+                    console.log('⚠️ Got choices response instead of scenario - Google Apps Script routing issue');
+                    addNotification(`⚠️ Scenario loading har routing-problem i Google Apps Script`);
+                    return;
+                }
+                
                 if (response && response.status === 'success' && response.data) {
-                    // Update gameData with loaded scenario
-                    gameData.currentScenario = {
+                    // Update gameState with loaded scenario
+                    gameState.currentScenario = {
                         id: response.data.id,
-                        title: response.data.title || '',
+                        title: response.data.title || 'Nytt Scenario',
                         background: response.data.background || '',
                         deadline: response.data.deadline || '',
                         tasks: response.data.tasks || [],
@@ -889,22 +1126,23 @@ function addTask() {
                         results: response.data.results || {}
                     };
                     
-                    console.log('✅ Scenario loaded from Google Sheets:', gameData.currentScenario.title);
+                    console.log('✅ Scenario loaded from Google Sheets:', gameState.currentScenario.title);
+                    console.log('📋 Scenario data:', gameState.currentScenario);
                     
                     // Update UI
-                    document.getElementById('scenario-title').value = gameData.currentScenario.title;
-                    document.getElementById('scenario-background').value = gameData.currentScenario.background;
-                    document.getElementById('scenario-deadline').value = gameData.currentScenario.deadline;
+                    renderScenario();
+                    updateStats();
                     
-                    // Load tasks into UI
-                    loadTasksIntoUI();
-                    
-                    // Load choices into UI  
-                   // loadChoicesIntoUI();
-                    
-                    previewChoices();
+                    addNotification(`🎲 Scenario oppdatert: ${gameState.currentScenario.title}`);
+                } else if (response && response.status === 'success' && !response.data) {
+                    console.log('ℹ️ No scenario found in Google Sheets - database empty');
+                    gameState.currentScenario = null;
+                    renderScenario();
+                    updateStats();
+                    addNotification(`ℹ️ Ingen aktive scenarioer i Google Sheets database`);
                 } else {
-                    console.log('ℹ️ No scenario found in Google Sheets - using defaults');
+                    console.log('❌ Invalid scenario response:', response);
+                    addNotification(`❌ Ugyldig scenario-respons fra Google Sheets`);
                 }
             };
             
@@ -912,10 +1150,20 @@ function addTask() {
                 document.head.removeChild(script);
                 delete window[callbackName];
                 console.log('❌ Failed to load scenario from Google Sheets');
+                addNotification(`❌ Kunne ikke laste scenario fra Google Sheets.`);
             };
             
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=getCurrentScenario';
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getCurrentScenario';
             document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    console.log('❌ Scenario loading timeout');
+                }
+            }, 15000);
         }
 
         function loadPlayerBreakdownsFromSheets() {
@@ -950,176 +1198,10 @@ function addTask() {
     document.head.appendChild(script);
 }
 
-       function saveScenarioToSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                console.log('No valid Google Sheets URL - cannot save scenario');
-                return;
-            }
-            
-            // FIRST: Collect current data from UI
-            gameData.currentScenario.title = document.getElementById('scenario-title').value;
-            gameData.currentScenario.background = document.getElementById('scenario-background').value;
-            gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
-            gameData.currentScenario.tasks = collectTasksData();
-            collectChoicesData(); // This updates gameData.currentScenario.choices
-            
-            const callbackName = 'saveScenarioCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success') {
-                    console.log('✅ Scenario saved to Google Sheets successfully');
-                    if (response.id) {
-                        gameData.currentScenario.id = response.id;
-                    }
-                } else {
-                    console.log('❌ Failed to save scenario:', response ? response.message : 'Unknown error');
-                }
-            };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                console.log('❌ Failed to save scenario to Google Sheets');
-            };
-            
-            const scenarioData = encodeURIComponent(JSON.stringify(gameData.currentScenario));
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenario&data=' + scenarioData;
-            document.head.appendChild(script);
-        }
-
-function loadTasksIntoUI() {
-    const tasksDiv = document.getElementById('scenario-tasks');
-    if (!tasksDiv) {
-        console.log('❌ scenario-tasks element not found');
-        return;
-    }
-    
-    let html = '';
-    
-    if (gameData.currentScenario.tasks && gameData.currentScenario.tasks.length > 0) {
-        gameData.currentScenario.tasks.forEach((task, index) => {
-            const taskType = task.type || 'text';
-            
-html += `
-    <div class="scenario-task" data-task="${task.number || (index + 1)}">
-        <div class="task-header">
-            <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
-            <span class="task-number">${task.number || (index + 1)})</span>
-            <input type="text" class="task-title-input" placeholder="Oppgave tittel" value="${task.title || ''}">
-            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-        </div>
-                    
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Type oppgave:</label>
-                        <select class="task-type-select" onchange="toggleTaskType(this)">
-                            <option value="text" ${taskType === 'text' ? 'selected' : ''}>📝 Tekst beskrivelse</option>
-                            <option value="table" ${taskType === 'table' ? 'selected' : ''}>📊 Regnskapstabell</option>
-                        </select>
-                    </div>
-                    
-                    <div class="text-mode" style="display: ${taskType === 'text' ? 'block' : 'none'};">
-                        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2">${task.description || ''}</textarea>
-                    </div>
-                    
-                    <div class="table-mode" style="display: ${taskType === 'table' ? 'block' : 'none'};">
-                        <div class="table-builder">
-                            <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
-                            <div class="table-rows">
-            `;
-            
-            // Add existing table rows if they exist
-            if (taskType === 'table' && task.tableData && task.tableData.length > 0) {
-                task.tableData.forEach(row => {
-                    html += `
-                        <div class="table-row">
-                            <input type="text" class="account-input" placeholder="Konto" maxlength="4" value="${row.account || ''}">
-                            <input type="text" class="description-input" placeholder="Beskrivelse" value="${row.description || ''}">
-                            <input type="text" class="amount-input" placeholder="Beløp" value="${row.amount || ''}">
-                            <button type="button" class="remove-row-btn" onclick="removeTableRow(this)">×</button>
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="task-rewards">
-                        <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK" value="${task.reward || ''}">
-                        <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK" value="${task.penalty || ''}">
-                    </div>
-                </div>
-            `;
-        });
-    }
-    
-    // Add the "Legg til oppgave" button
-    html += '<button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>';
-    
-    tasksDiv.innerHTML = html;
-    
-    // Update table previews for any loaded table tasks
-    setTimeout(() => {
-        document.querySelectorAll('.scenario-task').forEach(taskEl => {
-            const typeSelect = taskEl.querySelector('.task-type-select');
-            if (typeSelect && typeSelect.value === 'table') {
-                updateTablePreview(taskEl);
-            }
-        });
-    }, 100);
-    
-    console.log('✅ Tasks loaded into UI:', gameData.currentScenario.tasks ? gameData.currentScenario.tasks.length : 0, 'tasks');
-    
-    // Make loaded tasks draggable
-    setTimeout(() => {
-        makeDraggable();
-    }, 200);
-}
-
-        function loadChoicesIntoUI() {
-            const choicesDiv = document.getElementById('scenario-choices');
-            if (!choicesDiv) {
-                console.log('❌ scenario-choices element not found');
-                return;
-            }
-            
-            let html = '';
-            
-            if (gameData.currentScenario.choices && Object.keys(gameData.currentScenario.choices).length > 0) {
-                Object.entries(gameData.currentScenario.choices).forEach(([key, choice]) => {
-                    const title = typeof choice === 'string' ? choice : choice.title || '';
-                    html += `
-                        <div class="scenario-choice" data-choice="${key}">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="${key}) ${title}" placeholder="${key}) Valg tittel" oninput="previewChoices()">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: " value="${choice.cost || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                            <input type="text" class="choice-potential" placeholder="Potensial: " value="${choice.potential || ''}" style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                            <input type="text" class="choice-odds" placeholder="Odds: " value="${choice.odds || ''}" oninput="previewChoices()">
-                        </div>
-                    `;
-                });
-            }
-            
-            choicesDiv.innerHTML = html;
-            console.log('✅ Choices loaded into UI:', gameData.currentScenario.choices ? Object.keys(gameData.currentScenario.choices).length : 0, 'choices');
-        }
-
-        // NEW GOOGLE SHEETS INTEGRATION FOR PLAYERS
+        // STEG 2: Load players from Google Sheets - ALWAYS use Sheets data if available
         function loadPlayersFromSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                console.log('No valid Google Sheets URL saved - using default players');
-                return;
-            }
+            console.log('🔄 Loading players from Google Sheets...');
+            updateConnectionStatus('loading', 'Laster spillere...');
             
             const callbackName = 'loadPlayersCallback_' + Date.now();
             const script = document.createElement('script');
@@ -1128,1593 +1210,657 @@ html += `
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
+                console.log('📊 Players response:', response);
+                
                 if (response && response.status === 'success' && response.data && response.data.length > 0) {
-                    // Update gameData with loaded players
-                    gameData.players = response.data.map((player, index) => ({
-                        name: player.name,
-                        company: player.company,
+                    // ALWAYS use data from Google Sheets - it's our database!
+                    gameState.players = response.data.map((player, index) => ({
+                        name: player.name || `Spiller ${index + 1}`,
+                        company: player.company || player.name || `Selskap ${index + 1}`,
                         businessValue: parseInt(player.businessValue) || 500000,
                         rank: parseInt(player.rank) || (index + 1)
                     }));
                     
                     // Sort by business value and update ranks
-                    gameData.players.sort((a, b) => b.businessValue - a.businessValue);
-                    gameData.players.forEach((player, index) => {
+                    gameState.players.sort((a, b) => b.businessValue - a.businessValue);
+                    gameState.players.forEach((player, index) => {
                         player.rank = index + 1;
                     });
                     
-                    console.log('✅ Players loaded from Google Sheets:', gameData.players.length, 'players');
+                    console.log('✅ Players loaded from Google Sheets database:', gameState.players.length, 'players');
+                    console.log('📋 Player data:', gameState.players);
                     
-                    // FIXED: Force UI refresh after loading
-                    setTimeout(() => {
-                        refreshLeaderboard();
-                    }, 100);
+                    // Update UI
+                    renderLeaderboard();
+                    updateStats();
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
+                    
+                    addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
                 } else {
-                    console.log('ℹ️ No players found in Google Sheets - using defaults');
+                    console.log('ℹ️ No players found in Google Sheets - database is empty');
+                    updateConnectionStatus('connected', 'Database tom');
+                    addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
+                // Also load breakdowns from localStorage
+const savedBreakdowns = localStorage.getItem('tripletex_player_breakdowns');
+if (savedBreakdowns) {
+    gameState.playerBreakdowns = JSON.parse(savedBreakdowns);
+}
             };
             
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
+                updateConnectionStatus('error', 'Feil ved lasting av spillere');
                 console.log('❌ Failed to load players from Google Sheets');
+                addNotification(`❌ Kunne ikke laste spillerdata fra Google Sheets database.`);
             };
             
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayers';
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
             document.head.appendChild(script);
+            
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Timeout ved lasting av spillere');
+                    console.log('❌ Players loading timeout');
+                    addNotification(`⏰ Timeout ved lasting fra Google Sheets database.`);
+                }
+            }, 15000);
         }
 
-        function savePlayersToSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                console.log('No valid Google Sheets URL - cannot save players');
-                return;
-            }
+        // Test connection to Google Sheets
+        function testGoogleSheetsConnection() {
+            console.log('🔄 Testing Google Sheets connection...');
+            updateConnectionStatus('loading', 'Tester forbindelse...');
             
-            const callbackName = 'savePlayersCallback_' + Date.now();
+            const callbackName = 'testCallback_' + Date.now();
             const script = document.createElement('script');
             
             window[callbackName] = function(response) {
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
+                console.log('📡 Google Sheets response:', response);
+                
                 if (response && response.status === 'success') {
-                    console.log('✅ Players saved to Google Sheets successfully');
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
+                    console.log('✅ Google Sheets connection successful');
                 } else {
-                    console.log('❌ Failed to save players:', response ? response.message : 'Unknown error');
+                    updateConnectionStatus('error', 'Forbindelsesfeil');
+                    console.log('❌ Google Sheets connection failed:', response);
                 }
             };
             
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                console.log('❌ Failed to save players to Google Sheets');
+                updateConnectionStatus('error', 'Kan ikke nå databasen');
+                console.log('❌ Google Sheets network error');
             };
             
-            const playersData = encodeURIComponent(JSON.stringify(gameData.players));
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayers&data=' + playersData;
+            // Test with a simple ping - try getPlayers action instead of ping
+            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayers';
             document.head.appendChild(script);
-        }
-
-        function savePlayerBreakdownsToSheets() {
-    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-        console.log('No valid Google Sheets URL - cannot save player breakdowns');
-        return;
-    }
-    
-    const callbackName = 'saveBreakdownsCallback_' + Date.now();
-    const script = document.createElement('script');
-    
-    window[callbackName] = function(response) {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        
-        if (response && response.status === 'success') {
-            console.log('✅ Player breakdowns saved to Google Sheets successfully');
-        } else {
-            console.log('❌ Failed to save player breakdowns:', response ? response.message : 'Unknown error');
-        }
-    };
-    
-    script.onerror = function() {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        console.log('❌ Failed to save player breakdowns to Google Sheets');
-    };
-    
-    const breakdownsData = encodeURIComponent(JSON.stringify(gameData.playerBreakdowns));
-    script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + breakdownsData;
-    document.head.appendChild(script);
-}
-
-        // URL Storage functions
-        function saveUrl() {
-            const urlInput = document.getElementById('sheets-url-input');
-            const url = urlInput.value.trim();
             
-            if (!url || url.includes('YOUR_SCRIPT_ID')) {
-                alert('Legg inn en gyldig Google Apps Script URL først!');
-                return;
-            }
-            
-            localStorage.setItem('tripletex_sheets_url', url);
-            alert('✅ URL lagret!');
-            
-            // Auto-load players after saving URL
-            setTimeout(loadPlayersFromSheets, 1000);
-        }
-
-        function loadSavedUrl() {
-            const savedUrl = localStorage.getItem('tripletex_sheets_url');
-            if (savedUrl && !savedUrl.includes('YOUR_SCRIPT_ID')) {
-                document.getElementById('sheets-url-input').value = savedUrl;
-                return true;
-            }
-            return false;
-        }
-
-        // Tab functionality
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabName === 'leaderboard') {
-                refreshLeaderboard();
-            } else if (tabName === 'penalties') {
-                refreshPenalties();
-            }
-        }
-
-        // Leaderboard functions
-        function refreshLeaderboard() {
-            gameData.players.sort((a, b) => b.businessValue - a.businessValue);
-            
-            gameData.players.forEach((player, index) => {
-                player.rank = index + 1;
-            });
-            
-            const currentDiv = document.getElementById('current-leaderboard');
-            currentDiv.innerHTML = gameData.players.map(player => 
-                player.rank + '. ' + player.name + ' - ' + player.businessValue.toLocaleString() + ' NOK'
-            ).join('<br>');
-            
-            const playerListDiv = document.getElementById('player-list');
-            let playerHtml = '';
-            gameData.players.forEach((player, index) => {
-                playerHtml += '<div class="player-row">';
-                playerHtml += '<span>' + player.rank + '. ' + player.name + '</span>';
-                playerHtml += '<div>';
-                playerHtml += '<input type="number" value="' + player.businessValue + '" onchange="updatePlayerValue(' + index + ', this.value)">';
-                playerHtml += '<button class="btn btn-small" onclick="removePlayer(' + index + ')">Fjern</button>';
-                playerHtml += '</div>';
-                playerHtml += '</div>';
-            });
-            playerListDiv.innerHTML = playerHtml;
-            
-            updatePlayerDropdowns();
-        }
-
-function updatePlayerDropdowns() {
-    const dropdowns = [
-        'quick-player-select',
-        'penalty-player',
-        'correction-player'
-    ];
-    dropdowns.forEach(dropdownId => {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return; // hopp over hvis elementet ikke finnes
-        let options = '<option value="">Velg spiller...</option>';
-        gameData.players.forEach((player, index) => {
-            options += `<option value="${index}">${player.name}</option>`;
-        });
-        dropdown.innerHTML = options;
-    });
-}
-        function addPlayer() {
-            const name = document.getElementById('new-player-name').value;
-            const company = document.getElementById('new-player-company').value;
-            const value = parseInt(document.getElementById('new-player-value').value);
-            
-            if (name && company && value) {
-                gameData.players.push({
-                    name: name,
-                    company: company,
-                    businessValue: value,
-                    rank: gameData.players.length + 1
-                });
-                
-                document.getElementById('new-player-name').value = '';
-                document.getElementById('new-player-company').value = '';
-                document.getElementById('new-player-value').value = '500000';
-                
-                refreshLeaderboard();
-                savePlayersToSheets();
-                alert(name + ' lagt til og lagret!');
-            } else {
-                alert('Fyll inn alle felt');
-            }
-        }
-
-        function removePlayer(index) {
-            if (confirm('Sikker på at du vil fjerne ' + gameData.players[index].name + '?')) {
-                gameData.players.splice(index, 1);
-                refreshLeaderboard();
-                savePlayersToSheets();
-            }
-        }
-
-        function updatePlayerValue(index, newValue) {
-            gameData.players[index].businessValue = parseInt(newValue);
-            refreshLeaderboard();
-            savePlayersToSheets();
-        }
-
-        function applyQuickChange() {
-            const playerIndex = document.getElementById('quick-player-select').value;
-            const change = parseInt(document.getElementById('quick-value-change').value);
-            const reason = document.getElementById('quick-change-reason').value;
-            
-            if (playerIndex !== '' && change) {
-                gameData.players[playerIndex].businessValue += change;
-                
-                document.getElementById('quick-player-select').value = '';
-                document.getElementById('quick-value-change').value = '';
-                document.getElementById('quick-change-reason').value = '';
-                
-                refreshLeaderboard();
-                savePlayersToSheets();
-                alert('Endring på ' + change.toLocaleString() + ' NOK utført og lagret for ' + gameData.players[playerIndex].name);
-            } else {
-                alert('Velg spiller og angi endring');
-            }
-        }
-
-        function updateLeaderboard() {
-            savePlayersToSheets();
-            alert('Leaderboard oppdatert og lagret til Google Sheets!');
-        }
-
-        // UPDATED Scenario functions
-function updateScenario() {
-    // OPPRETT currentScenario hvis den ikke finnes
-    if (!gameData.currentScenario) {
-        gameData.currentScenario = {};
-    }
-    
-    gameData.currentScenario.title = document.getElementById('scenario-title').value;
-    gameData.currentScenario.background = document.getElementById('scenario-background').value;
-    gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
-    gameData.currentScenario.tasks = collectTasksData();
-    
-    collectChoicesData();
-    
-    // Save to Google Sheets
-    saveScenarioToSheets();
-    
-    alert('Scenario oppdatert og lagret til Google Sheets!');
-}
-
-        function loadPlayerBreakdownsFromSheets() {
-    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-        console.log('No valid Google Sheets URL - cannot load player breakdowns');
-        return;
-    }
-    
-    const callbackName = 'loadAdminBreakdownsCallback_' + Date.now();
-    const script = document.createElement('script');
-    
-    window[callbackName] = function(response) {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        
-        if (response && response.status === 'success') {
-            gameData.playerBreakdowns = response.data;
-            console.log('✅ Admin loaded existing breakdowns from Google Sheets:', Object.keys(response.data).length, 'players');
-        } else {
-            console.log('ℹ️ No existing breakdowns found in Google Sheets');
-        }
-    };
-    
-    script.onerror = function() {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        console.log('❌ Failed to load breakdowns from Google Sheets');
-    };
-    
-    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
-    document.head.appendChild(script);
-}
-
-        function collectChoicesData() {
-            const choiceElements = document.querySelectorAll('.scenario-choice');
-            const choices = {};
-            
-            choiceElements.forEach(choiceEl => {
-                const titleInput = choiceEl.querySelector('.choice-title-input');
-                const costInput = choiceEl.querySelector('.choice-cost');
-                const potentialInput = choiceEl.querySelector('.choice-potential');
-                const oddsInput = choiceEl.querySelector('.choice-odds');
-                
-                if (titleInput && titleInput.value.trim()) {
-                    const titleValue = titleInput.value.trim();
-                    const letterMatch = titleValue.match(/^([A-Z])\)/);
-                    const letter = letterMatch ? letterMatch[1] : 'A';
-                    const title = titleValue.replace(/^[A-Z]\)\s*/, '');
-                    
-                    choices[letter] = {
-                        title: title,
-                        cost: costInput ? costInput.value.trim() : '',
-                        potential: potentialInput ? potentialInput.value.trim() : '',
-                        odds: oddsInput ? oddsInput.value.trim() : ''
-                    };
+            // Timeout after 15 seconds
+            setTimeout(() => {
+                if (document.head.contains(script)) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    updateConnectionStatus('error', 'Forbindelse timeout');
+                    console.log('❌ Google Sheets connection timeout');
                 }
-            });
-            
-            gameData.currentScenario.choices = choices;
+            }, 15000);
         }
 
-        function addChoice() {
-            const choicesDiv = document.getElementById('scenario-choices');
-            const choiceCount = choicesDiv.children.length;
-            const choiceLetter = String.fromCharCode(65 + choiceCount);
-            
-            const choiceDiv = document.createElement('div');
-            choiceDiv.className = 'scenario-choice';
-            choiceDiv.setAttribute('data-choice', choiceLetter);
-            choiceDiv.innerHTML = `
-                <div class="choice-header">
-                    <input type="text" class="choice-title-input" value="${choiceLetter}) Nytt valg" placeholder="${choiceLetter}) Valg tittel" oninput="previewChoices()">
-                    <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                </div>
-                <input type="text" class="choice-cost" placeholder="Kostnad: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                <input type="text" class="choice-potential" placeholder="Potensial: " style="margin-bottom: 0.5rem;" oninput="previewChoices()">
-                <input type="text" class="choice-odds" placeholder="Odds: " oninput="previewChoices()">
-            `;
-            choicesDiv.appendChild(choiceDiv);
-            
-            setTimeout(previewChoices, 100);
-        }
-
-        function removeChoice(button) {
-            button.closest('.scenario-choice').remove();
-            previewChoices();
-        }
-
-        function previewChoices() {
-            collectChoicesData();
-            
-            const previewDiv = document.getElementById('choices-preview');
-            const choices = gameData.currentScenario.choices;
-            
-            if (!choices || Object.keys(choices).length === 0) {
-                previewDiv.innerHTML = '<p>Ingen valg lagt til ennå</p>';
-                return;
-            }
-            
-            let html = '';
-            Object.entries(choices).forEach(([key, choice]) => {
-                html += `
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: white;">
-                        <div style="font-weight: bold; color: #0066CC; margin-bottom: 0.5rem;">${key}) ${choice.title}</div>
-                        ${choice.cost ? `<div style="color: #dc3545; font-size: 0.9rem;">💰 ${choice.cost}</div>` : ''}
-                        ${choice.potential ? `<div style="color: #28a745; font-size: 0.9rem;">🎯 ${choice.potential}</div>` : ''}
-                        ${choice.odds ? `<div style="color: #666; font-size: 0.9rem;">🎲 ${choice.odds}</div>` : ''}
-                    </div>
-                `;
-            });
-            
-            previewDiv.innerHTML = html;
-        }
-
-        // Smart dice rolling with player choices
-        let loadedPlayerChoices = [];
-        let diceResultsData = [];
-
-        function rollDiceWithChoices() {
-            if (loadedPlayerChoices.length === 0) {
-                alert('Hent spillernes valg først!');
-                return;
-            }
-            
-            // Group by player and get latest choice per player
-            const playerChoices = {};
-            loadedPlayerChoices.forEach(choice => {
-                const player = choice['Player Name'];
-                if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
-                    playerChoices[player] = choice;
-                }
-            });
-            
-            diceResultsData = [];
-            let resultsHtml = '<h3>🎲 Terningkast Resultater med Business Beregninger:</h3>';
-            
-            Object.values(playerChoices).forEach(choice => {
-                const roll = Math.floor(Math.random() * 6) + 1;
-                const playerName = choice['Player Name'];
-                const choiceLetter = choice['Choice Letter'];
-                const choiceTitle = choice['Choice Title'];
-                
-                // Simple business logic based on dice roll
-                let outcome, nokValue, description;
-                
-                if (roll <= 2) {
-                    // Fiasko
-                    outcome = 'Fiasko';
-                    nokValue = -15000;
-                    description = 'Strategien slo ikke til. Tap av investeringer.';
-                } else if (roll <= 4) {
-                    // Moderat suksess  
-                    outcome = 'Moderat Suksess';
-                    nokValue = 15000;
-                    description = 'Strategien fungerte delvis. Mindre gevinst.';
-                } else {
-                    // Full suksess
-                    outcome = 'Full Suksess';
-                    nokValue = 35000;
-                    description = 'Strategien var vellykket! Stor gevinst.';
-                }
-                
-                // Store for later use
-                diceResultsData.push({
-                    player: playerName,
-                    choice: choiceLetter,
-                    choiceTitle: choiceTitle,
-                    roll: roll,
-                    outcome: outcome,
-                    nokValue: nokValue,
-                    description: description
-                });
-                
-                // Visual styling based on outcome
-                const outcomeColor = nokValue > 0 ? '#28a745' : '#dc3545';
-                const rollEmoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
-                
-                resultsHtml += '<div class="dice-result" style="border-left-color: ' + outcomeColor + ';">';
-                resultsHtml += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">';
-                resultsHtml += '<strong style="font-size: 1.1rem;">' + playerName + '</strong>';
-                resultsHtml += '<span style="font-size: 1.2rem;">' + rollEmoji + '</span>';
-                resultsHtml += '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Valg:</strong> ' + choiceLetter + ') ' + choiceTitle + '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Terning:</strong> ' + roll + ' → ' + outcome + '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem;">' + description + '</div>';
-                resultsHtml += '<div style="font-size: 1.2rem; font-weight: bold; color: ' + outcomeColor + ';">';
-                resultsHtml += (nokValue > 0 ? '+' : '') + nokValue.toLocaleString() + ' NOK';
-                resultsHtml += '</div>';
-                resultsHtml += '</div>';
-            });
-            
-            document.getElementById('dice-results-smart').innerHTML = resultsHtml;
-            document.getElementById('apply-results-section').style.display = 'block';
-            
-            // Store results in scenario and automatically save to Google Sheets
-            gameData.currentScenario.results = {};
-            diceResultsData.forEach(result => {
-                gameData.currentScenario.results[result.player] = {
-                    choice: result.choice,
-                    choiceTitle: result.choiceTitle,
-                    outcome: result.outcome,
-                    valueChange: result.nokValue,
-                    description: result.description
-                };
-            });
-
-            // NEW: Automatically save results to Google Sheets
-            saveResultsToSheets();
-        }
-
-        // NEW: Save dice results to Google Sheets automatically
-        function saveResultsToSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                alert('⚠️ Ingen Google Sheets URL lagret! Resultater kan ikke lagres automatisk.');
-                return;
-            }
-            
-            const callbackName = 'saveResultsCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-window[callbackName] = function(response) {
-    document.head.removeChild(script);
-    delete window[callbackName];
-    
-    if (response && response.status === 'success') {
-        console.log('✅ Terningkast-resultater lagret til Google Sheets!');
-        alert('✅ Terningkast-resultater automatisk lagret til Google Sheets!\n\nAdmin leaderboard oppdateres automatisk.');
-        
-        // NEW: Auto-apply results to admin leaderboard
-        applyDiceResults();
-    } else {
-        console.log('❌ Feil ved lagring til Google Sheets:', response);
-        alert('❌ Kunne ikke lagre resultater til Google Sheets: ' + (response ? response.message : 'Ukjent feil'));
-    }
+        // Game state with real companies
+let gameState = {
+    players: [], // TOM
+    currentScenario: null, // NULL
+    notifications: [],
+    playerBreakdowns: {}
 };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                alert('❌ Nettverksfeil ved lagring til Google Sheets');
-            };
-            
-            const resultsData = encodeURIComponent(JSON.stringify(gameData.currentScenario.results));
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveResults&data=' + resultsData;
-            document.head.appendChild(script);
-        }
 
-        function applyDiceResults() {
-            if (diceResultsData.length === 0) {
-                alert('Ingen resultater å anvende!');
-                return;
-            }
-            
-            let updatedCount = 0;
-            
-            diceResultsData.forEach(result => {
-                // Find player in gameData and update business value
-                const playerIndex = gameData.players.findIndex(p => p.name === result.player);
-                if (playerIndex !== -1) {
-                    // Check if already applied to avoid duplicates
-                    const currentValue = gameData.players[playerIndex].businessValue;
-                    const expectedValue = currentValue + result.nokValue;
-                    
-                    // Only apply if not already applied
-                    if (!gameData.players[playerIndex]._lastResultApplied || 
-                        gameData.players[playerIndex]._lastResultApplied !== result.nokValue) {
-                        
-                        gameData.players[playerIndex].businessValue += result.nokValue;
-                        gameData.players[playerIndex]._lastResultApplied = result.nokValue; // Track last applied
-                        
-                        // Add to player breakdown
-                        if (!gameData.playerBreakdowns[result.player]) {
-                            gameData.playerBreakdowns[result.player] = {
-                                startCapital: 500000,
-                                scenarioGains: [],
-                                penalties: [],
-                                bonuses: []
-                            };
-                        }
-                        
-                        // Check for duplicates in breakdown
-                        const existingGain = gameData.playerBreakdowns[result.player].scenarioGains.find(
-                            gain => gain.scenario === gameData.currentScenario.title && gain.choice === result.choice
-                        );
-                        
-                        if (!existingGain) {
-                            gameData.playerBreakdowns[result.player].scenarioGains.push({
-                                week: 'Current',
-                                scenario: gameData.currentScenario.title,
-                                choice: result.choice,
-                                choiceTitle: result.choiceTitle,
-                                outcome: result.outcome,
-                                description: result.description,
-                                value: result.nokValue
-                            });
-                        }
-                        
-                        updatedCount++;
-                    }
-                }
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                // Show selected section
+                const targetSection = e.target.getAttribute('data-section');
+                document.getElementById(targetSection).classList.remove('hidden');
             });
-            
-if (updatedCount > 0) {
-    refreshLeaderboard();
-    
-    // NEW: Save updated players to Google Sheets
-    savePlayersToSheets();
-    // NEW: Save player breakdowns too
-localStorage.setItem('tripletex_player_breakdowns', JSON.stringify(gameData.playerBreakdowns));
-    alert('✅ Resultater anvendt i admin! ' + updatedCount + ' spillere oppdatert.\n\n✅ Spillerdata lagret til Google Sheets!');
-} else {
-    alert('ℹ️ Resultater allerede anvendt. Ingen endringer gjort.');
-}
-        }
+        });
 
-function exportResultsForPlayers() {
-    if (diceResultsData.length === 0) {
-        alert('Ingen resultater å eksportere! Kast terning først.');
+        // Render functions
+function renderLeaderboard() {
+    const container = document.getElementById('leaderboard-content');
+    
+    if (!gameState.players || gameState.players.length === 0) {
+        container.innerHTML = '<p>Ingen spillere registrert ennå.</p>';
         return;
     }
-    
-    // LAGER LOKAL KOPI - IKKE ENDRE gameData!
-    const localPlayers = JSON.parse(JSON.stringify(gameData.players)); // Deep copy
-    const localBreakdowns = JSON.parse(JSON.stringify(gameData.playerBreakdowns)); // Deep copy
-    const localScenario = JSON.parse(JSON.stringify(gameData.currentScenario)); // Deep copy
-    
-    // Apply results to LOCAL copies only
-    diceResultsData.forEach(result => {
-        const playerIndex = localPlayers.findIndex(p => p.name === result.player);
-        if (playerIndex !== -1) {
-            localPlayers[playerIndex].businessValue += result.nokValue;
+
+    let html = '';
+    gameState.players.forEach((player, index) => {
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        
+        // Check for penalties to display
+        const playerBreakdown = gameState.playerBreakdowns[player.name];
+        let penaltyInfo = '';
+        
+        if (playerBreakdown && playerBreakdown.penalties && playerBreakdown.penalties.length > 0) {
+            const penalties = playerBreakdown.penalties;
+            const totalPenalties = penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
+            const latestPenalty = penalties[penalties.length - 1];
             
-            if (!localBreakdowns[result.player]) {
-                localBreakdowns[result.player] = {
+            penaltyInfo = `
+                <div style="font-size: 0.8rem; color: #dc3545; margin-top: 0.3rem;">
+                    <strong>Straffer:</strong> ${penalties.length} aktive (${totalPenalties.toLocaleString()} NOK totalt)<br>
+                    <strong>Siste:</strong> ${latestPenalty.type} (${latestPenalty.value.toLocaleString()} NOK)
+                </div>
+            `;
+        }
+        
+        html += `
+            <div class="leaderboard-item" 
+                 onclick="showPlayerBreakdown('${player.name}')" 
+                 title="Klikk for å se ${player.name}'s detaljer"
+                 data-player="${player.name}">
+                <span class="rank ${rankClass}">${player.rank}</span>
+                <div class="player-info">
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-company">${player.company}</div>
+                    ${penaltyInfo}
+                </div>
+                <span class="business-value">${player.businessValue.toLocaleString()} NOK</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+        function showPlayerBreakdown(playerName) {
+            // Close any existing breakdown
+            const existingBreakdown = document.querySelector('.breakdown.visible');
+            if (existingBreakdown) {
+                existingBreakdown.classList.remove('visible');
+                existingBreakdown.remove();
+            }
+            
+            // Find the player's leaderboard item
+            const playerItem = document.querySelector(`[data-player="${playerName}"]`);
+            if (!playerItem) return;
+            
+            // Get breakdown data
+            const breakdownData = gameState.playerBreakdowns[playerName];
+            if (!breakdownData) {
+                // Create default breakdown for players without data
+                const defaultBreakdown = {
                     startCapital: 500000,
                     scenarioGains: [],
                     penalties: [],
                     bonuses: []
                 };
-            }
-            
-            localBreakdowns[result.player].scenarioGains.push({
-                week: 'Current',
-                scenario: localScenario.title,
-                choice: result.choice,
-                choiceTitle: result.choiceTitle,
-                outcome: result.outcome,
-                description: result.description,
-                value: result.nokValue
-            });
-        }
-    });
-    
-    // Re-rank LOCAL players
-    localPlayers.sort((a, b) => b.businessValue - a.businessValue);
-    localPlayers.forEach((player, index) => {
-        player.rank = index + 1;
-    });
-    
-    // Add results to LOCAL scenario
-    localScenario.results = {};
-    diceResultsData.forEach(result => {
-        localScenario.results[result.player] = {
-            choice: result.choice,
-            choiceTitle: result.choiceTitle,
-            outcome: result.outcome,
-            valueChange: result.nokValue,
-            description: result.description
-        };
-    });
-    
-    // Generate codes with LOCAL data (not gameData!)
-    const updatedLeaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(localPlayers, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(localBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
-    
-    const completeUpdateCode = `// Spillerside oppdatering
-window.updateGameData({
-    scenario: ${JSON.stringify(localScenario, null, 2)},
-    players: ${JSON.stringify(localPlayers, null, 2)},
-    playerBreakdowns: ${JSON.stringify(localBreakdowns, null, 2)}
-});
-
-console.log("Spillerresultater oppdatert!");`;
-    
-    // Update export boxes
-    document.getElementById('export-leaderboard-js').textContent = updatedLeaderboardCode;
-    document.getElementById('export-scenario-js').textContent = completeUpdateCode;
-    
-    alert('✅ Resultater klar for eksport til spillere!\n\nGå til "Eksporter Data" tab og kopier scenario-koden.\n\n💡 TIP: gameData forblir uendret i admin!');
-}
-
-        // Player choices management
-        function fetchPlayerChoices() {
-            const urlInput = document.getElementById('sheets-url-input');
-            const sheetsUrl = urlInput.value.trim();
-            
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                alert('Legg inn din Google Apps Script URL først!');
+                const breakdownHTML = createBreakdownHTML(playerName, defaultBreakdown);
+                playerItem.insertAdjacentHTML('afterend', breakdownHTML);
                 return;
             }
             
-            document.getElementById('choices-content').innerHTML = '<p>⏳ Henter valg...</p>';
-            
-            // Simple JSONP fetch
-            const callbackName = 'choicesCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success' && response.data) {
-                    displayChoices(response.data);
-                } else {
-                    document.getElementById('choices-content').innerHTML = '<p>❌ Ingen valg funnet eller feil ved henting</p>';
-                }
-            };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                document.getElementById('choices-content').innerHTML = '<p>❌ Feil ved tilkobling til Google Sheets</p>';
-            };
-            
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=get';
-            document.head.appendChild(script);
+            const breakdownHTML = createBreakdownHTML(playerName, breakdownData);
+            playerItem.insertAdjacentHTML('afterend', breakdownHTML);
         }
 
-        function displayChoices(data) {
-            if (!data || data.length === 0) {
-                document.getElementById('choices-content').innerHTML = '<p>📭 Ingen valg funnet</p>';
-                return;
-            }
+        function createBreakdownHTML(playerName, breakdownData) {
+            const totalScenarioGains = breakdownData.scenarioGains.reduce((sum, gain) => sum + Number(gain.value), 0);
+            const totalPenalties = breakdownData.penalties.reduce((sum, penalty) => sum + Number(penalty.value), 0);
+            const totalBonuses = breakdownData.bonuses.reduce((sum, bonus) => sum + Number(bonus.value), 0);
+            const calculatedTotal = Number(breakdownData.startCapital) + totalScenarioGains + totalPenalties + totalBonuses;
             
-            let html = '<h3>📊 Spillervalg (' + data.length + ' totalt)</h3>';
-            
-            data.forEach(choice => {
-                html += '<div class="dice-result">';
-                html += '<strong>' + choice['Player Name'] + '</strong> - ';
-                html += 'Valg ' + choice['Choice Letter'] + ': ' + choice['Choice Title'];
-                html += '<br><small>⏰ ' + new Date(choice['Timestamp']).toLocaleString('no-NO') + '</small>';
-                html += '</div>';
-            });
-            
-            document.getElementById('choices-content').innerHTML = html;
-            
-            // Show dice section after choices are loaded
-            document.getElementById('dice-section').style.display = 'block';
-            
-            // Store choices for dice rolling
-            loadedPlayerChoices = data;
-        }
-
-        // Penalty functions
-        function addPenalty() {
-            const playerIndex = document.getElementById('penalty-player').value;
-            const penaltyType = document.getElementById('penalty-type').value;
-            const customAmount = document.getElementById('penalty-amount').value;
-            const comment = document.getElementById('penalty-comment').value;
-            
-            if (playerIndex !== '' && penaltyType) {
-                let amount = 0;
-                let description = '';
-                
-                switch(penaltyType) {
-                    case 'setup':
-                        amount = -50000;
-                        description = 'Setup-feil';
-                        break;
-                    case 'mva':
-                        amount = -25000;
-                        description = 'MVA-feil';
-                        break;
-                    case 'sale':
-                        amount = -10000;
-                        description = 'Manglende salg';
-                        break;
-                    case 'account':
-                        amount = -5000;
-                        description = 'Feil kontokode';
-                        break;
-                    case 'custom':
-                        amount = parseInt(customAmount);
-                        description = 'Egendefinert straff';
-                        break;
-                }
-                
-                const player = gameData.players[playerIndex];
-                const playerName = player.name;
-                
-                // Update business value
-                gameData.players[playerIndex].businessValue += amount;
-                
-                // FIXED: Ensure playerBreakdowns exists and add penalty properly
-                if (!gameData.playerBreakdowns[playerName]) {
-                    gameData.playerBreakdowns[playerName] = {
-                        startCapital: 500000,
-                        scenarioGains: [],
-                        penalties: [],
-                        bonuses: []
-                    };
-                }
-                
-                // Add to penalties array with proper structure
-                gameData.playerBreakdowns[playerName].penalties.push({
-                    type: description,
-                    value: amount,
-                    date: new Date().toLocaleDateString('no-NO'),
-                    status: 'aktiv',
-                    reason: comment || 'Ingen kommentar'
-                });
-                
-                // Clear form
-                document.getElementById('penalty-player').value = '';
-                document.getElementById('penalty-type').value = '';
-                document.getElementById('penalty-amount').value = '';
-                document.getElementById('penalty-comment').value = '';
-                
-                refreshLeaderboard();
-                savePlayersToSheets();
-                savePlayerBreakdownsToSheets();
-    
-    console.log('Penalty added to player:', playerName);
-    console.log('Current playerBreakdowns:', gameData.playerBreakdowns[playerName]);
-    
-    alert('Straff på ' + amount.toLocaleString() + ' NOK lagt til for ' + playerName + '.\n\nStraffen er nå synlig både i admin og spillerside!');
-} else {
-                alert('Velg spiller og type straff');
-            }
-        }
-
-function addCorrection() {
-    const playerIndex = document.getElementById('correction-player').value;
-    const correctionType = document.getElementById('correction-type').value;
-    const customAmount = document.getElementById('correction-amount').value;
-    const reason = document.getElementById('correction-reason').value;
-    
-    if (playerIndex !== '' && correctionType) {
-        let amount = 0;
-        let description = '';
-        
-        switch(correctionType) {
-            case 'reverse-setup':
-                amount = 50000;
-                description = 'Korriger Setup-feil';
-                break;
-            case 'reverse-mva':
-                amount = 25000;
-                description = 'Korriger MVA-feil';
-                break;
-            case 'reverse-sale':
-                amount = 10000;
-                description = 'Korriger Manglende salg';
-                break;
-            case 'reverse-account':
-                amount = 5000;
-                description = 'Korriger Feil kontokode';
-                break;
-            case 'custom':
-                amount = parseInt(customAmount);
-                description = 'Egendefinert korreksjon';
-                break;
-        }
-        
-        if (isNaN(amount) || amount <= 0) {
-            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
-            return;
-        }
-        
-        const player = gameData.players[playerIndex];
-        const playerName = player.name;
-        
-        // Bekreft med admin
-        const confirmed = confirm(
-            `Korriger straff for ${playerName}?\n\n` +
-            `Type: ${description}\n` +
-            `Beløp: +${amount.toLocaleString()} NOK\n` +
-            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
-            `Dette vil øke spillerens Business Value.`
-        );
-        
-        if (!confirmed) return;
-        
-        // Update business value LOKALT
-        gameData.players[playerIndex].businessValue += amount;
-        
-        // Add to playerBreakdowns as bonus
-        if (!gameData.playerBreakdowns[playerName]) {
-            gameData.playerBreakdowns[playerName] = {
-                startCapital: 500000,
-                scenarioGains: [],
-                penalties: [],
-                bonuses: []
-            };
-        }
-        
-        gameData.playerBreakdowns[playerName].bonuses.push({
-            type: description,
-            value: amount,
-            date: new Date().toLocaleDateString('no-NO'),
-            status: 'anvendt',
-            reason: reason || 'Ingen årsak oppgitt'
-        });
-        
-        // Clear form
-        document.getElementById('correction-player').value = '';
-        document.getElementById('correction-type').value = '';
-        document.getElementById('correction-amount').value = '';
-        document.getElementById('correction-reason').value = '';
-        
-        // Sync to Google Sheets
-        savePlayersToSheets();
-        savePlayerBreakdownsToSheets();
-        
-        refreshLeaderboard();
-        
-        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
-        
-    } else {
-        alert('Velg spiller og type korreksjon');
-    }
-}
-        
-function addCorrection() {
-    const playerIndex = document.getElementById('correction-player').value;
-    const correctionType = document.getElementById('correction-type').value;
-    const customAmount = document.getElementById('correction-amount').value;
-    const reason = document.getElementById('correction-reason').value;
-    
-    if (playerIndex !== '' && correctionType) {
-        let amount = 0;
-        let description = '';
-        
-        switch(correctionType) {
-            case 'reverse-setup':
-                amount = 50000;
-                description = 'Korriger Setup-feil';
-                break;
-            case 'reverse-mva':
-                amount = 25000;
-                description = 'Korriger MVA-feil';
-                break;
-            case 'reverse-sale':
-                amount = 10000;
-                description = 'Korriger Manglende salg';
-                break;
-            case 'reverse-account':
-                amount = 5000;
-                description = 'Korriger Feil kontokode';
-                break;
-            case 'custom':
-                amount = parseInt(customAmount);
-                description = 'Egendefinert korreksjon';
-                break;
-        }
-        
-        if (isNaN(amount) || amount <= 0) {
-            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
-            return;
-        }
-        
-        const player = gameData.players[playerIndex];
-        const playerName = player.name;
-        
-        // Bekreft med admin
-        const confirmed = confirm(
-            `Korriger straff for ${playerName}?\n\n` +
-            `Type: ${description}\n` +
-            `Beløp: +${amount.toLocaleString()} NOK\n` +
-            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
-            `Dette vil øke spillerens Business Value.`
-        );
-        
-        if (!confirmed) return;
-        
-        // Update business value LOKALT
-        gameData.players[playerIndex].businessValue += amount;
-        
-        // Add to playerBreakdowns as bonus
-        if (!gameData.playerBreakdowns[playerName]) {
-            gameData.playerBreakdowns[playerName] = {
-                startCapital: 500000,
-                scenarioGains: [],
-                penalties: [],
-                bonuses: []
-            };
-        }
-        
-        gameData.playerBreakdowns[playerName].bonuses.push({
-            type: description,
-            value: amount,
-            date: new Date().toLocaleDateString('no-NO'),
-            status: 'anvendt',
-            reason: reason || 'Ingen årsak oppgitt'
-        });
-        
-        // Clear form
-        document.getElementById('correction-player').value = '';
-        document.getElementById('correction-type').value = '';
-        document.getElementById('correction-amount').value = '';
-        document.getElementById('correction-reason').value = '';
-        
-        // Sync to Google Sheets
-        savePlayersToSheets();
-        savePlayerBreakdownsToSheets();
-        
-        refreshLeaderboard();
-        
-        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
-        
-    } else {
-        alert('Velg spiller og type korreksjon');
-    }
-}        
-function addCorrection() {
-    const playerIndex = document.getElementById('correction-player').value;
-    const correctionType = document.getElementById('correction-type').value;
-    const customAmount = document.getElementById('correction-amount').value;
-    const reason = document.getElementById('correction-reason').value;
-    
-    if (playerIndex !== '' && correctionType) {
-        let amount = 0;
-        let description = '';
-        
-        switch(correctionType) {
-            case 'reverse-setup':
-                amount = 50000;
-                description = 'Korriger Setup-feil';
-                break;
-            case 'reverse-mva':
-                amount = 25000;
-                description = 'Korriger MVA-feil';
-                break;
-            case 'reverse-sale':
-                amount = 10000;
-                description = 'Korriger Manglende salg';
-                break;
-            case 'reverse-account':
-                amount = 5000;
-                description = 'Korriger Feil kontokode';
-                break;
-            case 'custom':
-                amount = parseInt(customAmount);
-                description = 'Egendefinert korreksjon';
-                break;
-        }
-        
-        if (isNaN(amount) || amount <= 0) {
-            alert('Ugyldig korreksjonsbeløp - må være positivt tall');
-            return;
-        }
-        
-        const player = gameData.players[playerIndex];
-        const playerName = player.name;
-        
-        // Bekreft med admin
-        const confirmed = confirm(
-            `Korriger straff for ${playerName}?\n\n` +
-            `Type: ${description}\n` +
-            `Beløp: +${amount.toLocaleString()} NOK\n` +
-            `Årsak: ${reason || 'Ingen årsak oppgitt'}\n\n` +
-            `Dette vil øke spillerens Business Value.`
-        );
-        
-        if (!confirmed) return;
-        
-        // Update business value LOKALT
-        gameData.players[playerIndex].businessValue += amount;
-        
-        // Add to playerBreakdowns as bonus
-        if (!gameData.playerBreakdowns[playerName]) {
-            gameData.playerBreakdowns[playerName] = {
-                startCapital: 500000,
-                scenarioGains: [],
-                penalties: [],
-                bonuses: []
-            };
-        }
-        
-        gameData.playerBreakdowns[playerName].bonuses.push({
-            type: description,
-            value: amount,
-            date: new Date().toLocaleDateString('no-NO'),
-            status: 'anvendt',
-            reason: reason || 'Ingen årsak oppgitt'
-        });
-        
-        // Clear form
-        document.getElementById('correction-player').value = '';
-        document.getElementById('correction-type').value = '';
-        document.getElementById('correction-amount').value = '';
-        document.getElementById('correction-reason').value = '';
-        
-        // Sync to Google Sheets
-        savePlayersToSheets();
-        savePlayerBreakdownsToSheets();
-        
-        refreshLeaderboard();
-        
-        alert(`✅ Korreksjon på +${amount.toLocaleString()} NOK anvendt for ${playerName}!`);
-        
-    } else {
-        alert('Velg spiller og type korreksjon');
-    }
-}
-        // UPDATED Export function - KOMBINERT KODE MED TASKS
-        function generateExportCode() {
-            if (!gameData.players || gameData.players.length === 0) {
-                alert('Legg til spillere først!');
-                return;
-            }
-            
-            collectChoicesData();
-            
-            // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec';
-            
-            const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
-
-            // KOMBINERT SCENARIO + LEADERBOARD KODE MED KLIKKBARHET + TASKS
-            const combinedCode = `// KOMBINERT OPPDATERING - Dashboard + Leaderboard + Klikkbare Valg + STRUKTURERTE OPPGAVER
-// Alt-i-ett løsning som oppdaterer HELE siden!
-
-// ENDRE DENNE URL-EN OM NØDVENDIG:
-const GOOGLE_SHEETS_URL = '${savedSheetsUrl}';
-
-// Oppdater ALLE data samtidig
-window.updateGameData({
-    players: ${JSON.stringify(gameData.players, null, 2)},
-    playerBreakdowns: ${JSON.stringify(gameData.playerBreakdowns, null, 2)},
-    scenario: ${JSON.stringify(gameData.currentScenario, null, 2)}
-});
-
-// FORCE refresh dashboard stats
-setTimeout(() => {
-    // Manual dashboard update
-    if (typeof updateStats === 'function') {
-        updateStats();
-    }
-    if (typeof renderLeaderboard === 'function') {
-        renderLeaderboard();
-    }
-    if (typeof renderScenario === 'function') {
-        renderScenario();
-    }
-    
-    // Update stats manually if functions don't exist
-    const totalPlayersEl = document.getElementById('total-players');
-    const currentLeaderEl = document.getElementById('current-leader'); 
-    const avgValueEl = document.getElementById('avg-value');
-    
-    if (totalPlayersEl) totalPlayersEl.textContent = ${gameData.players.length};
-    if (currentLeaderEl) currentLeaderEl.textContent = '${gameData.players[0]?.name?.split(' ')[0] || 'N/A'}';
-    if (avgValueEl) {
-        const avg = ${Math.round(gameData.players.reduce((sum, p) => sum + p.businessValue, 0) / gameData.players.length)};
-        avgValueEl.textContent = avg.toLocaleString();
-    }
-    
-    console.log('📊 Dashboard stats manually updated');
-}, 500);
-
-// Function to send choice to Google Sheets using JSONP (bypasses CORS)
-function sendChoiceToSheets(choiceData) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(response) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            
-            if (response && response.status === 'success') {
-                resolve(true);
-            } else {
-                reject(new Error(response ? response.message : 'Unknown error'));
-            }
-        };
-        
-        script.onerror = function() {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error('Failed to load script'));
-        };
-        
-        const params = new URLSearchParams({
-            callback: callbackName,
-            player: choiceData.player,
-            choice: choiceData.choice,
-            choiceTitle: choiceData.choiceTitle,
-            scenarioTitle: choiceData.scenarioTitle,
-            week: choiceData.week,
-            timestamp: choiceData.timestamp
-        });
-        
-        script.src = GOOGLE_SHEETS_URL + '?' + params.toString();
-        document.head.appendChild(script);
-        
-        setTimeout(() => {
-            if (document.head.contains(script)) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('Request timeout'));
-            }
-        }, 10000);
-    });
-}
-
-// Make choices clickable AFTER everything is updated
-setTimeout(() => {
-    const choiceElements = document.querySelectorAll('.choice-display');
-    choiceElements.forEach((choiceEl) => {
-        const choiceLetter = choiceEl.querySelector('.choice-letter').textContent.replace(')', '');
-        
-        // Skip if already has click handler
-        if (choiceEl.hasAttribute('data-clickable')) return;
-        choiceEl.setAttribute('data-clickable', 'true');
-        
-        // Add click handler
-        choiceEl.style.cursor = 'pointer';
-        choiceEl.style.transition = 'all 0.3s ease';
-        
-        choiceEl.addEventListener('mouseenter', () => {
-            choiceEl.style.transform = 'translateX(5px)';
-            choiceEl.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
-        });
-        
-        choiceEl.addEventListener('mouseleave', () => {
-            choiceEl.style.transform = 'translateX(0)';
-            choiceEl.style.boxShadow = 'none';
-        });
-        
-        choiceEl.addEventListener('click', async () => {
-            const playerName = prompt('Skriv inn ditt navn for å velge dette alternativet:');
-            if (playerName && playerName.trim()) {
-                const choiceTitle = choiceEl.querySelector('.choice-title').textContent;
-                const confirmed = confirm(\`\${playerName}, bekrefter du valg \${choiceLetter}: \${choiceTitle}?\`);
-                
-                if (confirmed) {
-                    const originalBg = choiceEl.style.backgroundColor;
-                    choiceEl.style.backgroundColor = '#fff3cd';
-                    choiceEl.style.borderColor = '#ffc107';
+            return `
+                <div class="breakdown visible" id="breakdown-${playerName.replace(/\s+/g, '-')}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; color: #0066CC;">${playerName}'s Breakdown</h4>
+                        <button class="btn" onclick="closeBreakdown(this)" style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.8rem; margin: 0;">✕</button>
+                    </div>
                     
-                    const loadingEl = document.createElement('div');
-                    loadingEl.innerHTML = '⏳ Sender valg...';
-                    loadingEl.style.cssText = 'font-size: 0.8rem; color: #856404; margin-top: 0.5rem; font-weight: bold;';
-                    choiceEl.appendChild(loadingEl);
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">💰 Start Kapital</div>
+                        <div class="breakdown-item neutral">
+                            <span>Åpningsbalanse</span>
+                            <span>${Number(breakdownData.startCapital).toLocaleString()} NOK</span>
+                        </div>
+                    </div>
                     
-                    const choiceData = {
-                        player: playerName.trim(),
-                        choice: choiceLetter,
-                        choiceTitle: choiceTitle,
-                        scenarioTitle: ${JSON.stringify(gameData.currentScenario.title)},
-                        week: 'Current',
-                        timestamp: new Date().toISOString()
-                    };
+                    ${breakdownData.scenarioGains.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">🎲 Scenario Resultater</div>
+                        ${breakdownData.scenarioGains.map(gain => {
+                            const value = Number(gain.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>${gain.scenario} - Valg ${gain.choice}) ${gain.choiceTitle || ''}</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    <strong>${gain.outcome}</strong>${gain.description ? ` - ${gain.description}` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="breakdown-item ${totalScenarioGains > 0 ? 'positive' : totalScenarioGains < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalScenarioGains > 0 ? '#28a745' : totalScenarioGains < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
+                            <span>Total scenario gevinster</span>
+                            <span>${totalScenarioGains > 0 ? '+' : ''}${totalScenarioGains.toLocaleString()} NOK</span>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">🎲 Scenario Resultater</div>
+                        <div class="breakdown-item neutral">
+                            <span>Ingen scenario gevinster ennå</span>
+                            <span>0 NOK</span>
+                        </div>
+                    </div>
+                    `}
                     
-                    try {
-                        await sendChoiceToSheets(choiceData);
-                        
-                        choiceEl.removeChild(loadingEl);
-                        choiceEl.style.backgroundColor = '#d4edda';
-                        choiceEl.style.borderColor = '#28a745';
-                        
-                        alert(\`✅ Valg registrert: \${choiceLetter}) \${choiceTitle}\\n\\nDitt valg er sendt til admin og lagret i systemet!\`);
-                        
-                        const successEl = document.createElement('div');
-                        successEl.innerHTML = '✅ Valg registrert!';
-                        successEl.style.cssText = 'font-size: 0.8rem; color: #155724; margin-top: 0.5rem; font-weight: bold;';
-                        choiceEl.appendChild(successEl);
-                        
-                        choiceEl.style.pointerEvents = 'none';
-                        choiceEl.style.opacity = '0.8';
-                        
-                    } catch (error) {
-                        console.error('Error sending choice:', error);
-                        
-                        if (choiceEl.contains(loadingEl)) {
-                            choiceEl.removeChild(loadingEl);
-                        }
-                        
-                        choiceEl.style.backgroundColor = '#f8d7da';
-                        choiceEl.style.borderColor = '#dc3545';
-                        
-                        alert('❌ Feil ved sending av valg: ' + error.message + '\\n\\nPrøv igjen eller kontakt admin.');
-                        
-                        setTimeout(() => {
-                            choiceEl.style.backgroundColor = originalBg;
-                            choiceEl.style.borderColor = '';
-                        }, 3000);
-                    }
-                }
-            }
-        });
-        
-        // Add visual indication that choices are clickable
-        const choiceContent = choiceEl.querySelector('.choice-content');
-        if (choiceContent && !choiceContent.querySelector('.click-hint')) {
-            const clickHint = document.createElement('div');
-            clickHint.innerHTML = '👆 Klikk for å velge';
-            clickHint.className = 'click-hint';
-            clickHint.style.cssText = 'font-size: 0.8rem; color: #0066CC; margin-top: 0.5rem; opacity: 0.7;';
-            choiceContent.appendChild(clickHint);
-        }
-    });
-}, 1000);
-
-console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + Strukturerte oppgaver + Google Sheets integration!');`;
-
-            // ALWAYS update both boxes
-            document.getElementById('export-leaderboard-js').textContent = leaderboardCode;
-            document.getElementById('export-scenario-js').textContent = combinedCode;
-            
-            const urlMessage = savedSheetsUrl.includes('YOUR_SCRIPT_ID') ? 
-                '\n\n🔧 VIKTIG: Endre YOUR_SCRIPT_ID til din Google Apps Script ID!' : 
-                '\n\n✅ Google Sheets URL automatisk inkludert!';
-            
-            alert('✅ KOMBINERT kode generert med strukturerte oppgaver!' + urlMessage);
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshLeaderboard();
-            
-            const now = new Date();
-            now.setDate(now.getDate() + 2);
-            document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
-            
-            document.getElementById('scenario-title').value = '';
-            document.getElementById('scenario-background').value = '';
-            
-            previewChoices();
-            
-            // Load saved URL and set the new URL
-            const newUrl = 'https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec';
-            document.getElementById('sheets-url-input').value = newUrl;
-            localStorage.setItem('tripletex_sheets_url', newUrl);
-            
-            // Auto-load players from Google Sheets with new URL
-setTimeout(() => {
-    console.log('🔄 Auto-loading players from Google Sheets...');
-    loadPlayersFromSheets();
-    
-    console.log('🔄 Auto-loading scenario from Google Sheets...');
-    loadScenarioFromSheets();
-    
-    console.log('🔄 Auto-loading breakdowns from Google Sheets...');
-    loadPlayerBreakdownsFromSheets();
-    
-    // Add drag & drop initialization
-    console.log('🔄 Initializing drag & drop...');
-    makeDraggable();
-}, 1000);
-        });
-        // NEW: Create new scenario function
-function newScenario() {
-    if (!confirm('Er du sikker? Dette vil slette all data i skjemaet og starte på nytt.')) {
-        return;
-    }
-    
-    // Clear all input fields
-    document.getElementById('scenario-title').value = '';
-    document.getElementById('scenario-background').value = '';
-    document.getElementById('scenario-deadline').value = '';
-    
-    // Reset deadline to default (2 days from now)
-    const now = new Date();
-    now.setDate(now.getDate() + 2);
-    document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
-    
-    // Clear tasks - keep default structure
-    document.getElementById('scenario-tasks').innerHTML = `
-        <div class="scenario-task" data-task="1">
-            <div class="task-header">
-                <span class="task-number">1)</span>
-                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-            </div>
-            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-            <div class="task-rewards">
-                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-            </div>
-        </div>
-        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
-    `;
-    
-// Clear choices - keep default structure  
-document.getElementById('scenario-choices').innerHTML = `
-    <div class="scenario-choice" data-choice="A">
-        <div class="choice-header">
-            <input type="text" class="choice-title-input" value="A) Aggressiv ekspansjon" placeholder="A) Valg tittel">
-            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-        </div>
-        <input type="text" class="choice-cost" placeholder="Kostnad: Høy investering + stor risiko" value="Kostnad: Høy investering + stor risiko" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-potential" placeholder="Potensial: Maksimal vekst eller store tap" value="Potensial: Maksimal vekst eller store tap" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-odds" placeholder="Odds: 70% for stor gevinst, 30% for store tap" value="Odds: 70% for stor gevinst, 30% for store tap">
-    </div>
-    <div class="scenario-choice" data-choice="B">
-        <div class="choice-header">
-            <input type="text" class="choice-title-input" value="B) Konservativ vekst" placeholder="B) Valg tittel">
-            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-        </div>
-        <input type="text" class="choice-cost" placeholder="Kostnad: Moderat investering" value="Kostnad: Moderat investering" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-potential" placeholder="Potensial: Stabil og trygg utvikling" value="Potensial: Stabil og trygg utvikling" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-odds" placeholder="Odds: 80% for trygg gevinst, 20% for mindre tap" value="Odds: 80% for trygg gevinst, 20% for mindre tap">
-    </div>
-    <div class="scenario-choice" data-choice="C">
-        <div class="choice-header">
-            <input type="text" class="choice-title-input" value="C) Balansert strategi" placeholder="C) Valg tittel">
-            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-        </div>
-        <input type="text" class="choice-cost" placeholder="Kostnad: Variabel investering" value="Kostnad: Variabel investering" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-potential" placeholder="Potensial: God balanse risiko/belønning" value="Potensial: God balanse risiko/belønning" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-odds" placeholder="Odds: 60% for god gevinst, 40% for moderat tap" value="Odds: 60% for god gevinst, 40% for moderat tap">
-    </div>
-    <div class="scenario-choice" data-choice="D">
-        <div class="choice-header">
-            <input type="text" class="choice-title-input" value="D) Effektivitetsfokus" placeholder="D) Valg tittel">
-            <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-        </div>
-        <input type="text" class="choice-cost" placeholder="Kostnad: Optimalisering av eksisterende" value="Kostnad: Optimalisering av eksisterende" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-potential" placeholder="Potensial: Jevn og forutsigbar vekst" value="Potensial: Jevn og forutsigbar vekst" style="margin-bottom: 0.5rem;">
-        <input type="text" class="choice-odds" placeholder="Odds: 70% for jevn gevinst, 30% for kontrollert tap" value="Odds: 70% for jevn gevinst, 30% for kontrollert tap">
-    </div>
-    <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
-`;
-    
-    // Clear gameData scenario
-    gameData.currentScenario = {};
-    
-    // Update preview
-    previewChoices();
-    
-    alert('✅ Nytt scenario opprettet! Alle felter er tømt og klare for inndata.');
-}
-        // NEW: Task type toggle functionality
-function toggleTaskType(selectElement) {
-    const taskElement = selectElement.closest('.scenario-task');
-    const textMode = taskElement.querySelector('.text-mode');
-    const tableMode = taskElement.querySelector('.table-mode');
-    
-    if (selectElement.value === 'table') {
-        textMode.style.display = 'none';
-        tableMode.style.display = 'block';
-        
-        // Initialize with one empty row if no rows exist
-        const tableRows = tableMode.querySelector('.table-rows');
-        if (tableRows.children.length === 0) {
-            addTableRow(selectElement);
-        }
-    } else {
-        textMode.style.display = 'block';
-        tableMode.style.display = 'none';
-    }
-}
-
-function addTableRow(element) {
-    const taskElement = element.closest('.scenario-task');
-    const tableRows = taskElement.querySelector('.table-rows');
-    
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'table-row';
-    rowDiv.innerHTML = `
-        <input type="text" class="account-input" placeholder="Konto" maxlength="4">
-        <input type="text" class="description-input" placeholder="Beskrivelse">
-        <input type="text" class="amount-input" placeholder="Beløp">
-        <button type="button" class="remove-row-btn" onclick="removeTableRow(this)">×</button>
-    `;
-    
-    tableRows.appendChild(rowDiv);
-    updateTablePreview(taskElement);
-}
-
-function removeTableRow(button) {
-    const taskElement = button.closest('.scenario-task');
-    button.closest('.table-row').remove();
-    updateTablePreview(taskElement);
-}
-
-function updateTablePreview(taskElement) {
-    const tableRows = taskElement.querySelectorAll('.table-row');
-    const tableMode = taskElement.querySelector('.table-mode');
-    
-    // Remove existing preview
-    const existingPreview = tableMode.querySelector('.table-preview');
-    if (existingPreview) {
-        existingPreview.remove();
-    }
-    
-    if (tableRows.length === 0) return;
-    
-    // Create preview
-    const previewDiv = document.createElement('div');
-    previewDiv.className = 'table-preview';
-    
-    let tableHTML = `
-        <h4>Forhåndsvisning:</h4>
-        <table class="preview-table">
-            <thead>
-                <tr>
-                    <th>Konto</th>
-                    <th>Beskrivelse</th>
-                    <th class="amount">Beløp</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    
-    tableRows.forEach(row => {
-        const account = row.querySelector('.account-input').value || '';
-        const description = row.querySelector('.description-input').value || '';
-        const amount = row.querySelector('.amount-input').value || '';
-        
-        if (account || description || amount) {
-            tableHTML += `
-                <tr>
-                    <td><strong>${account}</strong></td>
-                    <td>${description}</td>
-                    <td class="amount">${amount}</td>
-                </tr>
+                    ${breakdownData.penalties.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">⚠️ Straffer</div>
+                        ${breakdownData.penalties.map(penalty => {
+                            const value = Number(penalty.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>${penalty.type} (${penalty.status}) - ${penalty.date}</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    ${penalty.reason}
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="breakdown-item ${totalPenalties > 0 ? 'positive' : totalPenalties < 0 ? 'negative' : 'neutral'}" style="font-weight: bold; border-top: 2px solid ${totalPenalties > 0 ? '#28a745' : totalPenalties < 0 ? '#dc3545' : '#6c757d'}; padding-top: 0.5rem;">
+                            <span>Total straffer</span>
+                            <span>${totalPenalties > 0 ? '+' : ''}${totalPenalties.toLocaleString()} NOK</span>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${breakdownData.bonuses.length > 0 ? `
+                    <div class="breakdown-section">
+                        <div class="breakdown-title">🎉 Bonuser</div>
+                        ${breakdownData.bonuses.map(bonus => {
+                            const value = Number(bonus.value);
+                            const colorClass = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+                            const sign = value > 0 ? '+' : '';
+                            
+                            return `
+                                <div class="breakdown-item ${colorClass}">
+                                    <span>${bonus.type} - ${bonus.date}</span>
+                                    <span>${sign}${value.toLocaleString()} NOK</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-left: 1rem; margin-bottom: 0.5rem;">
+                                    ${bonus.reason}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="breakdown-total">
+                        📊 Total Business Value: ${calculatedTotal.toLocaleString()} NOK
+                    </div>
+                </div>
             `;
         }
-    });
+
+        function closeBreakdown(button) {
+            const breakdown = button.closest('.breakdown');
+            if (breakdown) {
+                breakdown.classList.remove('visible');
+                breakdown.remove();
+            }
+        }
+
+        // UPDATED renderScenario function with clickable choices
+        function renderScenario() {
+            const container = document.getElementById('scenario-content');
+            
+            if (!gameState.currentScenario) {
+                container.innerHTML = `
+                    <div class="scenario-card">
+                        <h2>Ingen aktivt scenario</h2>
+                        <p>Neste scenario kommer snart! Hold deg oppdatert på Dashboard.</p>
+                        <p><em>Scenarioer styres av admin og oppdateres her når de er aktive.</em></p>
+                    </div>
+                `;
+                return;
+            }
+
+            const scenario = gameState.currentScenario;
+            const deadline = scenario.deadline ? new Date(scenario.deadline) : null;
+            const now = new Date();
+            const timeLeft = deadline ? deadline - now : 0;
+            const isExpired = timeLeft <= 0;
+            
+            let deadlineHtml = '';
+            if (deadline && !isExpired) {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                
+                const urgentClass = timeLeft < 24 * 60 * 60 * 1000 ? 'urgent' : '';
+                deadlineHtml = `
+                    <div class="scenario-deadline ${urgentClass}">
+                        ⏰ Deadline: ${days}d ${hours}t ${minutes}m igjen
+                    </div>
+                `;
+            } else if (deadline && isExpired) {
+                deadlineHtml = `
+                    <div class="scenario-deadline urgent">
+                        ⏰ Deadline passert - venter på resultater
+                    </div>
+                `;
+            }
+
+            // Build tasks HTML if available
+            let tasksHtml = '';
+            if (scenario.tasks && scenario.tasks.length > 0) {
+                tasksHtml = '<div class="scenario-tasks"><h3>📋 Obligatoriske Oppgaver:</h3>';
+                
+scenario.tasks.forEach(task => {
+    let taskContent = '';
     
-    tableHTML += `
-            </tbody>
-        </table>
+    if (task.type === 'table' && task.tableData && task.tableData.length > 0) {
+        // Render as table
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <table class="accounting-table">
+                <thead>
+                    <tr>
+                        <th>Konto</th>
+                        <th>Beskrivelse</th>
+                        <th class="amount">Beløp</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        task.tableData.forEach(row => {
+            taskContent += `
+                <tr>
+                    <td><strong>${row.account}</strong></td>
+                    <td>${row.description}</td>
+                    <td class="amount">${row.amount}</td>
+                </tr>
+            `;
+        });
+        
+        taskContent += `
+                </tbody>
+            </table>
+        `;
+    } else {
+        // Render as text
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <div class="task-description">${task.description || ''}</div>
+        `;
+    }
+    
+    tasksHtml += `
+        <div class="task-display">
+            <div class="task-number">${task.number}</div>
+            <div class="task-content">
+                ${taskContent}
+                <div class="task-rewards">
+                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
+                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
+                </div>
+            </div>
+        </div>
     `;
-    
-    previewDiv.innerHTML = tableHTML;
-    tableMode.appendChild(previewDiv);
-}
-
-// Add event listeners for live preview updates
-document.addEventListener('input', function(e) {
-    if (e.target.matches('.table-row input')) {
-        const taskElement = e.target.closest('.scenario-task');
-        updateTablePreview(taskElement);
-    }
 });
-        // DRAG & DROP FUNCTIONALITY
-function makeDraggable() {
-    const tasksContainer = document.getElementById('scenario-tasks');
-    const tasks = tasksContainer.querySelectorAll('.scenario-task');
+                tasksHtml += '</div>';
+            }
+
+            // Build choices HTML if available
+let choicesHtml = '';
+const hasResults = scenario.results && Object.keys(scenario.results).length > 0;
+if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults) {
+                choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
+                
+                Object.entries(scenario.choices).forEach(([key, choice]) => {
+                    // Handle both string choices and object choices
+                    if (typeof choice === 'string') {
+                        choicesHtml += `
+                            <div class="choice-display">
+                                <div class="choice-letter">${key})</div>
+                                <div class="choice-content">
+                                    <div class="choice-title">${choice}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        choicesHtml += `
+                            <div class="choice-display">
+                                <div class="choice-letter">${key})</div>
+                                <div class="choice-content">
+                                    <div class="choice-title">${choice.title || choice}</div>
+                                    ${choice.cost ? `<div class="choice-cost">💰 ${choice.cost}</div>` : ''}
+                                    ${choice.potential ? `<div class="choice-potential">🎯 ${choice.potential}</div>` : ''}
+                                    ${choice.odds ? `<div class="choice-odds">🎲 ${choice.odds}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                choicesHtml += '</div>';
+                
+if (!isExpired) {
+    choicesHtml += `
+        <div class="scenario-note">
+            <p><strong>⏰ VIKTIG:</strong> Du må velge ett alternativ før deadline</p>
+            <p><strong>👆</strong> Klikk på ønsket valg for å registrere</p>
+        </div>
+    `;
+} else {
+                    choicesHtml += `
+                        <div class="scenario-note">
+                            <p><strong>⏰ Valg-periode avsluttet</strong></p>
+                            <p>Venter på business-resultater...</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Build results HTML if available - Business results only (no dice details)
+            let resultsHtml = '';
+            if (scenario.results && Object.keys(scenario.results).length > 0) {
+                resultsHtml = `
+                    <div class="scenario-results">
+                        <h3>🎊 Scenario Resultater!</h3>
+                        <div class="results-grid">
+                `;
+                
+                Object.entries(scenario.results).forEach(([playerName, result]) => {
+                    resultsHtml += `
+                        <div class="result-item">
+                            <div class="result-player">${playerName}</div>
+                            <div class="result-choice">Valg: ${result.choice}) ${result.choiceTitle || result.choice}</div>
+                            <div class="result-outcome">${result.outcome}</div>
+                            ${result.description ? `<div style="font-size: 0.9rem; color: #666; margin: 0.5rem 0;">${result.description}</div>` : ''}
+                            <div class="result-value ${result.valueChange >= 0 ? 'positive' : 'negative'}">
+                                ${result.valueChange >= 0 ? '+' : ''}${result.valueChange.toLocaleString()} NOK
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsHtml += `
+                        </div>
+                        <div class="scenario-note">
+                            <p><strong>💼 Neste steg:</strong> Implementer effektene i ditt Tripletex-regnskap!</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Combine all HTML parts
+            container.innerHTML = `
+                <div class="scenario-card">
+                    <h2>${scenario.title}</h2>
+                    ${scenario.background ? `<p>${scenario.background}</p>` : 
+                      scenario.description ? `<p>${scenario.description}</p>` : ''}
+                    ${deadlineHtml}
+                    ${tasksHtml}
+                    ${choicesHtml}
+                    ${resultsHtml}
+                </div>
+            `;
+            
+            // Make choices clickable after rendering
+            setTimeout(() => {
+                makeChoicesClickable();
+            }, 100);
+        }
+
+        function updateStats() {
+            // Update dashboard stats
+            document.getElementById('total-players').textContent = gameState.players.length;
+            
+            if (gameState.players.length > 0) {
+                const leader = gameState.players[0];
+                document.getElementById('current-leader').textContent = leader.name.split(' ')[0];
+                
+                const avgValue = gameState.players.reduce((sum, p) => sum + p.businessValue, 0) / gameState.players.length;
+                document.getElementById('avg-value').textContent = avgValue.toLocaleString();
+            }
+
+            // Update scenario status
+const scenarioStatusEl = document.getElementById('scenario-status');
+if (gameState.currentScenario) {
+    const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
+    const now = new Date();
     
-    tasks.forEach(task => {
-        task.draggable = true;
-        
-        task.addEventListener('dragstart', handleDragStart);
-        task.addEventListener('dragover', handleDragOver);
-        task.addEventListener('drop', handleDrop);
-        task.addEventListener('dragend', handleDragEnd);
-        task.addEventListener('dragenter', handleDragEnter);
-        task.addEventListener('dragleave', handleDragLeave);
-    });
-}
-
-let draggedElement = null;
-
-function handleDragStart(e) {
-    draggedElement = this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.outerHTML);
-}
-
-function handleDragOver(e) {
-    if (e.preventDefault) {
-        e.preventDefault();
+    if (deadline && deadline < now) {
+        scenarioStatusEl.textContent = 'Utløpt';
+    } else if (deadline) {
+        scenarioStatusEl.textContent = 'Aktiv';
+    } else {
+        scenarioStatusEl.textContent = 'Oppgaver tilgjengelig';
     }
-    e.dataTransfer.dropEffect = 'move';
-    return false;
+} else {
+    scenarioStatusEl.textContent = 'Ingen aktive';
 }
+        }
 
-function handleDragEnter(e) {
-    if (this !== draggedElement) {
-        this.classList.add('drag-over');
-    }
-}
+        function addNotification(message, type = 'info') {
+            gameState.notifications.unshift({
+                message,
+                type,
+                timestamp: new Date(),
+                id: Date.now()
+            });
+            renderNotifications();
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                gameState.notifications = gameState.notifications.filter(n => n.id !== gameState.notifications[0].id);
+                renderNotifications();
+            }, 10000);
+        }
 
-function handleDragLeave(e) {
-    this.classList.remove('drag-over');
-}
+        function renderNotifications() {
+            const container = document.getElementById('notifications');
+            
+            if (gameState.notifications.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
 
-function handleDrop(e) {
-    if (e.stopPropagation) {
-        e.stopPropagation();
-    }
-    
-    if (draggedElement !== this) {
-        const allTasks = Array.from(document.querySelectorAll('.scenario-task'));
-        const draggedIndex = allTasks.indexOf(draggedElement);
-        const targetIndex = allTasks.indexOf(this);
-        
-        if (draggedIndex < targetIndex) {
-            this.parentNode.insertBefore(draggedElement, this.nextSibling);
-        } else {
-            this.parentNode.insertBefore(draggedElement, this);
+            let html = '';
+            gameState.notifications.slice(0, 3).forEach(notification => {
+                html += `
+                    <div class="notification">
+                        📢 ${notification.message}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Functions that admin panel can call to update this platform
+        window.updateGameData = function(newData) {
+            if (newData.players) {
+                gameState.players = newData.players;
+                renderLeaderboard();
+                updateStats();
+            }
+            if (newData.playerBreakdowns) {
+                gameState.playerBreakdowns = newData.playerBreakdowns;
+            }
+            if (newData.scenario) {
+                gameState.currentScenario = newData.scenario;
+                renderScenario();
+            }
+            if (newData.notification) {
+                addNotification(newData.notification.message, newData.notification.type);
+            }
+        };
+
+        // Auto-refresh countdown timer every minute
+function startAutoRefresh() {
+    setInterval(() => {
+        if (gameState.currentScenario && gameState.currentScenario.deadline) {
+            renderScenario(); // Updates countdown
+            updateStats(); // Updates scenario status
         }
         
-        updateTaskNumbers();
-    }
-    
-    return false;
+        // Auto-refresh scenario data every 2 minutes to check for new results
+        loadScenarioFromSheets();
+    }, 120000); // Every 2 minutes (changed from 60000)
 }
 
-function handleDragEnd(e) {
-    document.querySelectorAll('.scenario-task').forEach(task => {
-        task.classList.remove('dragging', 'drag-over');
-    });
-    draggedElement = null;
-}
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test Google Sheets connection first, then load data
+            testGoogleSheetsConnection();
+            
+            // Load real data from Google Sheets after a short delay
+            setTimeout(() => {
+                loadPlayersFromSheets();
+                loadScenarioFromSheets(); // STEG 3: Also load scenario
+            }, 2000);
+                setTimeout(() => {
+        loadPlayerBreakdownsFromSheets();
+    }, 4000);
+            renderLeaderboard();
+            renderScenario();
+            updateStats();
+            startAutoRefresh(); // Start countdown timer
+            
+            // Welcome notification
+            addNotification('Velkommen til Suppa Business League! Klikk på spillere for å se detaljer. 🎉');
+        });
     </script>
 </body>
 </html>
-                
