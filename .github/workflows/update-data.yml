@@ -13,7 +13,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
-   - name: Fetch data from copied Google Sheet
+      - name: Fetch data from copied Google Sheet
         run: |
           echo "📊 Henter ekte data fra kopiert Google Sheet..."
           
