@@ -267,13 +267,42 @@
             transition: all 0.3s ease;
         }
 
-        .scenario-deadline {
+.scenario-deadline {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
             text-align: center;
+            font-weight: bold;
+        }
+
+        /* Accounting table styling */
+        .accounting-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .accounting-table th,
+        .accounting-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .accounting-table th {
+            background: #f8f9ff;
+            font-weight: bold;
+            color: #0066CC;
+            border-bottom: 2px solid #0066CC;
+        }
+
+        .accounting-table .amount {
+            text-align: right;
+            font-family: 'Courier New', monospace;
             font-weight: bold;
         }
 
@@ -586,12 +615,91 @@
                 margin-bottom: 1rem;
             }
         }
+
+/* Styling for lister i task descriptions */
+.task-description ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.task-description li {
+    margin-bottom: 0.25rem;
+}
+
+/* Styling for bold tekst i descriptions */
+.task-description strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Scrollbar styling for better appearance */
+.task-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-description::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.task-description::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Ensure task display has consistent spacing */
+.task-display {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(145deg, #f8f9ff, #ffffff);
+    border-radius: 12px;
+    border-left: 4px solid #0066CC;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .task-description {
+        font-size: 0.9rem;
+        max-height: 100px;
+        padding: 0.6rem;
+    }
+        }
+        .task-description,
+        .task-content {
+            background: #f8f9ff !important;
+            color: #2c3e50 !important;
+            border: 1px solid #e3f2fd !important;
+            border-radius: 6px !important;
+            padding: 0.75rem !important;
+            white-space: pre-line !important;
+            line-height: 1.5 !important;
+        }
+
+.scenario-card {
+    padding: 3rem !important;
+    line-height: 1.6 !important;
+}
+
+.scenario-card h2 {
+    margin-bottom: 2rem !important;
+}
+
+.scenario-card p {
+    white-space: pre-line !important;
+    margin-bottom: 1rem !important;
+}
     </style>
 </head>
 <body>
     <!-- Connection status indicator -->
     <div id="connection-status" class="connection-status loading">
-        🔄 Kobler til Google Sheets...
+        🔄 Kobler til database...
     </div>
 
     <header class="header">
@@ -613,14 +721,14 @@
             <section id="dashboard" class="section">
                 <div class="dashboard">
                     <h1>Velkommen til Suppa Business League! 🚀</h1>
-                    <p><strong>Uke <span id="current-week">1</span> av 12</strong> - <span id="current-phase">Foundation Phase</span></p>
+                    <p><strong>Uke <span id="current-week">1</span> av 3</strong> - <span id="current-phase">Oppstartsfase</span></p>
                     
                     <div id="notifications" class="notifications"></div>
                     
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-value" id="total-players">4</div>
-                            <div class="stat-label">Aktive Spillere</div>
+                            <div class="stat-label">Deltakere</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" id="current-leader">Ingen leder</div>
@@ -657,44 +765,42 @@
                 </div>
             </section>
 
-            <!-- Help Section -->
-            <section id="help" class="section hidden">
-                <div class="dashboard">
-                    <h2>🎮 Hvordan spille</h2>
-                    
-                    <h3>📋 Regler</h3>
-                    <p><strong>Mål:</strong> Få høyest Business Value etter 12 uker</p>
-                    <p><strong>Start:</strong> 500,000 NOK på bankkonto</p>
-                    <p><strong>Strategi:</strong> Velg smarte risiko/reward scenarioer</p>
-                    
-                    <h3>🎲 Scenarioer</h3>
-                    <p>Hver måned får du et scenario med 3-4 valg. Høyere risiko = høyere potensial!</p>
-                    <p>Business-logikk avgjør utfall basert på strategiske beslutninger.</p>
-                    
-                    <h3>⚠️ Straffer</h3>
-                    <p>Feil i Tripletex gir automatiske kostnader:</p>
-                    <ul style="margin: 1rem 0; padding-left: 2rem;">
-                        <li>Feil åpningsbalanse: -50,000 NOK</li>
-                        <li>Feil MVA-oppsett: -25,000 NOK/dag</li>
-                        <li>Manglende første salg: -10,000 NOK/dag</li>
-                        <li>Feil kontokoder: -5,000 NOK per feil</li>
-                    </ul>
-                    
-                    <h3>🏆 Vinnere</h3>
-                    <p>Høyest Business Value etter 12 uker vinner!</p>
-                    <p>Det teller både scenario-gevinster og regnskaps-nøyaktighet.</p>
-                    
-                    <h3>👁️ Transparency</h3>
-                    <p><strong>Klikk på hvem som helst</strong> i leaderboard for å se deres detaljerte breakdown!</p>
-                    <p>Alt er åpent og transparent - lær av hverandres strategier og resultater.</p>
-                </div>
-            </section>
+<!-- Help Section -->
+<section id="help" class="section hidden">
+    <div class="dashboard">
+        <h2>🎮 Hvordan spille</h2>
+        
+        <h3>📋 Regler</h3>
+        <p><strong>Mål:</strong> Få høyest Business Value etter 3 uker</p>
+        <p><strong>Start:</strong> 500,000 NOK på bankkonto</p>
+        <p><strong>Strategi:</strong> Velg smarte risiko/reward scenarioer</p>
+        
+        <h3>🎲 Scenarioer</h3>
+        <p>Hver uke får du et scenario med 3-4 valg. Høyere risiko = høyere potensial!</p>
+        <p>Business-logikk avgjør utfall basert på strategiske beslutninger.</p>
+        
+        <h3>⚠️ Straffer</h3>
+        <p>Feil i Tripletex reduserer Business Value. Nøyaktighet lønner seg!</p>
+        
+        <h3>🏆 Vinnere</h3>
+        <p>Høyest Business Value etter 3 uker vinner!</p>
+        <p>Det teller både scenario-gevinster og regnskaps-nøyaktighet.</p>
+        
+        <h3>👁️ Transparency</h3>
+        <p><strong>Klikk på hvem som helst</strong> i leaderboard for å se deres detaljerte breakdown!</p>
+        <p>Alt er åpent og transparent - lær av hverandres strategier og resultater.</p>
+        
+        <h3>🤝 Support</h3>
+        <p><strong>Spørsmål eller problemer?</strong> Kontakt game master!</p>
+        <p>Rapporter bugs eller tekniske problemer umiddelbart.</p>
+    </div>
+</section>
         </div>
     </main>
 
     <script>
         // GOOGLE SHEETS CONFIGURATION - UPDATED URL
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/a/macros/visma.com/s/AKfycbzGdq2C8ylXp3GQfLYfn22CpI7ueQZRUP7AcODUmTuLRfluwzXvuGbaALSOFpQcykdsAw/exec';
 
         // STEG 4: Make choices clickable and send to Google Sheets
         function makeChoicesClickable() {
@@ -800,6 +906,8 @@
                         delete window[callbackName];
                         reject(new Error('Failed to load script'));
                     };
+
+                    script.crossOrigin = 'anonymous';
                     
                     const params = new URLSearchParams({
                         callback: callbackName,
@@ -1060,7 +1168,7 @@
 
         function loadPlayerBreakdownsFromSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/macros/s/AKfycbymARO4q3XVNcMH7PsPjsQNHU1JYColGCO5WP94cQ752QBcF_FPMAXAW6wMnIcPGg7Tyg/exec';
+                     'https://script.google.com/a/macros/visma.com/s/AKfycbzGdq2C8ylXp3GQfLYfn22CpI7ueQZRUP7AcODUmTuLRfluwzXvuGbaALSOFpQcykdsAw/exec';
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
@@ -1125,12 +1233,12 @@
                     // Update UI
                     renderLeaderboard();
                     updateStats();
-                    updateConnectionStatus('connected', 'Live data fra Sheets');
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
                     
                     addNotification(`📊 ${gameState.players.length} spillere lastet fra Google Sheets database!`);
                 } else {
                     console.log('ℹ️ No players found in Google Sheets - database is empty');
-                    updateConnectionStatus('connected', 'Tilkoblet (database tom)');
+                    updateConnectionStatus('connected', 'Database tom');
                     addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
                 // Also load breakdowns from localStorage
@@ -1178,7 +1286,7 @@ if (savedBreakdowns) {
                 console.log('📡 Google Sheets response:', response);
                 
                 if (response && response.status === 'success') {
-                    updateConnectionStatus('connected', 'Tilkoblet Google Sheets');
+                    updateConnectionStatus('connected', 'Tilkoblet databasen');
                     console.log('✅ Google Sheets connection successful');
                 } else {
                     updateConnectionStatus('error', 'Forbindelsesfeil');
@@ -1189,7 +1297,7 @@ if (savedBreakdowns) {
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                updateConnectionStatus('error', 'Kan ikke nå Google Sheets');
+                updateConnectionStatus('error', 'Kan ikke nå databasen');
                 console.log('❌ Google Sheets network error');
             };
             
@@ -1477,21 +1585,59 @@ function renderLeaderboard() {
             if (scenario.tasks && scenario.tasks.length > 0) {
                 tasksHtml = '<div class="scenario-tasks"><h3>📋 Obligatoriske Oppgaver:</h3>';
                 
-                scenario.tasks.forEach(task => {
-                    tasksHtml += `
-                        <div class="task-display">
-                            <div class="task-number">${task.number}</div>
-                            <div class="task-content">
-                                <div class="task-title">${task.title}</div>
-                                <div class="task-description">${task.description}</div>
-                                <div class="task-rewards">
-                                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
-                                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+scenario.tasks.forEach(task => {
+    let taskContent = '';
+    
+    if (task.type === 'table' && task.tableData && task.tableData.length > 0) {
+        // Render as table
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <table class="accounting-table">
+                <thead>
+                    <tr>
+                        <th>Konto</th>
+                        <th>Beskrivelse</th>
+                        <th class="amount">Beløp</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        task.tableData.forEach(row => {
+            taskContent += `
+                <tr>
+                    <td><strong>${row.account}</strong></td>
+                    <td>${row.description}</td>
+                    <td class="amount">${row.amount}</td>
+                </tr>
+            `;
+        });
+        
+        taskContent += `
+                </tbody>
+            </table>
+        `;
+    } else {
+        // Render as text
+        taskContent = `
+            <div class="task-title">${task.title}</div>
+            <div class="task-description">${task.description || ''}</div>
+        `;
+    }
+    
+    tasksHtml += `
+        <div class="task-display">
+            <div class="task-number">${task.number}</div>
+            <div class="task-content">
+                ${taskContent}
+                <div class="task-rewards">
+                    ${task.reward ? `<div class="task-reward">✅ ${task.reward}</div>` : ''}
+                    ${task.penalty ? `<div class="task-penalty">❌ ${task.penalty}</div>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+});
                 tasksHtml += '</div>';
             }
 
@@ -1528,14 +1674,14 @@ if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults)
                 });
                 choicesHtml += '</div>';
                 
-                if (!isExpired) {
-                    choicesHtml += `
-                        <div class="scenario-note">
-                            <p><strong>📝 Hvordan delta:</strong></p>
-                            <p>Klikk på ditt ønskede valg for å registrere det automatisk!</p>
-                        </div>
-                    `;
-                } else {
+if (!isExpired) {
+    choicesHtml += `
+        <div class="scenario-note">
+            <p><strong>⏰ VIKTIG:</strong> Du må velge ett alternativ før deadline</p>
+            <p><strong>👆</strong> Klikk på ønsket valg for å registrere</p>
+        </div>
+    `;
+} else {
                     choicesHtml += `
                         <div class="scenario-note">
                             <p><strong>⏰ Valg-periode avsluttet</strong></p>
@@ -1609,23 +1755,21 @@ if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults)
             }
 
             // Update scenario status
-            const scenarioStatusEl = document.getElementById('scenario-status');
-            if (gameState.currentScenario) {
-                const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
-                const now = new Date();
-                
-                if (gameState.currentScenario.results) {
-                    scenarioStatusEl.textContent = 'Resultater klar';
-                } else if (deadline && deadline < now) {
-                    scenarioStatusEl.textContent = 'Venter resultater';
-                } else if (deadline) {
-                    scenarioStatusEl.textContent = 'Aktiv';
-                } else {
-                    scenarioStatusEl.textContent = 'Planlagt';
-                }
-            } else {
-                scenarioStatusEl.textContent = 'Ingen aktive';
-            }
+const scenarioStatusEl = document.getElementById('scenario-status');
+if (gameState.currentScenario) {
+    const deadline = gameState.currentScenario.deadline ? new Date(gameState.currentScenario.deadline) : null;
+    const now = new Date();
+    
+    if (deadline && deadline < now) {
+        scenarioStatusEl.textContent = 'Utløpt';
+    } else if (deadline) {
+        scenarioStatusEl.textContent = 'Aktiv';
+    } else {
+        scenarioStatusEl.textContent = 'Oppgaver tilgjengelig';
+    }
+} else {
+    scenarioStatusEl.textContent = 'Ingen aktive';
+}
         }
 
         function addNotification(message, type = 'info') {
