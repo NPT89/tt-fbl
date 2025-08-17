@@ -1078,7 +1078,7 @@
             });
         }
 
-        // FIXED: Player breakdowns loading function
+        // FIXED: Player breakdowns loading with merge logic instead of overwrite
         function loadPlayerBreakdownsFromSheets() {
             console.log('💼 Loading player breakdowns from Google Sheets...');
             
@@ -1090,22 +1090,43 @@
                 delete window[callbackName];
                 
                 if (response && response.status === 'success') {
-                    gameState.playerBreakdowns = response.data || {};
-                    console.log('✅ Player breakdowns loaded:', Object.keys(gameState.playerBreakdowns).length, 'players');
+                    const sheetsBreakdowns = response.data || {};
+                    console.log('✅ Player breakdowns loaded from sheets:', Object.keys(sheetsBreakdowns).length, 'players');
                     
-                    // Force re-render leaderboard with penalty info
+                    // CRITICAL: MERGE instead of replace to preserve scenario results
+                    Object.entries(sheetsBreakdowns).forEach(([playerName, sheetsData]) => {
+                        if (!gameState.playerBreakdowns[playerName]) {
+                            // Player doesn't exist locally, use sheets data
+                            gameState.playerBreakdowns[playerName] = sheetsData;
+                        } else {
+                            // Player exists locally, merge carefully
+                            const localData = gameState.playerBreakdowns[playerName];
+                            
+                            // Merge penalties and bonuses from sheets (these are admin-controlled)
+                            gameState.playerBreakdowns[playerName] = {
+                                startCapital: sheetsData.startCapital || localData.startCapital || 500000,
+                                scenarioGains: localData.scenarioGains || [], // KEEP LOCAL scenario results
+                                penalties: sheetsData.penalties || [], // Use sheets penalties 
+                                bonuses: sheetsData.bonuses || [] // Use sheets bonuses
+                            };
+                        }
+                    });
+                    
+                    console.log('🔄 Merged breakdowns with local scenario results');
+                    
+                    // Force re-render leaderboard with merged data
                     renderLeaderboard();
                 } else {
-                    console.log('ℹ️ No player breakdowns found in Google Sheets');
-                    gameState.playerBreakdowns = {};
+                    console.log('ℹ️ No player breakdowns found in Google Sheets - keeping local data');
+                    gameState.playerBreakdowns = gameState.playerBreakdowns || {};
                 }
             };
             
             script.onerror = function() {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                console.log('❌ Failed to load player breakdowns from Google Sheets');
-                gameState.playerBreakdowns = {};
+                console.log('❌ Failed to load player breakdowns from Google Sheets - keeping local data');
+                gameState.playerBreakdowns = gameState.playerBreakdowns || {};
             };
             
             script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
