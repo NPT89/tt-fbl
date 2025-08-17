@@ -1240,15 +1240,23 @@
             }
         }
 
-        // FIXED: Enhanced scenario rendering with PROPER results display
+        // FIXED: Enhanced scenario rendering with PROPER results display and DOM verification
         function renderScenario() {
             const container = document.getElementById('scenario-content');
             
+            if (!container) {
+                console.error('❌ scenario-content element not found in DOM!');
+                return;
+            }
+            
+            console.log('🎯 renderScenario called, container found:', container);
+            
             if (!gameState.currentScenario) {
+                console.log('ℹ️ No current scenario, showing default message');
                 container.innerHTML = `
                     <div class="scenario-card">
                         <h2>Ingen aktivt scenario</h2>
-                        <p>Neste scenario kommer snart! Hold deg oppdatert på Dashboard.</p>
+                        <p>Neste scenario kommer snart! Hold deg oppdateret på Dashboard.</p>
                         <p><em>Scenarioer styres av admin og oppdateres her når de er aktive.</em></p>
                     </div>
                 `;
@@ -1392,10 +1400,13 @@
                 }
             }
 
-            // FIXED: Build results HTML with enhanced styling
+            // FIXED: Build results HTML with enhanced styling and DEBUG logging
             let resultsHtml = '';
             if (hasResults) {
                 console.log('🎊 Rendering results for scenario:', scenario.title);
+                console.log('🎊 Results data:', scenario.results);
+                console.log('🎊 Number of results:', Object.keys(scenario.results).length);
+                
                 resultsHtml = `
                     <div class="scenario-results">
                         <h3>🎊 Scenario Resultater!</h3>
@@ -1403,6 +1414,8 @@
                 `;
                 
                 Object.entries(scenario.results).forEach(([playerName, result]) => {
+                    console.log(`🎊 Processing result for ${playerName}:`, result);
+                    
                     const isPositive = result.valueChange >= 0;
                     const outcomeClass = result.outcome.toLowerCase().includes('fiasko') ? 'failure' : 
                                        result.outcome.toLowerCase().includes('moderat') ? 'moderate' : 'success';
@@ -1428,10 +1441,14 @@
                         </div>
                     </div>
                 `;
+                
+                console.log('🎊 Generated results HTML length:', resultsHtml.length);
+            } else {
+                console.log('ℹ️ No results to render');
             }
 
-            // Combine all HTML parts
-            container.innerHTML = `
+            // FIXED: Combine all HTML parts with DOM verification
+            const finalHTML = `
                 <div class="scenario-card">
                     <h2>${scenario.title}</h2>
                     ${scenario.background ? `<p>${scenario.background}</p>` : 
@@ -1443,11 +1460,45 @@
                 </div>
             `;
             
+            console.log('🎯 Final HTML length:', finalHTML.length);
+            console.log('🎯 HTML contains results:', finalHTML.includes('scenario-results'));
+            console.log('🎯 Setting innerHTML on container:', container);
+            
+            // Set the HTML
+            container.innerHTML = finalHTML;
+            
+            // VERIFY the update worked
+            setTimeout(() => {
+                const updatedContainer = document.getElementById('scenario-content');
+                const resultsSection = updatedContainer ? updatedContainer.querySelector('.scenario-results') : null;
+                
+                console.log('🔍 DOM Verification after innerHTML:');
+                console.log('  - Container exists:', !!updatedContainer);
+                console.log('  - Container innerHTML length:', updatedContainer ? updatedContainer.innerHTML.length : 0);
+                console.log('  - Results section found:', !!resultsSection);
+                
+                if (hasResults && !resultsSection) {
+                    console.error('❌ CRITICAL: Results HTML was generated but not found in DOM!');
+                    console.error('❌ This suggests a DOM rendering issue');
+                    
+                    // FORCE a direct results injection as fallback
+                    if (updatedContainer) {
+                        console.log('🔧 ATTEMPTING FORCE INJECTION...');
+                        const forceResultsDiv = document.createElement('div');
+                        forceResultsDiv.innerHTML = resultsHtml;
+                        updatedContainer.appendChild(forceResultsDiv);
+                        console.log('🔧 Force injection completed');
+                    }
+                } else if (hasResults && resultsSection) {
+                    console.log('✅ Results successfully rendered in DOM!');
+                }
+            }, 100);
+            
             // Make choices clickable after rendering (only if no results)
             if (!hasResults) {
                 setTimeout(() => {
                     makeChoicesClickable();
-                }, 100);
+                }, 200);
             }
         }
 
@@ -1761,7 +1812,7 @@
             }, 15000);
         }
 
-        // DEBUG FUNCTIONS
+        // DEBUG FUNCTIONS - Enhanced with DOM verification
         window.debugScenarioResults = function() {
             console.log('🔧 DEBUG: Current scenario state');
             console.log('  Scenario exists:', !!gameState.currentScenario);
@@ -1771,11 +1822,55 @@
                 console.log('  Results count:', gameState.currentScenario.results ? Object.keys(gameState.currentScenario.results).length : 0);
                 console.log('  Results data:', gameState.currentScenario.results);
             }
+            
+            // Check DOM state
+            console.log('🔧 DEBUG: DOM state');
+            const container = document.getElementById('scenario-content');
+            console.log('  Container exists:', !!container);
+            if (container) {
+                console.log('  Container innerHTML length:', container.innerHTML.length);
+                const resultsSection = container.querySelector('.scenario-results');
+                console.log('  Results section in DOM:', !!resultsSection);
+                if (resultsSection) {
+                    console.log('  Results section innerHTML length:', resultsSection.innerHTML.length);
+                }
+            }
         };
 
         window.forceLoadScenario = function() {
             console.log('🔧 DEBUG: Force loading scenario...');
             loadScenarioFromSheets();
+        };
+
+        window.forceRenderScenario = function() {
+            console.log('🔧 DEBUG: Force rendering scenario...');
+            renderScenario();
+        };
+
+        window.testResultsHTML = function() {
+            console.log('🔧 DEBUG: Testing results HTML generation...');
+            
+            if (!gameState.currentScenario || !gameState.currentScenario.results) {
+                console.log('❌ No scenario or results to test with');
+                return;
+            }
+            
+            const container = document.getElementById('scenario-content');
+            if (!container) {
+                console.log('❌ Container not found');
+                return;
+            }
+            
+            // Inject test results HTML directly
+            const testHTML = `
+                <div class="scenario-results" style="background: red; padding: 20px; color: white;">
+                    <h3>🧪 TEST RESULTS SECTION</h3>
+                    <div>This is a test to verify DOM injection works</div>
+                </div>
+            `;
+            
+            container.innerHTML = testHTML;
+            console.log('🧪 Test HTML injected - check if red box appears');
         };
 
         // Initialize on page load
