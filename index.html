@@ -1167,8 +1167,7 @@
         }
 
         function loadPlayerBreakdownsFromSheets() {
-    const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/macros/s/AKfycbzIYn7ZeLaY7IlfrEOcdEEez3YuAQZQCIR5G2zq9APVCecTqgJIrP6QT1PeW1VpxfJK/exec';
+
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
@@ -1178,7 +1177,11 @@
         delete window[callbackName];
         
         if (response && response.status === 'success') {
-            gameState.playerBreakdowns = response.data;
+if (response.data && Object.keys(response.data).length > 0) {
+    gameState.playerBreakdowns = response.data;
+} else {
+    console.log('⚠️ Keeping existing breakdowns - Sheets empty');
+}
             console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data).length, 'players');
             
             // Force re-render leaderboard med penalties
@@ -1241,11 +1244,7 @@
                     updateConnectionStatus('connected', 'Database tom');
                     addNotification(`ℹ️ Google Sheets database er tom. Legg til spillere i admin panel.`);
                 }
-                // Also load breakdowns from localStorage
-const savedBreakdowns = localStorage.getItem('tripletex_player_breakdowns');
-if (savedBreakdowns) {
-    gameState.playerBreakdowns = JSON.parse(savedBreakdowns);
-}
+
             };
             
             script.onerror = function() {
