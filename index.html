@@ -892,7 +892,7 @@
             }
         }
 
-        // FIXED: Enhanced scenario loading with better error handling and debug info
+        // FIXED: Enhanced scenario loading with automatic breakdown sync
         function loadScenarioFromSheets() {
             console.log('🎲 Loading scenario from Google Sheets...');
             
@@ -920,8 +920,12 @@
                     console.log('✅ Scenario loaded successfully:', gameState.currentScenario.title);
                     console.log('🎯 Scenario has results:', Object.keys(gameState.currentScenario.results).length > 0);
                     
+                    // CRITICAL: Sync results to breakdowns when scenario loads
+                    syncScenarioResultsToBreakdowns();
+                    
                     // Update UI
                     renderScenario();
+                    renderLeaderboard(); // Re-render to show updated breakdowns
                     updateStats();
                     
                     // Check for results and notify
@@ -963,7 +967,7 @@
             }, 15000);
         }
 
-        // FIXED: Enhanced player loading with better breakdowns integration
+        // FIXED: Enhanced player loading with PROPER breakdown sync from scenario results
         function loadPlayersFromSheets() {
             console.log('📊 Loading players from Google Sheets...');
             updateConnectionStatus('loading', 'Laster spillere...');
@@ -992,6 +996,9 @@
                     });
                     
                     console.log('✅ Players loaded from database:', gameState.players.length, 'players');
+                    
+                    // CRITICAL: Sync scenario results into player breakdowns
+                    syncScenarioResultsToBreakdowns();
                     
                     // Update UI
                     renderLeaderboard();
@@ -1029,6 +1036,46 @@
                     console.log('⏰ Players loading timeout');
                 }
             }, 15000);
+        }
+
+        // NEW: Sync scenario results into player breakdowns
+        function syncScenarioResultsToBreakdowns() {
+            if (!gameState.currentScenario || !gameState.currentScenario.results) {
+                console.log('ℹ️ No scenario results to sync');
+                return;
+            }
+            
+            console.log('🔄 Syncing scenario results to player breakdowns...');
+            
+            Object.entries(gameState.currentScenario.results).forEach(([playerName, result]) => {
+                if (!gameState.playerBreakdowns[playerName]) {
+                    gameState.playerBreakdowns[playerName] = {
+                        startCapital: 500000,
+                        scenarioGains: [],
+                        penalties: [],
+                        bonuses: []
+                    };
+                }
+                
+                // Check if this result already exists
+                const existingGain = gameState.playerBreakdowns[playerName].scenarioGains.find(
+                    gain => gain.scenario === gameState.currentScenario.title && gain.choice === result.choice
+                );
+                
+                if (!existingGain) {
+                    gameState.playerBreakdowns[playerName].scenarioGains.push({
+                        week: 'Current',
+                        scenario: gameState.currentScenario.title,
+                        choice: result.choice,
+                        choiceTitle: result.choiceTitle,
+                        outcome: result.outcome,
+                        description: result.description,
+                        value: result.valueChange
+                    });
+                    
+                    console.log(`✅ Added scenario result for ${playerName}: ${result.valueChange} NOK`);
+                }
+            });
         }
 
         // FIXED: Player breakdowns loading function
