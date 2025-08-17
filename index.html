@@ -454,25 +454,62 @@
             margin-bottom: 0;
         }
 
-        /* FIXED: Better styling for results section with !important overrides */
-        .scenario-results {
+        /* EMERGENCY CSS OVERRIDES - Maximum specificity to force results visibility */
+        #scenario-content .scenario-results,
+        .scenario-section .scenario-results,
+        .scenario-card .scenario-results {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 999 !important;
             margin-top: 2rem !important;
             background: linear-gradient(145deg, #f0f8ff, #e8f4f8) !important;
             border-radius: 12px !important;
             padding: 2rem !important;
-            border: 2px solid #0066CC !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-            display: block !important; /* FORCE VISIBILITY */
-            visibility: visible !important; /* FORCE VISIBILITY */
-            opacity: 1 !important; /* FORCE VISIBILITY */
+            border: 3px solid #ff0000 !important; /* RED BORDER FOR DEBUGGING */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+            width: 100% !important;
+            height: auto !important;
+            max-width: none !important;
+            min-height: 200px !important;
         }
 
-        .scenario-results h3 {
-            color: #0066CC !important;
+        #scenario-content .scenario-results h3,
+        .scenario-section .scenario-results h3,
+        .scenario-card .scenario-results h3 {
+            display: block !important;
+            visibility: visible !important;
+            color: #ff0000 !important; /* RED TEXT FOR DEBUGGING */
             margin-bottom: 1.5rem !important;
             text-align: center !important;
-            font-size: 1.5rem !important;
+            font-size: 2rem !important;
+            font-weight: bold !important;
+        }
+
+        #scenario-content .results-grid,
+        .scenario-section .results-grid,
+        .scenario-card .results-grid {
+            display: grid !important;
+            visibility: visible !important;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+            gap: 1.5rem !important;
+            margin: 1.5rem 0 !important;
+            width: 100% !important;
+        }
+
+        #scenario-content .result-item,
+        .scenario-section .result-item,
+        .scenario-card .result-item {
             display: block !important;
+            visibility: visible !important;
+            background: #ffff00 !important; /* YELLOW BACKGROUND FOR DEBUGGING */
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+            border: 3px solid #00ff00 !important; /* GREEN BORDER FOR DEBUGGING */
+            margin-bottom: 1rem !important;
+            min-height: 150px !important;
         }
 
         .results-grid {
