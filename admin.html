@@ -504,7 +504,7 @@
                         <textarea id="scenario-background" rows="2" placeholder="Din bedrift vokser raskt, men du støter på nye utfordringer..."></textarea>
                     </div>
 
-                    <div class="form-group">
+<div class="form-group">
     <label>Uke/Periode:</label>
     <select id="scenario-week">
         <option value="Uke 1">Uke 1 - Grunnleggende</option>
@@ -526,31 +526,51 @@
 <div class="form-group">
     <label>Obligatoriske Oppgaver:</label>
     <div id="scenario-tasks">
-
-                    <div class="form-group">
-                        <label>Obligatoriske Oppgaver:</label>
-                        <div id="scenario-tasks">
-<div class="scenario-task" data-task="1">
-    <div class="task-header">
-    <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
-    <span class="task-number">1)</span>
-    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+        <div class="scenario-task" data-task="1">
+            <div class="task-header">
+                <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+                <span class="task-number">1)</span>
+                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Type oppgave:</label>
+                <select class="task-type-select" onchange="toggleTaskType(this)">
+                    <option value="text">📝 Tekst beskrivelse</option>
+                    <option value="table">📊 Regnskapstabell</option>
+                </select>
+            </div>
+            
+            <div class="text-mode">
+                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+            </div>
+            
+            <div class="table-mode" style="display: none;">
+                <div class="table-builder">
+                    <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                    <div class="table-rows"></div>
+                </div>
+            </div>
+            
+            <div class="task-rewards">
+                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+            </div>
+        </div>
+        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
+    </div>
 </div>
-    
-    <!-- NY: Type selector -->
-    <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Type oppgave:</label>
-        <select class="task-type-select" onchange="toggleTaskType(this)">
-            <option value="text">📝 Tekst beskrivelse</option>
-            <option value="table">📊 Regnskapstabell</option>
-        </select>
+
+<div class="form-group">
+    <label>Deadline:</label>
+    <input type="datetime-local" id="scenario-deadline">
+</div>
+
+<button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+<button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
     </div>
-    
-    <!-- Tekst modus (default) -->
-    <div class="text-mode">
-        <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-    </div>
+ 
     
     <!-- Tabell modus (skjult initially) -->
     <div class="table-mode" style="display: none;">
