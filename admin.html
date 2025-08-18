@@ -655,6 +655,7 @@
             </div>
 
             <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+            <button class="btn" onclick="archiveAndStartNew()" style="background: #ff8c00; margin-top: 0.5rem;">🔄 Arkiver og start nytt</button>
             <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
         </div>
 
@@ -3040,6 +3041,179 @@ function showTab(tabName) {
         refreshPenalties();
     } else if (tabName === 'library') {
         loadScenarioLibrary();
+    }
+}
+
+        // Arkiver nåværende scenario og start nytt
+function archiveAndStartNew() {
+    const currentTitle = document.getElementById('scenario-title').value;
+    const currentWeek = document.getElementById('scenario-week').value;
+    
+    if (!currentTitle.trim()) {
+        alert('❌ Ingen scenario å arkivere. Opprett et scenario først.');
+        return;
+    }
+    
+    const confirmed = confirm(
+        `🔄 ARKIVER OG START NYTT\n\n` +
+        `Dette vil:\n` +
+        `1. Arkivere: "${currentTitle}" (${currentWeek})\n` +
+        `2. Starte nytt scenario for neste uke\n\n` +
+        `Er du sikker?`
+    );
+    
+    if (!confirmed) return;
+    
+    // Step 1: Archive current scenario
+    archiveCurrentScenario(() => {
+        // Step 2: Start new scenario (callback after archiving)
+        startNextScenario();
+    });
+}
+
+// Archive current scenario
+function archiveCurrentScenario(callback) {
+    if (!gameData.currentScenario) {
+        gameData.currentScenario = {};
+    }
+    
+    // Collect current data
+    gameData.currentScenario.title = document.getElementById('scenario-title').value;
+    gameData.currentScenario.background = document.getElementById('scenario-background').value;
+    gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
+    gameData.currentScenario.week = document.getElementById('scenario-week').value;
+    gameData.currentScenario.status = 'arkiv'; // Force to archive
+    gameData.currentScenario.tasks = collectTasksData();
+    collectChoicesData();
+    
+    // Add archive metadata
+    gameData.currentScenario.archivedDate = new Date().toISOString();
+    gameData.currentScenario.archivedBy = 'Admin';
+    
+    console.log('🗄️ Archiving scenario:', gameData.currentScenario.title);
+    
+    // Save to Google Sheets as archived
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl) {
+        alert('❌ Google Sheets URL ikke konfigurert');
+        return;
+    }
+    
+    const callbackName = 'archiveScenarioCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            console.log('✅ Scenario archived successfully');
+            if (callback) callback(); // Continue to next step
+        } else {
+            alert('❌ Feil ved arkivering: ' + (response ? response.message : 'Ukjent feil'));
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        alert('❌ Nettverksfeil ved arkivering');
+    };
+    
+    const scenarioData = encodeURIComponent(JSON.stringify(gameData.currentScenario));
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenario&data=' + scenarioData;
+    document.head.appendChild(script);
+}
+
+// Start new scenario for next week
+function startNextScenario() {
+    const currentWeek = document.getElementById('scenario-week').value;
+    const nextWeek = getNextWeek(currentWeek);
+    
+    console.log('🆕 Starting new scenario for:', nextWeek);
+    
+    // Clear current scenario
+    gameData.currentScenario = {};
+    
+    // Clear form fields
+    document.getElementById('scenario-title').value = '';
+    document.getElementById('scenario-background').value = '';
+    document.getElementById('scenario-deadline').value = '';
+    document.getElementById('scenario-week').value = nextWeek;
+    document.getElementById('scenario-status').value = 'kladd';
+    
+    // Set deadline to next week (7 days from now)
+    const nextDeadline = new Date();
+    nextDeadline.setDate(nextDeadline.getDate() + 7);
+    document.getElementById('scenario-deadline').value = nextDeadline.toISOString().slice(0, 16);
+    
+    // Clear tasks - keep default structure
+    document.getElementById('scenario-tasks').innerHTML = `
+        <div class="scenario-task" data-task="1">
+            <div class="task-header">
+                <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+                <span class="task-number">1)</span>
+                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Type oppgave:</label>
+                <select class="task-type-select" onchange="toggleTaskType(this)">
+                    <option value="text">📝 Tekst beskrivelse</option>
+                    <option value="table">📊 Regnskapstabell</option>
+                </select>
+            </div>
+            
+            <div class="text-mode">
+                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+            </div>
+            
+            <div class="table-mode" style="display: none;">
+                <div class="table-builder">
+                    <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                    <div class="table-rows"></div>
+                </div>
+            </div>
+            
+            <div class="task-rewards">
+                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+            </div>
+        </div>
+        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
+    `;
+    
+    // Reset choices to defaults for new week
+    document.getElementById('scenario-choices').innerHTML = `
+        <div class="scenario-choice" data-choice="A">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" value="A) Ny strategi" placeholder="A) Valg tittel">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: " style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-potential" placeholder="Potensial: " style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-odds" placeholder="Odds: " >
+        </div>
+        <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
+    `;
+    
+    // Re-initialize draggable tasks
+    setTimeout(() => {
+        makeDraggable();
+        previewChoices();
+    }, 100);
+    
+    alert(`✅ Scenario arkivert og nytt scenario startet!\n\n📅 Nå jobber du med: ${nextWeek}\n💡 Fyll inn ny tittel og oppgaver.`);
+}
+
+// Helper: Get next week
+function getNextWeek(currentWeek) {
+    switch(currentWeek) {
+        case 'Uke 1': return 'Uke 2';
+        case 'Uke 2': return 'Uke 3';
+        case 'Uke 3': return 'Uke 1'; // Loop back or handle as needed
+        default: return 'Uke 2';
     }
 }
         
