@@ -3021,14 +3021,27 @@ function copyScenario(scenarioId) {
     alert('🚧 Kopier-funksjon kommer i neste versjon');
 }
 
-// Update showTab function to load library when needed
-const originalShowTab = showTab;
-showTab = function(tabName) {
-    originalShowTab(tabName);
+// Enhanced showTab function with library support
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
     
-    if (tabName === 'library') {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.getElementById(tabName).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (tabName === 'leaderboard') {
+        refreshLeaderboard();
+    } else if (tabName === 'penalties') {
+        refreshPenalties();
+    } else if (tabName === 'library') {
         loadScenarioLibrary();
     }
+}
         
     </script>
 </body>
