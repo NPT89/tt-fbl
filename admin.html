@@ -656,7 +656,6 @@
 
             <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
             <button class="btn" onclick="archiveAndStartNew()" style="background: #ff8c00; margin-top: 0.5rem;">🔄 Arkiver og start nytt</button>
-            <button class="btn btn-small" onclick="archiveAndStartNew()" style="background: #ff6b35; margin-top: 0.5rem;">🗄️ Arkiver og start på nytt</button>
             <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario (uten arkivering)</button>
         </div>
 
@@ -1371,24 +1370,31 @@ html += `
         }
 
         // Tab functionality
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabName === 'leaderboard') {
-                refreshLeaderboard();
-            } else if (tabName === 'penalties') {
-                refreshPenalties();
-            }
-        }
+ function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.getElementById(tabName).classList.add('active');
+    
+    // Find og aktiver riktig tab-knapp
+    const tabButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
+    
+    if (tabName === 'leaderboard') {
+        refreshLeaderboard();
+    } else if (tabName === 'penalties') {
+        refreshPenalties();
+    } else if (tabName === 'library') {
+        loadScenarioLibrary();
+    }
+}
 
         // Leaderboard functions
         function refreshLeaderboard() {
