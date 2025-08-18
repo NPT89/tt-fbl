@@ -488,183 +488,139 @@
             </div>
         </div>
 
-        <!-- Scenarios Tab -->
-        <div id="scenarios" class="tab-content">
-            <div class="panel-grid">
-                <div class="panel">
-                    <h2>🎲 Aktivt Scenario</h2>
-                    
-                    <div class="form-group">
-                        <label>Scenariotittel:</label>
-                        <input type="text" id="scenario-title" placeholder="Måned 1: Kapasitetsutfordring">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Scenario Bakgrunn:</label>
-                        <textarea id="scenario-background" rows="2" placeholder="Din bedrift vokser raskt, men du støter på nye utfordringer..."></textarea>
-                    </div>
-
-<div class="form-group">
-    <label>Uke/Periode:</label>
-    <select id="scenario-week">
-        <option value="Uke 1">Uke 1 - Grunnleggende</option>
-        <option value="Uke 2">Uke 2 - Avansert workflow</option>
-        <option value="Uke 3">Uke 3 - Månedsavslutning</option>
-    </select>
-</div>
-
-<div class="form-group">
-    <label>Status:</label>
-    <select id="scenario-status">
-        <option value="kladd">Kladd</option>
-        <option value="aktiv">Aktiv</option>
-        <option value="avsluttet">Avsluttet</option>
-        <option value="arkiv">Arkiv</option>
-    </select>
-</div>
-
-<div class="form-group">
-    <label>Obligatoriske Oppgaver:</label>
-    <div id="scenario-tasks">
-        <div class="scenario-task" data-task="1">
-            <div class="task-header">
-                <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
-                <span class="task-number">1)</span>
-                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+<!-- Scenarios Tab -->
+<div id="scenarios" class="tab-content">
+    <div class="panel-grid">
+        <div class="panel">
+            <h2>🎲 Aktivt Scenario</h2>
+            
+            <div class="form-group">
+                <label>Scenariotittel:</label>
+                <input type="text" id="scenario-title" placeholder="Måned 1: Kapasitetsutfordring">
             </div>
             
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Type oppgave:</label>
-                <select class="task-type-select" onchange="toggleTaskType(this)">
-                    <option value="text">📝 Tekst beskrivelse</option>
-                    <option value="table">📊 Regnskapstabell</option>
+            <div class="form-group">
+                <label>Scenario Bakgrunn:</label>
+                <textarea id="scenario-background" rows="2" placeholder="Din bedrift vokser raskt, men du støter på nye utfordringer..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Uke/Periode:</label>
+                <select id="scenario-week">
+                    <option value="Uke 1">Uke 1 - Grunnleggende</option>
+                    <option value="Uke 2">Uke 2 - Avansert workflow</option>
+                    <option value="Uke 3">Uke 3 - Månedsavslutning</option>
                 </select>
             </div>
-            
-            <div class="text-mode">
-                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+
+            <div class="form-group">
+                <label>Status:</label>
+                <select id="scenario-status">
+                    <option value="kladd">Kladd</option>
+                    <option value="aktiv">Aktiv</option>
+                    <option value="avsluttet">Avsluttet</option>
+                    <option value="arkiv">Arkiv</option>
+                </select>
             </div>
-            
-            <div class="table-mode" style="display: none;">
-                <div class="table-builder">
-                    <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
-                    <div class="table-rows"></div>
+
+            <div class="form-group">
+                <label>Obligatoriske Oppgaver:</label>
+                <div id="scenario-tasks">
+                    <div class="scenario-task" data-task="1">
+                        <div class="task-header">
+                            <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+                            <span class="task-number">1)</span>
+                            <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                            <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Type oppgave:</label>
+                            <select class="task-type-select" onchange="toggleTaskType(this)">
+                                <option value="text">📝 Tekst beskrivelse</option>
+                                <option value="table">📊 Regnskapstabell</option>
+                            </select>
+                        </div>
+                        
+                        <div class="text-mode">
+                            <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="table-mode" style="display: none;">
+                            <div class="table-builder">
+                                <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                                <div class="table-rows"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="task-rewards">
+                            <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                            <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+                        </div>
+                    </div>
+                    <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label>Deadline:</label>
+                <input type="datetime-local" id="scenario-deadline">
+            </div>
+
+            <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
+            <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
+        </div>
+
+        <div class="panel">
+            <h2>📋 Scenario Valg</h2>
+            <div id="scenario-choices">
+                <div class="scenario-choice" data-choice="A">
+                    <div class="choice-header">
+                        <input type="text" class="choice-title-input" value="A) Aggressiv ekspansjon" placeholder="A) Valg tittel">
+                        <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                    </div>
+                    <input type="text" class="choice-cost" placeholder="Kostnad: Høy investering + stor risiko" value="Kostnad: Høy investering + stor risiko" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-potential" placeholder="Potensial: Maksimal vekst eller store tap" value="Potensial: Maksimal vekst eller store tap" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-odds" placeholder="Odds: 70% for stor gevinst, 30% for store tap" value="Odds: 70% for stor gevinst, 30% for store tap">
+                </div>
+                <div class="scenario-choice" data-choice="B">
+                    <div class="choice-header">
+                        <input type="text" class="choice-title-input" value="B) Konservativ vekst" placeholder="B) Valg tittel">
+                        <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                    </div>
+                    <input type="text" class="choice-cost" placeholder="Kostnad: Moderat investering" value="Kostnad: Moderat investering" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-potential" placeholder="Potensial: Stabil og trygg utvikling" value="Potensial: Stabil og trygg utvikling" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-odds" placeholder="Odds: 80% for trygg gevinst, 20% for mindre tap" value="Odds: 80% for trygg gevinst, 20% for mindre tap">
+                </div>
+                <div class="scenario-choice" data-choice="C">
+                    <div class="choice-header">
+                        <input type="text" class="choice-title-input" value="C) Balansert strategi" placeholder="C) Valg tittel">
+                        <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                    </div>
+                    <input type="text" class="choice-cost" placeholder="Kostnad: Variabel investering" value="Kostnad: Variabel investering" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-potential" placeholder="Potensial: God balanse risiko/belønning" value="Potensial: God balanse risiko/belønning" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-odds" placeholder="Odds: 60% for god gevinst, 40% for moderat tap" value="Odds: 60% for god gevinst, 40% for moderat tap">
+                </div>
+                <div class="scenario-choice" data-choice="D">
+                    <div class="choice-header">
+                        <input type="text" class="choice-title-input" value="D) Effektivitetsfokus" placeholder="D) Valg tittel">
+                        <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+                    </div>
+                    <input type="text" class="choice-cost" placeholder="Kostnad: Optimalisering av eksisterende" value="Kostnad: Optimalisering av eksisterende" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-potential" placeholder="Potensial: Jevn og forutsigbar vekst" value="Potensial: Jevn og forutsigbar vekst" style="margin-bottom: 0.5rem;">
+                    <input type="text" class="choice-odds" placeholder="Odds: 70% for jevn gevinst, 30% for kontrollert tap" value="Odds: 70% for jevn gevinst, 30% for kontrollert tap">
+                </div>
+            </div>
+            <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
             
-            <div class="task-rewards">
-                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-            </div>
-        </div>
-        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
-    </div>
-</div>
-
-<div class="form-group">
-    <label>Deadline:</label>
-    <input type="datetime-local" id="scenario-deadline">
-</div>
-
-<button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
-<button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
-    </div>
- 
-    
-    <!-- Tabell modus (skjult initially) -->
-    <div class="table-mode" style="display: none;">
-        <div class="table-builder">
-            <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
-            <div class="table-rows">
-                <!-- Tabell rader genereres dynamisk -->
+            <div class="choice-preview">
+                <h3>📋 Forhåndsvisning av valg:</h3>
+                <div id="choices-preview"></div>
+                <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
             </div>
         </div>
     </div>
-    
-    <div class="task-rewards">
-        <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
-        <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
-    </div>
 </div>
-                            
-                            <div class="scenario-task" data-task="2">
-                                <div class="task-header">
-                                    <span class="task-number">2)</span>
-                                    <input type="text" class="task-title-input" placeholder="Oppgave tittel">
-                                    <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
-                                </div>
-                                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
-                                <div class="task-rewards">
-<input type="text" class="task-reward" placeholder="Gevinst: +25,000 NOK">
-<input type="text" class="task-penalty" placeholder="Straff: -15,000 NOK">
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Deadline:</label>
-                        <input type="datetime-local" id="scenario-deadline">
-                                           <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
-                    <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
-                    </div>
-                    
-
-                </div>
-
-                <div class="panel">
-                    <h2>📝 Scenario Valg</h2>
-                    <div id="scenario-choices">
-                        <div class="scenario-choice" data-choice="A">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="A) Aggressiv ekspansjon" placeholder="A) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Høy investering + stor risiko" value="Kostnad: Høy investering + stor risiko" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Maksimal vekst eller store tap" value="Potensial: Maksimal vekst eller store tap" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 70% for stor gevinst, 30% for store tap" value="Odds: 70% for stor gevinst, 30% for store tap">
-                        </div>
-                        <div class="scenario-choice" data-choice="B">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="B) Konservativ vekst" placeholder="B) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Moderat investering" value="Kostnad: Moderat investering" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Stabil og trygg utvikling" value="Potensial: Stabil og trygg utvikling" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 80% for trygg gevinst, 20% for mindre tap" value="Odds: 80% for trygg gevinst, 20% for mindre tap">
-                        </div>
-                        <div class="scenario-choice" data-choice="C">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="C) Balansert strategi" placeholder="C) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Variabel investering" value="Kostnad: Variabel investering" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: God balanse risiko/belønning" value="Potensial: God balanse risiko/belønning" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 60% for god gevinst, 40% for moderat tap" value="Odds: 60% for god gevinst, 40% for moderat tap">
-                        </div>
-                        <div class="scenario-choice" data-choice="D">
-                            <div class="choice-header">
-                                <input type="text" class="choice-title-input" value="D) Effektivitetsfokus" placeholder="D) Valg tittel">
-                                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
-                            </div>
-                            <input type="text" class="choice-cost" placeholder="Kostnad: Optimalisering av eksisterende" value="Kostnad: Optimalisering av eksisterende" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-potential" placeholder="Potensial: Jevn og forutsigbar vekst" value="Potensial: Jevn og forutsigbar vekst" style="margin-bottom: 0.5rem;">
-                            <input type="text" class="choice-odds" placeholder="Odds: 70% for jevn gevinst, 30% for kontrollert tap" value="Odds: 70% for jevn gevinst, 30% for kontrollert tap">
-                        </div>
-                    </div>
-                    <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
-                    
-                    <div class="choice-preview">
-                        <h3>📋 Forhåndsvisning av valg:</h3>
-                        <div id="choices-preview"></div>
-                        <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Combined Choices & Dice Tab -->
         <div id="choices" class="tab-content">
             <div class="panel">
