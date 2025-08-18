@@ -505,6 +505,29 @@
                     </div>
 
                     <div class="form-group">
+    <label>Uke/Periode:</label>
+    <select id="scenario-week">
+        <option value="Uke 1">Uke 1 - Grunnleggende</option>
+        <option value="Uke 2">Uke 2 - Avansert workflow</option>
+        <option value="Uke 3">Uke 3 - Månedsavslutning</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Status:</label>
+    <select id="scenario-status">
+        <option value="kladd">Kladd</option>
+        <option value="aktiv">Aktiv</option>
+        <option value="avsluttet">Avsluttet</option>
+        <option value="arkiv">Arkiv</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Obligatoriske Oppgaver:</label>
+    <div id="scenario-tasks">
+
+                    <div class="form-group">
                         <label>Obligatoriske Oppgaver:</label>
                         <div id="scenario-tasks">
 <div class="scenario-task" data-task="1">
@@ -895,6 +918,8 @@ function addTask() {
                     document.getElementById('scenario-title').value = gameData.currentScenario.title;
                     document.getElementById('scenario-background').value = gameData.currentScenario.background;
                     document.getElementById('scenario-deadline').value = gameData.currentScenario.deadline;
+                    document.getElementById('scenario-week').value = gameData.currentScenario.week || 'Uke 1';
+                    document.getElementById('scenario-status').value = gameData.currentScenario.status || 'aktiv';
                     
                     // Load tasks into UI
                     loadTasksIntoUI();
@@ -1394,6 +1419,8 @@ function updateScenario() {
     gameData.currentScenario.background = document.getElementById('scenario-background').value;
     gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
     gameData.currentScenario.tasks = collectTasksData();
+    gameData.currentScenario.week = document.getElementById('scenario-week').value || 'Uke 1';
+    gameData.currentScenario.status = document.getElementById('scenario-status').value || 'aktiv';
     
     collectChoicesData();
     
