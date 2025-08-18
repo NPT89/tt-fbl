@@ -423,6 +423,92 @@
     font-family: 'Courier New', monospace;
 }
 
+/* Scenario-bibliotek styling */
+.scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.scenario-item {
+    background: linear-gradient(145deg, #f9f9f9, #ffffff);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.scenario-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.scenario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.scenario-title {
+    font-size: 1.1rem;
+    color: #333;
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+.scenario-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-end;
+}
+
+.week-badge {
+    background: #0066CC;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-kladd { background: #fff3cd; color: #856404; }
+.status-aktiv { background: #d4edda; color: #155724; }
+.status-avsluttet { background: #f8d7da; color: #721c24; }
+.status-arkiv { background: #e2e3e5; color: #383d41; }
+
+.scenario-info {
+    margin-bottom: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.scenario-stats {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.scenario-date {
+    font-size: 0.85rem;
+}
+
+.scenario-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+        
     </style>
 </head>
 <body>
@@ -432,12 +518,13 @@
             <p>Oppdater leaderboard, scenarioer og spillerdata enkelt</p>
         </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
-            <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
-            <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
-            <button class="tab" onclick="showTab('penalties')">Straffer</button>
-        </div>
+<div class="tabs">
+    <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
+    <button class="tab" onclick="showTab('scenarios')">Scenarioer</button>
+    <button class="tab" onclick="showTab('library')">📚 Scenario-bibliotek</button>
+    <button class="tab" onclick="showTab('choices')">Valg & Terningkast</button>
+    <button class="tab" onclick="showTab('penalties')">Straffer</button>
+</div>
 
         <!-- Leaderboard Tab -->
         <div id="leaderboard" class="tab-content active">
@@ -619,6 +706,31 @@
                 <button class="btn btn-small" onclick="previewChoices()">Oppdater forhåndsvisning</button>
             </div>
         </div>
+    </div>
+</div>
+
+        <!-- Scenario-bibliotek Tab -->
+<div id="library" class="tab-content">
+    <div class="panel">
+        <h2>📚 Scenario-bibliotek</h2>
+        
+        <div class="form-group">
+            <label>Filtrer etter uke:</label>
+            <select id="library-filter" onchange="filterScenarios()">
+                <option value="alle">Alle scenarioer</option>
+                <option value="Uke 1">Uke 1 - Grunnleggende</option>
+                <option value="Uke 2">Uke 2 - Avansert workflow</option>
+                <option value="Uke 3">Uke 3 - Månedsavslutning</option>
+            </select>
+        </div>
+        
+        <div id="scenarios-list">
+            <p style="text-align: center; color: #666; font-style: italic;">
+                Laster scenarioer fra databasen...
+            </p>
+        </div>
+        
+        <button class="btn" onclick="createNewScenario()">+ Opprett nytt scenario</button>
     </div>
 </div>
         <!-- Combined Choices & Dice Tab -->
@@ -2718,6 +2830,206 @@ function handleDragEnd(e) {
     });
     draggedElement = null;
 }
+
+        // SCENARIO-BIBLIOTEK FUNKSJONER
+
+// Load all scenarios from Google Sheets
+function loadScenarioLibrary() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        document.getElementById('scenarios-list').innerHTML = '<p>⚠️ Google Sheets URL ikke konfigurert</p>';
+        return;
+    }
+    
+    document.getElementById('scenarios-list').innerHTML = '<p>⏳ Laster scenarioer...</p>';
+    
+    const callbackName = 'loadLibraryCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            displayScenarioLibrary(response.data || []);
+        } else {
+            document.getElementById('scenarios-list').innerHTML = '<p>❌ Kunne ikke laste scenarioer</p>';
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        document.getElementById('scenarios-list').innerHTML = '<p>❌ Feil ved tilkobling til database</p>';
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getAllScenarios';
+    document.head.appendChild(script);
+}
+
+// Display scenarios in library format
+function displayScenarioLibrary(scenarios) {
+    const container = document.getElementById('scenarios-list');
+    
+    if (!scenarios || scenarios.length === 0) {
+        container.innerHTML = '<p>📭 Ingen scenarioer funnet i databasen</p>';
+        return;
+    }
+    
+    let html = '<div class="scenarios-grid">';
+    
+    scenarios.forEach(scenario => {
+        const statusIcon = getStatusIcon(scenario.status);
+        const weekBadge = scenario.week || 'Ukjent uke';
+        const taskCount = scenario.tasks ? scenario.tasks.length : 0;
+        const choiceCount = scenario.choices ? Object.keys(scenario.choices).length : 0;
+        
+        html += `
+            <div class="scenario-item" data-week="${scenario.week || 'alle'}">
+                <div class="scenario-header">
+                    <div class="scenario-title">
+                        ${statusIcon} <strong>${scenario.title || 'Uten tittel'}</strong>
+                    </div>
+                    <div class="scenario-meta">
+                        <span class="week-badge">${weekBadge}</span>
+                        <span class="status-badge status-${scenario.status || 'kladd'}">${scenario.status || 'kladd'}</span>
+                    </div>
+                </div>
+                
+                <div class="scenario-info">
+                    <div class="scenario-stats">
+                        📋 ${taskCount} oppgaver • 🎯 ${choiceCount} valg
+                    </div>
+                    <div class="scenario-date">
+                        📅 ${scenario.deadline ? new Date(scenario.deadline).toLocaleDateString('no-NO') : 'Ingen deadline'}
+                    </div>
+                </div>
+                
+                <div class="scenario-actions">
+                    <button class="btn btn-small" onclick="loadScenarioIntoEditor('${scenario.id}')">📝 Last inn</button>
+                    <button class="btn btn-small" onclick="copyScenario('${scenario.id}')" style="background: #17a2b8;">📋 Kopier</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Helper function for status icons
+function getStatusIcon(status) {
+    switch(status) {
+        case 'aktiv': return '🟢';
+        case 'avsluttet': return '🔴';
+        case 'arkiv': return '📦';
+        default: return '🟡';
+    }
+}
+
+// Filter scenarios by week
+function filterScenarios() {
+    const filter = document.getElementById('library-filter').value;
+    const scenarios = document.querySelectorAll('.scenario-item');
+    
+    scenarios.forEach(scenario => {
+        const week = scenario.getAttribute('data-week');
+        if (filter === 'alle' || week === filter) {
+            scenario.style.display = 'block';
+        } else {
+            scenario.style.display = 'none';
+        }
+    });
+}
+
+// Load specific scenario into editor
+function loadScenarioIntoEditor(scenarioId) {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl) {
+        alert('❌ Google Sheets URL ikke konfigurert');
+        return;
+    }
+    
+    const callbackName = 'loadScenarioCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success' && response.data) {
+            // Load scenario into current editor
+            gameData.currentScenario = response.data;
+            
+            // Fill form fields
+            document.getElementById('scenario-title').value = response.data.title || '';
+            document.getElementById('scenario-background').value = response.data.background || '';
+            document.getElementById('scenario-deadline').value = response.data.deadline || '';
+            document.getElementById('scenario-week').value = response.data.week || 'Uke 1';
+            document.getElementById('scenario-status').value = response.data.status || 'kladd';
+            
+            // Load tasks and choices
+            loadTasksIntoUI();
+            previewChoices();
+            
+            // Switch to scenarios tab
+            showTab('scenarios');
+            document.querySelector('[onclick="showTab(\'scenarios\')"]').click();
+            
+            alert(`✅ Scenario "${response.data.title}" lastet inn i editor!`);
+        } else {
+            alert('❌ Kunne ikke laste scenario');
+        }
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getScenario&id=' + scenarioId;
+    document.head.appendChild(script);
+}
+
+// Create new scenario (clear editor)
+function createNewScenario() {
+    const confirmed = confirm('🗑️ Dette vil slette alt innhold i editoren og starte nytt scenario.\n\nEr du sikker?');
+    if (!confirmed) return;
+    
+    // Clear current scenario
+    gameData.currentScenario = {};
+    
+    // Clear form fields
+    document.getElementById('scenario-title').value = '';
+    document.getElementById('scenario-background').value = '';
+    document.getElementById('scenario-deadline').value = '';
+    document.getElementById('scenario-week').value = 'Uke 1';
+    document.getElementById('scenario-status').value = 'kladd';
+    
+    // Reset deadline to default
+    const now = new Date();
+    now.setDate(now.getDate() + 2);
+    document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
+    
+    // Clear tasks and choices (use existing newScenario function logic)
+    newScenario();
+    
+    // Switch to scenarios tab
+    showTab('scenarios');
+    document.querySelector('[onclick="showTab(\'scenarios\')"]').click();
+    
+    alert('✅ Nytt scenario opprettet! Klar for inndata.');
+}
+
+// Copy scenario (for future implementation)
+function copyScenario(scenarioId) {
+    alert('🚧 Kopier-funksjon kommer i neste versjon');
+}
+
+// Update showTab function to load library when needed
+const originalShowTab = showTab;
+showTab = function(tabName) {
+    originalShowTab(tabName);
+    
+    if (tabName === 'library') {
+        loadScenarioLibrary();
+    }
+        
     </script>
 </body>
 </html>
