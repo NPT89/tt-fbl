@@ -656,7 +656,8 @@
 
             <button class="btn" onclick="updateScenario()">Oppdater Scenario</button>
             <button class="btn" onclick="archiveAndStartNew()" style="background: #ff8c00; margin-top: 0.5rem;">🔄 Arkiver og start nytt</button>
-            <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario</button>
+            <button class="btn btn-small" onclick="archiveAndStartNew()" style="background: #ff6b35; margin-top: 0.5rem;">🗄️ Arkiver og start på nytt</button>
+            <button class="btn btn-small" onclick="newScenario()" style="background: #dc3545; margin-top: 0.5rem;">🗑️ Nytt Scenario (uten arkivering)</button>
         </div>
 
         <div class="panel">
@@ -3044,33 +3045,6 @@ function showTab(tabName) {
     }
 }
 
-        // Arkiver nåværende scenario og start nytt
-function archiveAndStartNew() {
-    const currentTitle = document.getElementById('scenario-title').value;
-    const currentWeek = document.getElementById('scenario-week').value;
-    
-    if (!currentTitle.trim()) {
-        alert('❌ Ingen scenario å arkivere. Opprett et scenario først.');
-        return;
-    }
-    
-    const confirmed = confirm(
-        `🔄 ARKIVER OG START NYTT\n\n` +
-        `Dette vil:\n` +
-        `1. Arkivere: "${currentTitle}" (${currentWeek})\n` +
-        `2. Starte nytt scenario for neste uke\n\n` +
-        `Er du sikker?`
-    );
-    
-    if (!confirmed) return;
-    
-    // Step 1: Archive current scenario
-    archiveCurrentScenario(() => {
-        // Step 2: Start new scenario (callback after archiving)
-        startNextScenario();
-    });
-}
-
 // Archive current scenario
 function archiveCurrentScenario(callback) {
     if (!gameData.currentScenario) {
@@ -3216,7 +3190,180 @@ function getNextWeek(currentWeek) {
         default: return 'Uke 2';
     }
 }
+        // LEGG TIL DENNE FUNKSJONEN I ADMIN-PANELET (admin.html)
+// Finn scriptet og legg til funksjonen før den eksisterende newScenario() funksjonen
+
+function archiveAndStartNew() {
+    if (!confirm('🗄️ Dette vil arkivere nåværende scenario og starte et helt nytt.\n\nEr du sikker?')) {
+        return;
+    }
+    
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        alert('❌ Google Sheets URL ikke konfigurert! Kan ikke arkivere.');
+        return;
+    }
+    
+    console.log('🗄️ Archiving scenario:', gameData.currentScenario?.title || 'Current scenario');
+    
+    const callbackName = 'archiveCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
         
+        if (response && response.status === 'success') {
+            console.log('✅ Scenario archived successfully');
+            
+            // Clear current scenario data
+            gameData.currentScenario = {};
+            
+            // Start new scenario - same logic as newScenario()
+            startNewScenario();
+            
+            alert('✅ Scenario arkivert!\n\n📝 Nytt scenario opprettet og klar for inndata.');
+            
+        } else {
+            console.log('❌ Archive failed:', response);
+            alert('❌ Arkivering feilet: ' + (response ? response.message : 'Ukjent feil'));
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Network error during archiving');
+        alert('❌ Nettverksfeil ved arkivering. Sjekk forbindelsen til Google Sheets.');
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=archiveScenario';
+    document.head.appendChild(script);
+    
+    setTimeout(() => {
+        if (document.head.contains(script)) {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            alert('❌ Arkivering timeout - Google Sheets svarer ikke');
+        }
+    }, 15000);
+}
+
+function startNewScenario() {
+    // Clear all input fields
+    document.getElementById('scenario-title').value = '';
+    document.getElementById('scenario-background').value = '';
+    document.getElementById('scenario-deadline').value = '';
+    document.getElementById('scenario-week').value = 'Uke 1';
+    document.getElementById('scenario-status').value = 'kladd';
+    
+    // Reset deadline to default (2 days from now)
+    const now = new Date();
+    now.setDate(now.getDate() + 2);
+    document.getElementById('scenario-deadline').value = now.toISOString().slice(0, 16);
+    
+    // Clear tasks - keep one default task
+    document.getElementById('scenario-tasks').innerHTML = `
+        <div class="scenario-task" data-task="1">
+            <div class="task-header">
+                <span class="drag-handle" title="Dra for å endre rekkefølge">⋮⋮</span>
+                <span class="task-number">1)</span>
+                <input type="text" class="task-title-input" placeholder="Oppgave tittel">
+                <button class="btn btn-small" onclick="removeTask(this)">Fjern</button>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Type oppgave:</label>
+                <select class="task-type-select" onchange="toggleTaskType(this)">
+                    <option value="text">📝 Tekst beskrivelse</option>
+                    <option value="table">📊 Regnskapstabell</option>
+                </select>
+            </div>
+            
+            <div class="text-mode">
+                <textarea class="task-description" placeholder="Detaljert beskrivelse av oppgaven" rows="2"></textarea>
+            </div>
+            
+            <div class="table-mode" style="display: none;">
+                <div class="table-builder">
+                    <button type="button" class="btn btn-small" onclick="addTableRow(this)">+ Legg til rad</button>
+                    <div class="table-rows"></div>
+                </div>
+            </div>
+            
+            <div class="task-rewards">
+                <input type="text" class="task-reward" placeholder="Gevinst: +XX,XXX NOK">
+                <input type="text" class="task-penalty" placeholder="Straff: -XX,XXX NOK">
+            </div>
+        </div>
+        <button class="btn btn-small" onclick="addTask()">Legg til oppgave</button>
+    `;
+    
+    // Clear choices - keep default structure  
+    document.getElementById('scenario-choices').innerHTML = `
+        <div class="scenario-choice" data-choice="A">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" value="A) Aggressiv ekspansjon" placeholder="A) Valg tittel">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: Høy investering + stor risiko" value="Kostnad: Høy investering + stor risiko" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-potential" placeholder="Potensial: Maksimal vekst eller store tap" value="Potensial: Maksimal vekst eller store tap" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-odds" placeholder="Odds: 70% for stor gevinst, 30% for store tap" value="Odds: 70% for stor gevinst, 30% for store tap">
+        </div>
+        <div class="scenario-choice" data-choice="B">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" value="B) Konservativ vekst" placeholder="B) Valg tittel">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: Moderat investering" value="Kostnad: Moderat investering" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-potential" placeholder="Potensial: Stabil og trygg utvikling" value="Potensial: Stabil og trygg utvikling" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-odds" placeholder="Odds: 80% for trygg gevinst, 20% for mindre tap" value="Odds: 80% for trygg gevinst, 20% for mindre tap">
+        </div>
+        <div class="scenario-choice" data-choice="C">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" value="C) Balansert strategi" placeholder="C) Valg tittel">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: Variabel investering" value="Kostnad: Variabel investering" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-potential" placeholder="Potensial: God balanse risiko/belønning" value="Potensial: God balanse risiko/belønning" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-odds" placeholder="Odds: 60% for god gevinst, 40% for moderat tap" value="Odds: 60% for god gevinst, 40% for moderat tap">
+        </div>
+        <div class="scenario-choice" data-choice="D">
+            <div class="choice-header">
+                <input type="text" class="choice-title-input" value="D) Effektivitetsfokus" placeholder="D) Valg tittel">
+                <button class="btn btn-small" onclick="removeChoice(this)">Fjern</button>
+            </div>
+            <input type="text" class="choice-cost" placeholder="Kostnad: Optimalisering av eksisterende" value="Kostnad: Optimalisering av eksisterende" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-potential" placeholder="Potensial: Jevn og forutsigbar vekst" value="Potensial: Jevn og forutsigbar vekst" style="margin-bottom: 0.5rem;">
+            <input type="text" class="choice-odds" placeholder="Odds: 70% for jevn gevinst, 30% for kontrollert tap" value="Odds: 70% for jevn gevinst, 30% for kontrollert tap">
+        </div>
+        <button class="btn btn-small" onclick="addChoice()">Legg til valg</button>
+    `;
+    
+    // Clear gameData scenario
+    gameData.currentScenario = {};
+    
+    // Update preview
+    previewChoices();
+    
+    // Re-initialize drag & drop
+    setTimeout(() => {
+        makeDraggable();
+    }, 100);
+    
+    console.log('✅ New scenario started with default values');
+}
+
+// OGSÅ OPPDATER NEWSCENARIO() FUNKSJONEN TIL Å BRUKE STARTnewscenario()
+function newScenario() {
+    if (!confirm('Er du sikker? Dette vil slette all data i skjemaet og starte på nytt.')) {
+        return;
+    }
+    
+    startNewScenario();
+    alert('✅ Nytt scenario opprettet! Alle felter er tømt og klare for inndata.');
+}
+    
     </script>
 </body>
 </html>
