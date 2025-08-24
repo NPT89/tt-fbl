@@ -1469,7 +1469,7 @@
 
             // Build choices HTML if no results yet
             let choicesHtml = '';
-            if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults) {
+           if (scenario.choices && Object.keys(scenario.choices).length > 0 && !hasResults && !isExpired) {
                 choicesHtml = '<div class="scenario-choices"><h3>📋 Valgalternativer:</h3>';
                 
                 Object.entries(scenario.choices).forEach(([key, choice]) => {
