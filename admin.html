@@ -741,7 +741,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbxz0iy6lkCow5Pq3HC0pUMeUfemAvU4gM6-k9US-pie657Ar66rqleJDYLa_ugA5eDK/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbxTdQTQPM83Tm1dJN_wPF-zNNuZwo83DIJM_kLjCi4to05y-JMh1MShXKvTXenoy7EKSg/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -1035,7 +1035,7 @@ function addTask() {
 
         function loadPlayerBreakdownsFromSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/macros/s/AKfycbxz0iy6lkCow5Pq3HC0pUMeUfemAvU4gM6-k9US-pie657Ar66rqleJDYLa_ugA5eDK/exec';
+                     'https://script.google.com/macros/s/AKfycbxTdQTQPM83Tm1dJN_wPF-zNNuZwo83DIJM_kLjCi4to05y-JMh1MShXKvTXenoy7EKSg/exec';
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
@@ -2361,7 +2361,7 @@ function addCorrection() {
             collectChoicesData();
             
             // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbxz0iy6lkCow5Pq3HC0pUMeUfemAvU4gM6-k9US-pie657Ar66rqleJDYLa_ugA5eDK/exec';
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbxTdQTQPM83Tm1dJN_wPF-zNNuZwo83DIJM_kLjCi4to05y-JMh1MShXKvTXenoy7EKSg/exec';
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
@@ -2579,7 +2579,7 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             previewChoices();
             
             // Load saved URL and set the new URL
-            const newUrl = 'https://script.google.com/macros/s/AKfycbxz0iy6lkCow5Pq3HC0pUMeUfemAvU4gM6-k9US-pie657Ar66rqleJDYLa_ugA5eDK/exec';
+            const newUrl = 'https://script.google.com/macros/s/AKfycbxTdQTQPM83Tm1dJN_wPF-zNNuZwo83DIJM_kLjCi4to05y-JMh1MShXKvTXenoy7EKSg/exec';
             document.getElementById('sheets-url-input').value = newUrl;
             localStorage.setItem('tripletex_sheets_url', newUrl);
             
