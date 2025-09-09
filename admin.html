@@ -1313,54 +1313,41 @@ html += `
 
 function savePlayerBreakdownsToSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-        console.log('No valid Google Sheets URL - cannot save player breakdowns');
-        return;
-    }
+    if (!sheetsUrl) return;
     
-    // DEBUGGING: Check what we're trying to save
-    console.log('gameData.playerBreakdowns exists:', !!gameData.playerBreakdowns);
-    console.log('gameData.playerBreakdowns keys:', Object.keys(gameData.playerBreakdowns || {}));
-    console.log('Full breakdown data:', gameData.playerBreakdowns);
+    // Send each player separately to avoid URL length limits
+    const players = Object.keys(gameData.playerBreakdowns);
+    let saved = 0;
     
-    // VALIDATION: Ensure data exists
-    if (!gameData.playerBreakdowns || Object.keys(gameData.playerBreakdowns).length === 0) {
-        console.log('❌ No player breakdowns to save');
-        return;
-    }
-    
-    const callbackName = 'saveBreakdownsCallback_' + Date.now();
-    const script = document.createElement('script');
-    
-    window[callbackName] = function(response) {
-        document.head.removeChild(script);
-        delete window[callbackName];
+    players.forEach((playerName, index) => {
+        const singlePlayerData = {};
+        singlePlayerData[playerName] = gameData.playerBreakdowns[playerName];
         
-        if (response && response.status === 'success') {
-            console.log('✅ Player breakdowns saved to Google Sheets successfully');
-        } else {
-            console.log('❌ Failed to save player breakdowns:', response ? response.message : 'Unknown error');
-        }
-    };
-    
-    script.onerror = function() {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        console.log('❌ Failed to save player breakdowns to Google Sheets');
-    };
-    
-    // FIXED: Better data encoding
-    let breakdownsData;
-    try {
-        breakdownsData = encodeURIComponent(JSON.stringify(gameData.playerBreakdowns));
-        console.log('Encoded data length:', breakdownsData.length);
-    } catch (error) {
-        console.log('❌ Error encoding breakdown data:', error);
-        return;
-    }
-    
-    script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + breakdownsData;
-    document.head.appendChild(script);
+        const callbackName = 'saveBreakdown_' + Date.now() + '_' + index;
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(response) {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            saved++;
+            
+            if (saved === players.length) {
+                console.log('✅ All player breakdowns saved');
+            }
+        };
+        
+        script.onerror = () => {
+            document.head.removeChild(script);
+            delete window[callbackName];
+        };
+        
+        const data = encodeURIComponent(JSON.stringify(singlePlayerData));
+        script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + data;
+        document.head.appendChild(script);
+        
+        // Delay between requests
+        setTimeout(() => {}, index * 100);
+    });
 }
 
         // URL Storage functions
