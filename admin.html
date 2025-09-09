@@ -1315,38 +1315,38 @@ function savePlayerBreakdownsToSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
     if (!sheetsUrl) return;
     
-    // Send each player separately to avoid URL length limits
     const players = Object.keys(gameData.playerBreakdowns);
-    let saved = 0;
+    const chunks = [];
     
-    players.forEach((playerName, index) => {
-        const singlePlayerData = {};
-        singlePlayerData[playerName] = gameData.playerBreakdowns[playerName];
-        
-        const callbackName = 'saveBreakdown_' + Date.now() + '_' + index;
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(response) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            saved++;
+    // Split into groups of 3 players max
+    for (let i = 0; i < players.length; i += 3) {
+        const chunk = {};
+        players.slice(i, i + 3).forEach(name => {
+            chunk[name] = gameData.playerBreakdowns[name];
+        });
+        chunks.push(chunk);
+    }
+    
+    let completed = 0;
+    chunks.forEach((chunk, index) => {
+        setTimeout(() => {
+            const callbackName = 'saveChunk_' + Date.now() + '_' + index;
+            const script = document.createElement('script');
             
-            if (saved === players.length) {
-                console.log('✅ All player breakdowns saved');
-            }
-        };
-        
-        script.onerror = () => {
-            document.head.removeChild(script);
-            delete window[callbackName];
-        };
-        
-        const data = encodeURIComponent(JSON.stringify(singlePlayerData));
-        script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + data;
-        document.head.appendChild(script);
-        
-        // Delay between requests
-        setTimeout(() => {}, index * 100);
+            window[callbackName] = function(response) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                completed++;
+                
+                if (completed === chunks.length) {
+                    console.log('All chunks saved successfully');
+                }
+            };
+            
+            const data = encodeURIComponent(JSON.stringify(chunk));
+            script.src = sheetsUrl + '?callback=' + callbackName + '&action=savePlayerBreakdowns&data=' + data;
+            document.head.appendChild(script);
+        }, index * 500);
     });
 }
 
