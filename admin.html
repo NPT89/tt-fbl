@@ -1144,35 +1144,6 @@ function saveScenarioChunk(sheetsUrl, chunkType, data, scenarioId, callback) {
     document.head.appendChild(script);
 }
 
-        
-function saveScenarioChunk(sheetsUrl, chunkType, data, callback) {
-    const callbackName = 'saveChunk_' + chunkType + '_' + Date.now();
-    const script = document.createElement('script');
-    
-    window[callbackName] = function(response) {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        
-        if (response && response.status === 'success') {
-            console.log('Chunk saved:', chunkType);
-            if (callback) callback();
-        } else {
-            console.log('Failed to save chunk:', chunkType, response);
-            alert('Feil ved lagring av ' + chunkType + ': ' + (response ? response.message : 'Ukjent feil'));
-        }
-    };
-    
-    script.onerror = function() {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        console.log('Network error saving chunk:', chunkType);
-        alert('Nettverksfeil ved lagring av ' + chunkType);
-    };
-    
-    const chunkData = encodeURIComponent(JSON.stringify(data));
-    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenarioChunk&chunkType=' + chunkType + '&data=' + chunkData;
-    document.head.appendChild(script);
-}
 
 function loadTasksIntoUI() {
     const tasksDiv = document.getElementById('scenario-tasks');
