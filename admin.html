@@ -1065,13 +1065,12 @@ function addTask() {
     document.head.appendChild(script);
 }
 
-   function saveScenarioToSheets() {
-    console.log('saveScenario called with POST method');
+function saveScenarioToSheets() {
+    console.log('saveScenario called with chunked data approach');
     
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
     if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
         console.log('No valid Google Sheets URL - cannot save scenario');
-        alert('Ingen gyldig Google Sheets URL konfigurert!');
         return;
     }
     
@@ -1088,37 +1087,90 @@ function addTask() {
     gameData.currentScenario.tasks = collectTasksData();
     collectChoicesData();
     
-    console.log('Scenario data collected, size:', JSON.stringify(gameData.currentScenario).length);
+    // Split data into smaller chunks
+    const basicData = {
+        id: gameData.currentScenario.id,
+        title: gameData.currentScenario.title,
+        background: gameData.currentScenario.background,
+        deadline: gameData.currentScenario.deadline,
+        week: gameData.currentScenario.week,
+        status: gameData.currentScenario.status
+    };
     
-    // Use fetch with POST instead of JSONP
-    fetch(sheetsUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'saveScenario',
-            data: gameData.currentScenario
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Response received:', data);
-        if (data && data.status === 'success') {
-            console.log('Scenario saved successfully');
-            alert('Scenario lagret til Google Sheets!');
-            if (data.id) {
-                gameData.currentScenario.id = data.id;
-            }
-        } else {
-            console.log('Save failed:', data ? data.message : 'Unknown error');
-            alert('Feil ved lagring: ' + (data ? data.message : 'Ukjent feil'));
-        }
-    })
-    .catch(error => {
-        console.log('Network error:', error);
-        alert('Nettverksfeil ved lagring: ' + error.message);
+    const tasksData = gameData.currentScenario.tasks || [];
+    const choicesData = gameData.currentScenario.choices || {};
+    
+    console.log('Saving in chunks: basic, tasks, choices');
+    
+    // Save basic data first
+    saveScenarioChunk(sheetsUrl, 'basic', basicData, () => {
+        // Then save tasks
+        saveScenarioChunk(sheetsUrl, 'tasks', tasksData, () => {
+            // Finally save choices
+            saveScenarioChunk(sheetsUrl, 'choices', choicesData, () => {
+                alert('Scenario lagret til Google Sheets!');
+            });
+        });
     });
+}
+
+function saveScenarioChunk(sheetsUrl, chunkType, data, callback) {
+    const callbackName = 'saveChunk_' + chunkType + '_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            console.log('Chunk saved:', chunkType);
+            if (callback) callback();
+        } else {
+            console.log('Failed to save chunk:', chunkType, response);
+            alert('Feil ved lagring av ' + chunkType + ': ' + (response ? response.message : 'Ukjent feil'));
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('Network error saving chunk:', chunkType);
+        alert('Nettverksfeil ved lagring av ' + chunkType);
+    };
+    
+    const chunkData = encodeURIComponent(JSON.stringify(data));
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenarioChunk&chunkType=' + chunkType + '&data=' + chunkData;
+    document.head.appendChild(script);
+}
+
+        
+function saveScenarioChunk(sheetsUrl, chunkType, data, callback) {
+    const callbackName = 'saveChunk_' + chunkType + '_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            console.log('Chunk saved:', chunkType);
+            if (callback) callback();
+        } else {
+            console.log('Failed to save chunk:', chunkType, response);
+            alert('Feil ved lagring av ' + chunkType + ': ' + (response ? response.message : 'Ukjent feil'));
+        }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('Network error saving chunk:', chunkType);
+        alert('Nettverksfeil ved lagring av ' + chunkType);
+    };
+    
+    const chunkData = encodeURIComponent(JSON.stringify(data));
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenarioChunk&chunkType=' + chunkType + '&data=' + chunkData;
+    document.head.appendChild(script);
 }
 
 function loadTasksIntoUI() {
