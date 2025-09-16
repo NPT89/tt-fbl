@@ -1377,27 +1377,23 @@ function savePlayerBreakdownsToSheets() {
         }
 
         // Tab functionality
-function showTab(tabName) {
-    // Fjern active class fra alle tab-contents
+ function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
     
-    // Fjern active class fra alle tabs
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Aktiver riktig tab-content
     document.getElementById(tabName).classList.add('active');
     
-    // FIKSET: Finn og aktiver riktig tab-knapp basert på onclick attributt
+    // Find og aktiver riktig tab-knapp
     const tabButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
     if (tabButton) {
         tabButton.classList.add('active');
     }
     
-    // Utfør spesifikke handlinger basert på hvilken tab som aktiveres
     if (tabName === 'leaderboard') {
         refreshLeaderboard();
     } else if (tabName === 'penalties') {
@@ -3041,26 +3037,40 @@ function copyScenario(scenarioId) {
 }
 
 // Enhanced showTab function with library support
+// ERSTATT ALLE VERSJONER AV showTab MED DENNE:
 function showTab(tabName) {
+    // Fjern active fra alle tab-contents
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
     
+    // Fjern active fra alle tab-knapper
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
+    // Aktiver riktig content
+    const targetContent = document.getElementById(tabName);
+    if (targetContent) {
+        targetContent.classList.add('active');
+    }
     
+    // FINN og aktiver riktig tab-knapp (INGEN event.target!)
+    const tabButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
+    
+    // Spesifikke handlinger per tab
     if (tabName === 'leaderboard') {
         refreshLeaderboard();
     } else if (tabName === 'penalties') {
-        refreshPenalties();
+        refreshPenalties();  
     } else if (tabName === 'library') {
         loadScenarioLibrary();
     }
 }
+
 
 // Archive current scenario
 function archiveCurrentScenario(callback) {
