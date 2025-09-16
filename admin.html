@@ -741,7 +741,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbxm8WYSjJYbfhVZULzf0A-NAoVZvARi5APPCTYHKZiA2b5D6I2LAHGrNGRNtCd_fUjvvg/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbxixJk9_TK-KPTMroAiYuUyH_OXft2NWP3KZ4fUx0tFmQz1hSmE7U33i7UAUlP0e-vgQg/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -1035,7 +1035,7 @@ function addTask() {
 
         function loadPlayerBreakdownsFromSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/macros/s/AKfycbxm8WYSjJYbfhVZULzf0A-NAoVZvARi5APPCTYHKZiA2b5D6I2LAHGrNGRNtCd_fUjvvg/exec';
+                     'https://script.google.com/macros/s/AKfycbxixJk9_TK-KPTMroAiYuUyH_OXft2NWP3KZ4fUx0tFmQz1hSmE7U33i7UAUlP0e-vgQg/exec';
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
@@ -1087,9 +1087,12 @@ function saveScenarioToSheets() {
     gameData.currentScenario.tasks = collectTasksData();
     collectChoicesData();
     
+    // Generate ID once
+    const scenarioId = gameData.currentScenario.id || 'scenario_' + Date.now();
+    
     // Split data into smaller chunks
     const basicData = {
-        id: gameData.currentScenario.id,
+        id: scenarioId,
         title: gameData.currentScenario.title,
         background: gameData.currentScenario.background,
         deadline: gameData.currentScenario.deadline,
@@ -1102,19 +1105,17 @@ function saveScenarioToSheets() {
     
     console.log('Saving in chunks: basic, tasks, choices');
     
-    // Save basic data first
-    saveScenarioChunk(sheetsUrl, 'basic', basicData, () => {
-        // Then save tasks
-        saveScenarioChunk(sheetsUrl, 'tasks', tasksData, () => {
-            // Finally save choices
-            saveScenarioChunk(sheetsUrl, 'choices', choicesData, () => {
+    // Save with scenario ID
+    saveScenarioChunk(sheetsUrl, 'basic', basicData, scenarioId, () => {
+        saveScenarioChunk(sheetsUrl, 'tasks', tasksData, scenarioId, () => {
+            saveScenarioChunk(sheetsUrl, 'choices', choicesData, scenarioId, () => {
                 alert('Scenario lagret til Google Sheets!');
             });
         });
     });
 }
-
-function saveScenarioChunk(sheetsUrl, chunkType, data, callback) {
+        
+function saveScenarioChunk(sheetsUrl, chunkType, data, scenarioId, callback) {
     const callbackName = 'saveChunk_' + chunkType + '_' + Date.now();
     const script = document.createElement('script');
     
@@ -1139,7 +1140,7 @@ function saveScenarioChunk(sheetsUrl, chunkType, data, callback) {
     };
     
     const chunkData = encodeURIComponent(JSON.stringify(data));
-    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenarioChunk&chunkType=' + chunkType + '&data=' + chunkData;
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenarioChunk&chunkType=' + chunkType + '&scenarioId=' + scenarioId + '&data=' + chunkData;
     document.head.appendChild(script);
 }
 
@@ -2414,7 +2415,7 @@ function addCorrection() {
             collectChoicesData();
             
             // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbxm8WYSjJYbfhVZULzf0A-NAoVZvARi5APPCTYHKZiA2b5D6I2LAHGrNGRNtCd_fUjvvg/exec';
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbxixJk9_TK-KPTMroAiYuUyH_OXft2NWP3KZ4fUx0tFmQz1hSmE7U33i7UAUlP0e-vgQg/exec';
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
@@ -2632,7 +2633,7 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             previewChoices();
             
             // Load saved URL and set the new URL
-            const newUrl = 'https://script.google.com/macros/s/AKfycbxm8WYSjJYbfhVZULzf0A-NAoVZvARi5APPCTYHKZiA2b5D6I2LAHGrNGRNtCd_fUjvvg/exec';
+            const newUrl = 'https://script.google.com/macros/s/AKfycbxixJk9_TK-KPTMroAiYuUyH_OXft2NWP3KZ4fUx0tFmQz1hSmE7U33i7UAUlP0e-vgQg/exec';
             document.getElementById('sheets-url-input').value = newUrl;
             localStorage.setItem('tripletex_sheets_url', newUrl);
             
