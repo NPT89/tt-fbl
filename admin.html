@@ -741,7 +741,7 @@
                 
                 <div class="form-group">
                     <label>Google Apps Script URL:</label>
-                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbx0jW4yNnJSZ101LJVBvKLJPEmhun5upN3ISNL5cELqwRnETs10PzpHJP_HgLuPJHc5iw/exec">
+                    <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycbz-VpQ2ynAzDOdeW86qKKixvDTFJy7dU-2BiGUZ3Iu7j76LPpNYurD6Qn_5H7E85Ldb/exec">
                     <button class="btn btn-small" onclick="saveUrl()">💾 Lagre URL</button>
                     <button class="btn btn-small" onclick="fetchPlayerChoices()">📥 Hent Valg</button>
                 </div>
@@ -1035,7 +1035,7 @@ function addTask() {
 
         function loadPlayerBreakdownsFromSheets() {
     const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
-                     'https://script.google.com/macros/s/AKfycbx0jW4yNnJSZ101LJVBvKLJPEmhun5upN3ISNL5cELqwRnETs10PzpHJP_HgLuPJHc5iw/exec';
+                     'https://script.google.com/macros/s/AKfycbz-VpQ2ynAzDOdeW86qKKixvDTFJy7dU-2BiGUZ3Iu7j76LPpNYurD6Qn_5H7E85Ldb/exec';
     
     const callbackName = 'loadBreakdownsCallback_' + Date.now();
     const script = document.createElement('script');
@@ -1065,47 +1065,61 @@ function addTask() {
     document.head.appendChild(script);
 }
 
-       function saveScenarioToSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                console.log('No valid Google Sheets URL - cannot save scenario');
-                return;
+   function saveScenarioToSheets() {
+    console.log('saveScenario called with POST method');
+    
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
+    if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
+        console.log('No valid Google Sheets URL - cannot save scenario');
+        alert('Ingen gyldig Google Sheets URL konfigurert!');
+        return;
+    }
+    
+    // Collect current data from UI
+    if (!gameData.currentScenario) {
+        gameData.currentScenario = {};
+    }
+    
+    gameData.currentScenario.title = document.getElementById('scenario-title').value;
+    gameData.currentScenario.background = document.getElementById('scenario-background').value;
+    gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
+    gameData.currentScenario.week = document.getElementById('scenario-week').value || 'Uke 1';
+    gameData.currentScenario.status = document.getElementById('scenario-status').value || 'aktiv';
+    gameData.currentScenario.tasks = collectTasksData();
+    collectChoicesData();
+    
+    console.log('Scenario data collected, size:', JSON.stringify(gameData.currentScenario).length);
+    
+    // Use fetch with POST instead of JSONP
+    fetch(sheetsUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'saveScenario',
+            data: gameData.currentScenario
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Response received:', data);
+        if (data && data.status === 'success') {
+            console.log('Scenario saved successfully');
+            alert('Scenario lagret til Google Sheets!');
+            if (data.id) {
+                gameData.currentScenario.id = data.id;
             }
-            
-            // FIRST: Collect current data from UI
-            gameData.currentScenario.title = document.getElementById('scenario-title').value;
-            gameData.currentScenario.background = document.getElementById('scenario-background').value;
-            gameData.currentScenario.deadline = document.getElementById('scenario-deadline').value;
-            gameData.currentScenario.tasks = collectTasksData();
-            collectChoicesData(); // This updates gameData.currentScenario.choices
-            
-            const callbackName = 'saveScenarioCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success') {
-                    console.log('✅ Scenario saved to Google Sheets successfully');
-                    if (response.id) {
-                        gameData.currentScenario.id = response.id;
-                    }
-                } else {
-                    console.log('❌ Failed to save scenario:', response ? response.message : 'Unknown error');
-                }
-            };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                console.log('❌ Failed to save scenario to Google Sheets');
-            };
-            
-            const scenarioData = encodeURIComponent(JSON.stringify(gameData.currentScenario));
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveScenario&data=' + scenarioData;
-            document.head.appendChild(script);
+        } else {
+            console.log('Save failed:', data ? data.message : 'Unknown error');
+            alert('Feil ved lagring: ' + (data ? data.message : 'Ukjent feil'));
         }
+    })
+    .catch(error => {
+        console.log('Network error:', error);
+        alert('Nettverksfeil ved lagring: ' + error.message);
+    });
+}
 
 function loadTasksIntoUI() {
     const tasksDiv = document.getElementById('scenario-tasks');
@@ -2348,7 +2362,7 @@ function addCorrection() {
             collectChoicesData();
             
             // Get saved Google Sheets URL
-            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbx0jW4yNnJSZ101LJVBvKLJPEmhun5upN3ISNL5cELqwRnETs10PzpHJP_HgLuPJHc5iw/exec';
+            const savedSheetsUrl = localStorage.getItem('tripletex_sheets_url') || 'https://script.google.com/macros/s/AKfycbz-VpQ2ynAzDOdeW86qKKixvDTFJy7dU-2BiGUZ3Iu7j76LPpNYurD6Qn_5H7E85Ldb/exec';
             
             const leaderboardCode = 'window.updateGameData({\n  players: ' + JSON.stringify(gameData.players, null, 2) + ',\n  playerBreakdowns: ' + JSON.stringify(gameData.playerBreakdowns, null, 2) + '\n});\n\nconsole.log("Leaderboard updated!");';
 
@@ -2566,7 +2580,7 @@ console.log('✅ FULL OPPDATERING: Dashboard + Leaderboard + Klikkbare valg + St
             previewChoices();
             
             // Load saved URL and set the new URL
-            const newUrl = 'https://script.google.com/macros/s/AKfycbx0jW4yNnJSZ101LJVBvKLJPEmhun5upN3ISNL5cELqwRnETs10PzpHJP_HgLuPJHc5iw/exec';
+            const newUrl = 'https://script.google.com/macros/s/AKfycbz-VpQ2ynAzDOdeW86qKKixvDTFJy7dU-2BiGUZ3Iu7j76LPpNYurD6Qn_5H7E85Ldb/exec';
             document.getElementById('sheets-url-input').value = newUrl;
             localStorage.setItem('tripletex_sheets_url', newUrl);
             
