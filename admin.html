@@ -1689,136 +1689,208 @@ function updateScenario() {
         let loadedPlayerChoices = [];
         let diceResultsData = [];
 
-        function rollDiceWithChoices() {
-            if (loadedPlayerChoices.length === 0) {
-                alert('Hent spillernes valg først!');
-                return;
-            }
-            
-            // Group by player and get latest choice per player
-            const playerChoices = {};
-            loadedPlayerChoices.forEach(choice => {
-                const player = choice['Player Name'];
-                if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
-                    playerChoices[player] = choice;
-                }
-            });
-            
-            diceResultsData = [];
-            let resultsHtml = '<h3>🎲 Terningkast Resultater med Business Beregninger:</h3>';
-            
-            Object.values(playerChoices).forEach(choice => {
-                const roll = Math.floor(Math.random() * 6) + 1;
-                const playerName = choice['Player Name'];
-                const choiceLetter = choice['Choice Letter'];
-                const choiceTitle = choice['Choice Title'];
-                
-                // Simple business logic based on dice roll
-                let outcome, nokValue, description;
-                
-                if (roll <= 2) {
-                    // Fiasko
-                    outcome = 'Fiasko';
-                    nokValue = -15000;
-                    description = 'Strategien slo ikke til. Tap av investeringer.';
-                } else if (roll <= 4) {
-                    // Moderat suksess  
-                    outcome = 'Moderat Suksess';
-                    nokValue = 15000;
-                    description = 'Strategien fungerte delvis. Mindre gevinst.';
-                } else {
-                    // Full suksess
-                    outcome = 'Full Suksess';
-                    nokValue = 35000;
-                    description = 'Strategien var vellykket! Stor gevinst.';
-                }
-                
-                // Store for later use
-                diceResultsData.push({
-                    player: playerName,
-                    choice: choiceLetter,
-                    choiceTitle: choiceTitle,
-                    roll: roll,
-                    outcome: outcome,
-                    nokValue: nokValue,
-                    description: description
-                });
-                
-                // Visual styling based on outcome
-                const outcomeColor = nokValue > 0 ? '#28a745' : '#dc3545';
-                const rollEmoji = roll <= 2 ? '💥' : roll <= 4 ? '😐' : '🎉';
-                
-                resultsHtml += '<div class="dice-result" style="border-left-color: ' + outcomeColor + ';">';
-                resultsHtml += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">';
-                resultsHtml += '<strong style="font-size: 1.1rem;">' + playerName + '</strong>';
-                resultsHtml += '<span style="font-size: 1.2rem;">' + rollEmoji + '</span>';
-                resultsHtml += '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Valg:</strong> ' + choiceLetter + ') ' + choiceTitle + '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Terning:</strong> ' + roll + ' → ' + outcome + '</div>';
-                resultsHtml += '<div style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem;">' + description + '</div>';
-                resultsHtml += '<div style="font-size: 1.2rem; font-weight: bold; color: ' + outcomeColor + ';">';
-                resultsHtml += (nokValue > 0 ? '+' : '') + nokValue.toLocaleString() + ' NOK';
-                resultsHtml += '</div>';
-                resultsHtml += '</div>';
-            });
-            
-            document.getElementById('dice-results-smart').innerHTML = resultsHtml;
-            document.getElementById('apply-results-section').style.display = 'block';
-            
-            // Store results in scenario and automatically save to Google Sheets
-            gameData.currentScenario.results = {};
-            diceResultsData.forEach(result => {
-                gameData.currentScenario.results[result.player] = {
-                    choice: result.choice,
-                    choiceTitle: result.choiceTitle,
-                    outcome: result.outcome,
-                    valueChange: result.nokValue,
-                    description: result.description
-                };
-            });
-
-            // NEW: Automatically save results to Google Sheets
-            saveResultsToSheets();
-        }
-
-        // NEW: Save dice results to Google Sheets automatically
-        function saveResultsToSheets() {
-            const sheetsUrl = localStorage.getItem('tripletex_sheets_url');
-            if (!sheetsUrl || sheetsUrl.includes('YOUR_SCRIPT_ID')) {
-                alert('⚠️ Ingen Google Sheets URL lagret! Resultater kan ikke lagres automatisk.');
-                return;
-            }
-            
-            const callbackName = 'saveResultsCallback_' + Date.now();
-            const script = document.createElement('script');
-            
-window[callbackName] = function(response) {
-    document.head.removeChild(script);
-    delete window[callbackName];
-    
-    if (response && response.status === 'success') {
-        console.log('✅ Terningkast-resultater lagret til Google Sheets!');
-        alert('✅ Terningkast-resultater automatisk lagret til Google Sheets!\n\nAdmin leaderboard oppdateres automatisk.');
-        
-        // NEW: Auto-apply results to admin leaderboard
-        applyDiceResults();
-    } else {
-        console.log('❌ Feil ved lagring til Google Sheets:', response);
-        alert('❌ Kunne ikke lagre resultater til Google Sheets: ' + (response ? response.message : 'Ukjent feil'));
+  function rollDiceWithChoices() {
+    if (loadedPlayerChoices.length === 0) {
+        alert('Hent spillernes valg først!');
+        return;
     }
-};
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                alert('❌ Nettverksfeil ved lagring til Google Sheets');
-            };
-            
-            const resultsData = encodeURIComponent(JSON.stringify(gameData.currentScenario.results));
-            script.src = sheetsUrl + '?callback=' + callbackName + '&action=saveResults&data=' + resultsData;
-            document.head.appendChild(script);
+    
+    // Group by player and get latest choice per player
+    const playerChoices = {};
+    loadedPlayerChoices.forEach(choice => {
+        const player = choice['Player Name'];
+        if (!playerChoices[player] || new Date(choice['Timestamp']) > new Date(playerChoices[player]['Timestamp'])) {
+            playerChoices[player] = choice;
         }
+    });
+    
+    diceResultsData = [];
+    let resultsHtml = '<h3>🎲 Forbedret Terningkast med Risikoprofiler:</h3>';
+    
+    Object.values(playerChoices).forEach(choice => {
+        const playerName = choice['Player Name'];
+        const choiceLetter = choice['Choice Letter'];
+        const choiceTitle = choice['Choice Title'];
+        
+        // Kast 3d6 (3-18 poeng)
+        const dice1 = Math.floor(Math.random() * 6) + 1;
+        const dice2 = Math.floor(Math.random() * 6) + 1;
+        const dice3 = Math.floor(Math.random() * 6) + 1;
+        const totalRoll = dice1 + dice2 + dice3;
+        
+        // Definer risikoprofiler basert på valg
+        let riskProfile = getRiskProfile(choiceLetter, choiceTitle);
+        
+        // Beregn utfall basert på risikoprofil og terningkast
+        const result = calculateOutcome(totalRoll, riskProfile);
+        
+        // Store for later use
+        diceResultsData.push({
+            player: playerName,
+            choice: choiceLetter,
+            choiceTitle: choiceTitle,
+            dice: [dice1, dice2, dice3],
+            totalRoll: totalRoll,
+            riskProfile: riskProfile,
+            outcome: result.outcome,
+            nokValue: result.value,
+            description: result.description
+        });
+        
+        // Visual styling
+        const outcomeColor = result.value > 0 ? '#28a745' : '#dc3545';
+        const rollEmoji = result.value > 0 ? '🎉' : result.value === 0 ? '😐' : '💥';
+        
+        resultsHtml += '<div class="dice-result" style="border-left-color: ' + outcomeColor + ';">';
+        resultsHtml += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">';
+        resultsHtml += '<strong style="font-size: 1.1rem;">' + playerName + '</strong>';
+        resultsHtml += '<span style="font-size: 1.2rem;">' + rollEmoji + '</span>';
+        resultsHtml += '</div>';
+        resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Valg:</strong> ' + choiceLetter + ') ' + choiceTitle + '</div>';
+        resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Risikoprofil:</strong> ' + riskProfile.name + '</div>';
+        resultsHtml += '<div style="margin-bottom: 0.25rem;"><strong>Terning:</strong> ' + dice1 + '+' + dice2 + '+' + dice3 + ' = ' + totalRoll + '</div>';
+        resultsHtml += '<div style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem;">' + result.description + '</div>';
+        resultsHtml += '<div style="font-size: 1.2rem; font-weight: bold; color: ' + outcomeColor + ';">';
+        resultsHtml += (result.value > 0 ? '+' : '') + result.value.toLocaleString() + ' NOK';
+        resultsHtml += '</div>';
+        resultsHtml += '</div>';
+    });
+    
+    document.getElementById('dice-results-smart').innerHTML = resultsHtml;
+    document.getElementById('apply-results-section').style.display = 'block';
+    
+    // Store results in scenario
+    gameData.currentScenario.results = {};
+    diceResultsData.forEach(result => {
+        gameData.currentScenario.results[result.player] = {
+            choice: result.choice,
+            choiceTitle: result.choiceTitle,
+            outcome: result.outcome,
+            valueChange: result.nokValue,
+            description: result.description,
+            diceRoll: result.totalRoll,
+            riskProfile: result.riskProfile.name
+        };
+    });
 
+    // Auto-save results
+    saveResultsToSheets();
+}
+
+// Definer risikoprofiler basert på valg
+function getRiskProfile(choiceLetter, choiceTitle) {
+    const profiles = {
+        'A': {
+            name: 'Aggressiv/Høy risiko',
+            thresholds: {
+                disaster: 6,    // 3-6: Katastrofe (10% sjanse)
+                failure: 9,     // 7-9: Fiasko (16% sjanse) 
+                moderate: 13,   // 10-13: Moderat (27% sjanse)
+                success: 16,    // 14-16: Suksess (27% sjanse)
+                jackpot: 18     // 17-18: Jackpot (20% sjanse)
+            },
+            payouts: {
+                disaster: -40000,
+                failure: -20000,
+                moderate: 15000,
+                success: 45000,
+                jackpot: 80000
+            }
+        },
+        'B': {
+            name: 'Konservativ/Lav risiko',
+            thresholds: {
+                disaster: 3,    // 3: Katastrofe (3% sjanse)
+                failure: 7,     // 4-7: Fiasko (13% sjanse)
+                moderate: 12,   // 8-12: Moderat (38% sjanse)
+                success: 16,    // 13-16: Suksess (33% sjanse)
+                jackpot: 18     // 17-18: Jackpot (13% sjanse)
+            },
+            payouts: {
+                disaster: -15000,
+                failure: -5000,
+                moderate: 18000,
+                success: 28000,
+                jackpot: 40000
+            }
+        },
+        'C': {
+            name: 'Balansert/Middels risiko',
+            thresholds: {
+                disaster: 4,    // 3-4: Katastrofe (6% sjanse)
+                failure: 8,     // 5-8: Fiasko (19% sjanse)
+                moderate: 13,   // 9-13: Moderat (31% sjanse)
+                success: 16,    // 14-16: Suksess (25% sjanse)
+                jackpot: 18     // 17-18: Jackpot (19% sjanse)
+            },
+            payouts: {
+                disaster: -25000,
+                failure: -12000,
+                moderate: 20000,
+                success: 35000,
+                jackpot: 60000
+            }
+        },
+        'D': {
+            name: 'Effektivitet/Stabil',
+            thresholds: {
+                disaster: 3,    // 3: Katastrofe (3% sjanse)
+                failure: 6,     // 4-6: Fiasko (9% sjanse)
+                moderate: 11,   // 7-11: Moderat (31% sjanse)
+                success: 15,    // 12-15: Suksess (44% sjanse)
+                jackpot: 18     // 16-18: Jackpot (13% sjanse)
+            },
+            payouts: {
+                disaster: -10000,
+                failure: -3000,
+                moderate: 12000,
+                success: 22000,
+                jackpot: 35000
+            }
+        }
+    };
+    
+    // Default til balansert hvis ukjent valg
+    return profiles[choiceLetter] || profiles['C'];
+}
+
+// Beregn utfall basert på terningkast og risikoprofil
+function calculateOutcome(roll, profile) {
+    const t = profile.thresholds;
+    const p = profile.payouts;
+    
+    if (roll <= t.disaster) {
+        return {
+            outcome: 'Katastrofe',
+            value: p.disaster,
+            description: 'Alt gikk galt. Store tap og komplikasjoner.'
+        };
+    } else if (roll <= t.failure) {
+        return {
+            outcome: 'Fiasko',
+            value: p.failure,
+            description: 'Strategien slo ikke til. Tap av investeringer.'
+        };
+    } else if (roll <= t.moderate) {
+        return {
+            outcome: 'Moderat Suksess',
+            value: p.moderate,
+            description: 'Strategien fungerte delvis. Mindre gevinst.'
+        };
+    } else if (roll <= t.success) {
+        return {
+            outcome: 'Suksess',
+            value: p.success,
+            description: 'Strategien var vellykket! God gevinst.'
+        };
+    } else {
+        return {
+            outcome: 'Storgevinst',
+            value: p.jackpot,
+            description: 'Perfekt utførelse! Maksimal gevinst og bonuseffekter.'
+        };
+    }
+}
         function applyDiceResults() {
             if (diceResultsData.length === 0) {
                 alert('Ingen resultater å anvende!');
