@@ -2076,7 +2076,9 @@ function addPenalty() {
                         bonuses: []
                     };
                 }
-                
+                if (!gameData.playerBreakdowns[playerName].penalties) {
+    gameData.playerBreakdowns[playerName].penalties = [];
+}
                 // Add to penalties array with proper structure
                 gameData.playerBreakdowns[playerName].penalties.push({
                     type: description,
