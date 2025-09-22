@@ -2025,7 +2025,10 @@ console.log("Spillerresultater oppdatert!");`;
         }
 
         // Penalty functions
-        function addPenalty() {
+function addPenalty() {
+    console.log('gameData.playerBreakdowns exists:', !!gameData.playerBreakdowns);
+    console.log('gameData.playerBreakdowns type:', typeof gameData.playerBreakdowns);
+    console.log('gameData.playerBreakdowns value:', gameData.playerBreakdowns);
             const playerIndex = document.getElementById('penalty-player').value;
             const penaltyType = document.getElementById('penalty-type').value;
             const customAmount = document.getElementById('penalty-amount').value;
