@@ -1079,60 +1079,41 @@
             });
         }
 
-        // FIXED: Player breakdowns loading with merge logic instead of overwrite
-        function loadPlayerBreakdownsFromSheets() {
-            console.log('💼 Loading player breakdowns from Google Sheets...');
+function loadPlayerBreakdownsFromSheets() {
+    const sheetsUrl = localStorage.getItem('tripletex_sheets_url') || 
+                     'https://script.google.com/macros/s/AKfycbwgqPq9xkJI1o2_b2NXRFbZo9-5iO8hUrndCQ26vfejrPeH3xvdJ6YgCsYSX6IqpSQZ6w/exec';
+    
+    const callbackName = 'loadBreakdownsCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(response) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (response && response.status === 'success') {
+            // FIXED: Always use data from Google Sheets as source of truth
+            gameState.playerBreakdowns = response.data || {};
             
-            const callbackName = 'loadBreakdownsCallback_' + Date.now();
-            const script = document.createElement('script');
+            console.log('✅ Player breakdowns loaded from Google Sheets:', Object.keys(response.data || {}).length, 'players');
             
-            window[callbackName] = function(response) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                
-                if (response && response.status === 'success') {
-                    const sheetsBreakdowns = response.data || {};
-                    console.log('✅ Player breakdowns loaded from sheets:', Object.keys(sheetsBreakdowns).length, 'players');
-                    
-                    // CRITICAL: MERGE instead of replace to preserve scenario results
-                    Object.entries(sheetsBreakdowns).forEach(([playerName, sheetsData]) => {
-                        if (!gameState.playerBreakdowns[playerName]) {
-                            // Player doesn't exist locally, use sheets data
-                            gameState.playerBreakdowns[playerName] = sheetsData;
-                        } else {
-                            // Player exists locally, merge carefully
-                            const localData = gameState.playerBreakdowns[playerName];
-                            
-                            // Merge penalties and bonuses from sheets (these are admin-controlled)
-                            gameState.playerBreakdowns[playerName] = {
-                                startCapital: sheetsData.startCapital || localData.startCapital || 500000,
-                                scenarioGains: localData.scenarioGains || [], // KEEP LOCAL scenario results
-                                penalties: sheetsData.penalties || [], // Use sheets penalties 
-                                bonuses: sheetsData.bonuses || [] // Use sheets bonuses
-                            };
-                        }
-                    });
-                    
-                    console.log('🔄 Merged breakdowns with local scenario results');
-                    
-                    // Force re-render leaderboard with merged data
-                    renderLeaderboard();
-                } else {
-                    console.log('ℹ️ No player breakdowns found in Google Sheets - keeping local data');
-                    gameState.playerBreakdowns = gameState.playerBreakdowns || {};
-                }
-            };
-            
-            script.onerror = function() {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                console.log('❌ Failed to load player breakdowns from Google Sheets - keeping local data');
-                gameState.playerBreakdowns = gameState.playerBreakdowns || {};
-            };
-            
-            script.src = GOOGLE_SHEETS_URL + '?callback=' + callbackName + '&action=getPlayerBreakdowns';
-            document.head.appendChild(script);
+            // Force re-render leaderboard with fresh data
+            renderLeaderboard();
+        } else {
+            console.log('ℹ️ No player breakdowns found in Google Sheets');
+            gameState.playerBreakdowns = gameState.playerBreakdowns || {};
         }
+    };
+    
+    script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        console.log('❌ Failed to load player breakdowns from Google Sheets - keeping local data');
+        gameState.playerBreakdowns = gameState.playerBreakdowns || {};
+    };
+    
+    script.src = sheetsUrl + '?callback=' + callbackName + '&action=getPlayerBreakdowns&cacheBust=' + Date.now();
+    document.head.appendChild(script);
+}
 
         // Navigation functionality
         document.querySelectorAll('.nav-link').forEach(link => {
